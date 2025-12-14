@@ -1,0 +1,526 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Info, Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+
+// Mock data for products
+const mockProducts = [
+  {
+    id: "1",
+    name: "Atlas",
+    version: "5.2.9",
+    description: "Capture and analyze web requests directly from your browser",
+    logo: "/apps/atlas.png",
+    installed: false,
+    isPaid: true,
+    platform: "mac",
+    addedAt: "2025-11-25",
+    downloads: 12450
+  },
+  {
+    id: "2",
+    name: "Ceres Assist",
+    version: "5.2.9",
+    description: "An autonomous browser assistant that works across tabs.",
+    logo: "/apps/ceres.png",
+    installed: false,
+    isPaid: true,
+    platform: "windows",
+    addedAt: "2025-12-02",
+    downloads: 8650
+  },
+
+]
+
+const mockApps = [
+  {
+    id: "101",
+    name: "Diamond Plateau",
+    version: "1.0.0",
+    description: "A minimalist desktop game that gamifies your productivity.",
+    logo: "/apps/daimond.png",
+    installed: false,
+    isPaid: false,
+    platform: "windows",
+    addedAt: "2025-12-07",
+    downloads: 0,
+  },
+]
+
+export function AllProducts() {
+  const { toast } = useToast()
+  const [products, setProducts] = useState(mockProducts)
+  const [apps, setApps] = useState(mockApps)
+  const [category, setCategory] = useState<"all" | "recent" | "popular">("all")
+  const [platform, setPlatform] = useState<"all" | "mac" | "windows">("all")
+  const [query, setQuery] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selected, setSelected] = useState<(typeof mockProducts)[number] | null>(null)
+
+  const handleInstallExtension = (id: string) => {
+    setProducts(products.map(ext => 
+      ext.id === id ? { ...ext, installed: true } : ext
+    ))
+    
+    const extension = products.find(ext => ext.id === id)
+    if (extension) {
+      toast({
+        title: "Extension Installed",
+        description: `${extension.name} has been successfully installed.`,
+      })
+    }
+  }
+
+  const handleUninstallExtension = (id: string) => {
+    setProducts(products.map(ext => 
+      ext.id === id ? { ...ext, installed: false } : ext
+    ))
+    
+    const extension = products.find(ext => ext.id === id)
+    if (extension) {
+      toast({
+        title: "Extension Uninstalled",
+        description: `${extension.name} has been successfully uninstalled.`,
+      })
+    }
+  }
+
+  const handleInstallApp = (id: string) => {
+    setApps(apps.map(app => (app.id === id ? { ...app, installed: true } : app)))
+
+    const app = apps.find(a => a.id === id)
+    if (app) {
+      toast({
+        title: "App Installed",
+        description: `${app.name} has been successfully installed.`,
+      })
+    }
+  }
+
+  const handleUninstallApp = (id: string) => {
+    setApps(apps.map(app => (app.id === id ? { ...app, installed: false } : app)))
+
+    const app = apps.find(a => a.id === id)
+    if (app) {
+      toast({
+        title: "App Uninstalled",
+        description: `${app.name} has been successfully uninstalled.`,
+      })
+    }
+  }
+
+  return (
+<div className={`flex flex-col h-full bg-background ${isModalOpen ? 'blur-sm transition-[filter] duration-200' : ''}`}>
+
+  {/* Page title */}
+  <div className="px-8 xl:px-12 pt-10 pb-4">
+    <p className="text-4xl font-semibold text-white">Discover</p>
+  </div>
+
+{/* Hero Section */}
+<div className="px-8 xl:px-12 mt-4 mb-16">
+  <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
+
+    {/* Radial faded grid background */}
+    <div
+      className="absolute inset-0 pointer-events-none opacity-40"
+      style={{
+        backgroundImage: `
+          radial-gradient(circle at center,
+            rgba(255,255,255,0.12) 0%,
+            rgba(255,255,255,0.04) 40%,
+            rgba(255,255,255,0.02) 60%,
+            transparent 100%
+          ),
+          linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "auto, 40px 40px, 40px 40px",
+      }}
+    />
+
+    <div className="relative flex flex-col items-center text-center gap-6 p-10 md:p-16 min-h-[420px]">
+
+      {/* Centered Logo */}
+      <img
+        src="/icon.svg"
+        alt="Icon"
+        className="w-20 h-20 rounded-full shadow-lg"
+      />
+
+      {/* Title */}
+      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        Sync Store
+      </h2>
+
+      {/* Description */}
+      <p className="text-white/70 max-w-md">
+        Get amazing extensions and the best apps for every task.
+      </p>
+
+      {/* Search Bar */}
+      <div className="mt-2 w-full flex justify-center">
+        <input
+          type="text"
+          placeholder="Search extensions..."
+          className="
+            w-full max-w-md px-5 py-3 
+            rounded-full
+            bg-black/80 text-white
+            border border-white/0
+            shadow-[inset_0_0_12px_rgba(255,255,255,0.25)]
+            placeholder:text-white/40
+            outline-none
+            transition-all
+            focus:border-white/0
+          "
+        />
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+  
+  
+  
+  
+  {/* Cards section */}
+  <div className="px-8 xl:px-12 pb-20">
+    <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex items-center gap-2 bg-black/80 text-white rounded-full border border-white/0 shadow-[inset_0_0_12px_rgba(255,255,255,0.25)] p-1">
+        <button
+          className={`px-4 py-2 rounded-full text-sm ${category === "all" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+          onClick={() => setCategory("all")}
+        >
+          All Extensions
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full text-sm ${category === "recent" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+          onClick={() => setCategory("recent")}
+        >
+          Recently Added
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full text-sm ${category === "popular" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+          onClick={() => setCategory("popular")}
+        >
+          Most Popular
+        </button>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 bg-black/80 text-white rounded-full border border-white/0 shadow-[inset_0_0_12px_rgba(255,255,255,0.25)] p-1">
+          <button
+            className={`px-3 py-2 rounded-full text-sm ${platform === "all" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+            onClick={() => setPlatform("all")}
+          >
+            All
+          </button>
+          <button
+            className={`px-3 py-2 rounded-full text-sm flex items-center gap-1 ${platform === "mac" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+            onClick={() => setPlatform("mac")}
+            aria-label="Mac"
+          >
+            <img src="/resources/apple.svg" alt="Apple" className="w-5 h-5 brightness-0 invert" />
+          </button>
+          <button
+            className={`px-3 py-2 rounded-full text-sm flex items-center gap-1 ${platform === "windows" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
+            onClick={() => setPlatform("windows")}
+            aria-label="Windows"
+          >
+            <img src="/resources/windows.svg" alt="Windows" className="w-4 h-4 brightness-0 invert" />
+          </button>
+        </div>
+      </div>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-10">
+      {products
+        .filter((p) => (platform === "all" ? true : (p as any).platform === platform))
+        .filter((p) => (query ? p.name.toLowerCase().includes(query.toLowerCase()) : true))
+        .sort((a, b) => {
+          if (category === "recent") return new Date((b as any).addedAt).getTime() - new Date((a as any).addedAt).getTime()
+          if (category === "popular") return (b as any).downloads - (a as any).downloads
+          return 0
+        })
+        .slice(0, 3)
+        .map((p, idx) => (
+        <Card
+          key={p.id + idx}
+          className="relative overflow-hidden rounded-2xl 
+                     border border-white/5 
+                     bg-black/50 backdrop-blur-xl
+                     hover:bg-black/60 transition-colors"
+          onClick={() => { setSelected(p); setIsModalOpen(true) }}
+        >
+          {/* Soft highlight */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)"
+            }}
+          />
+
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-white/60">Featured</p>
+              {p.isPaid && (
+                <Badge variant="outline" className="text-white/80">Paid</Badge>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="py-5">
+            <div className="flex items-start gap-4">
+              <img
+                src={p.logo}
+                alt={p.name}
+                className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-white text-base flex items-center gap-2">
+                    {p.name}
+                    {p.id === "1" && (
+                      <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
+                    )}
+                  </CardTitle>
+                  <Badge variant="outline" className="text-white/70">v{p.version}</Badge>
+                </div>
+                <CardDescription className="text-white/70 mt-1 line-clamp-2">
+                  {p.description}
+                </CardDescription>
+                <div className="mt-4 flex items-center gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleInstallExtension(p.id)}
+                    className="bg-white text-black hover:bg-white/90 rounded-full"
+                  >
+                    Install
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      toast({ title: "Manage Extension", description: `Opening management for ${p.name}` })
+                    }
+                    className="text-white rounded-full"
+                  >
+                    Manage
+                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-white/10"
+                        onClick={(e) => { e.stopPropagation(); setSelected(p); setIsModalOpen(true) }}
+                      >
+                        <Info className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">More info</TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+    </div>
+
+    {/* Apps section */}
+    <div className="mt-10">
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-xl font-semibold text-white">Apps</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-6">
+        {apps.slice(0, 3).map((a, idx) => (
+          <Card
+            key={a.id + idx}
+            className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
+          >
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)",
+              }}
+            />
+            {a.platform === "windows" && (
+              <img
+                src="/resources/windows.svg"
+                alt="Windows"
+                className="absolute top-3 right-3 w-5 h-5 brightness-0 invert opacity-100"
+              />
+            )}
+
+            <CardContent className="py-5">
+              <div className="flex items-start gap-4">
+                <img
+                  src={a.logo}
+                  alt={a.name}
+                  className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-white text-base flex items-center gap-2">
+                      {a.name}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-white/70">v{a.version}</Badge>
+                  </div>
+                  <CardDescription className="text-white/70 mt-1 line-clamp-2">
+                    {a.description}
+                  </CardDescription>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleInstallApp(a.id)}
+                      className="bg-white text-black hover:bg-white/90 rounded-full"
+                    >
+                      Install
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toast({ title: "Manage App", description: `Opening management for ${a.name}` })
+                      }
+                      className="text-white rounded-full"
+                    >
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+
+    <div className="mt-30">
+      <div className="rounded-2xl bg-black/70 border border-white/10 shadow-[inset_0_0_12px_rgba(255,255,255,0.15)] px-8 py-10 text-center">
+        <div className="mx-auto w-fit px-4 py-2 rounded-full bg-white/5 text-white/80 border border-white/10 text-xs tracking-wide">Preview</div>
+        <p className="mt-4 text-2xl font-semibold text-white">More Coming Soon</p>
+        <p className="mt-2 text-white/70 text-sm">We're curating more extensions and experiences. Stay tuned.</p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button
+  variant="outline"
+  size="sm"
+  className="rounded-full text-black bg-white font-semibold border-white/20 backdrop-blur-sm
+             hover:border-white/40 hover:bg-white/5 hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
+             transition-all duration-300"
+>
+  Notify Me
+</Button>
+
+{/* <Button
+  variant="outline"
+  size="sm"
+  className="rounded-full text-black bg-white font-semibold border-white/20 backdrop-blur-sm
+             hover:border-white/40 hover:bg-white/5 hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
+             transition-all duration-300"
+>
+  Sell on LoopSync
+</Button> */}
+
+
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  
+
+  {selected && (
+    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <DialogContent className="bg-black/40 border border-white/10 rounded-2xl backdrop-blur-xl p-0 max-w-4xl overflow-hidden">
+        <div className="relative">
+          <div className="p-6">
+            <DialogHeader>
+              <div className="flex items-start gap-4">
+                <img src={selected.logo} alt={selected.name} className="w-14 h-14 rounded-xl ring-1 ring-white/10" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <DialogTitle className="text-white text-xl">{selected.name}</DialogTitle>
+                    {selected.id === "1" && (
+                      <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
+                    )}
+                    <Badge variant="outline" className="text-white/70">v{selected.version}</Badge>
+                  </div>
+                  <DialogDescription className="text-white/70 mt-1">{selected.description}</DialogDescription>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleInstallExtension(selected.id)}
+                      className="bg-white text-black hover:bg-white/90 rounded-full"
+                    >
+                      Install
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toast({ title: "Manage Extension", description: `Opening management for ${selected.name}` })
+                      }
+                      className="text-white rounded-full"
+                    >
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="px-6">
+            <div className="overflow-x-auto">
+              <div className="flex items-start gap-4 min-w-full pb-4">
+                <video src="/video/ceres.mp4" controls className="w-[360px] h-[220px] rounded-xl border border-white/10 bg-black/50" />
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <img
+                    key={i}
+                    src="/placeholder.jpg"
+                    alt="Preview"
+                    className="w-[360px] h-[220px] rounded-xl border border-white/10 bg-black/50 object-cover"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-white font-semibold">Developer Details</p>
+                <Badge variant="outline" className="text-white/70">Official</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="text-white/80">Publisher: LoopSync</div>
+                <div className="text-white/80">Website: loopsync.cloud</div>
+                <div className="text-white/80">Platform: {selected.platform}</div>
+                <div className="text-white/80">Added: {selected.addedAt}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )}
+
+</div>
+
+  )
+}
