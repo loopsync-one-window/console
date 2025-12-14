@@ -46,7 +46,7 @@ export default function ModelsPage() {
       model: "LS R3-Advanced",
       speed: 4,
       intelligence: 5,
-      context: "8k",
+      context: "100k",
       imageProcessing: true,
     },
     {
