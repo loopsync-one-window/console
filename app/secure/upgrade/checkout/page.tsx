@@ -168,7 +168,7 @@ const UpgradeCheckoutPage = () => {
   useEffect(() => {
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!accessToken || !email) return;
-    const url = `http://localhost:8000/payment-methods/search?email=${encodeURIComponent(email)}`;
+    const url = `https://srv01.loopsync.cloud/payment-methods/search?email=${encodeURIComponent(email)}`;
     fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
       .then(r => r.json() as Promise<SearchResponse>)
       .then((data) => {
@@ -216,7 +216,7 @@ const UpgradeCheckoutPage = () => {
           const waitForActivation = async (): Promise<string | null> => {
             const started = Date.now();
             while (Date.now() - started < 60000) { // up to 60s
-              const meResp = await fetch('http://localhost:8000/subscriptions/me', {
+              const meResp = await fetch('https://srv01.loopsync.cloud/subscriptions/me', {
                 method: 'GET',
                 headers,
               });
@@ -230,7 +230,7 @@ const UpgradeCheckoutPage = () => {
 
           const activatedId = await waitForActivation();
           if (activatedId) {
-            await fetch('http://localhost:8000/billing/subscription/sync', {
+            await fetch('https://srv01.loopsync.cloud/billing/subscription/sync', {
               method: 'POST',
               headers,
               body: JSON.stringify({ subscriptionId: activatedId }),
@@ -247,7 +247,7 @@ const UpgradeCheckoutPage = () => {
           } as Record<string, string>;
 
           // Get current subscription to retrieve ID
-          const meResp = await fetch('http://localhost:8000/subscriptions/me', {
+          const meResp = await fetch('https://srv01.loopsync.cloud/subscriptions/me', {
             method: 'GET',
             headers,
           });
@@ -255,14 +255,14 @@ const UpgradeCheckoutPage = () => {
           const subId = meJson?.subscription?.id as string | undefined;
 
           if (subId) {
-            await fetch('http://localhost:8000/billing/subscription/sync', {
+            await fetch('https://srv01.loopsync.cloud/billing/subscription/sync', {
               method: 'POST',
               headers,
               body: JSON.stringify({ subscriptionId: subId }),
             });
 
             if (prepaidBeforeUpgrade > 0 && (prepaidEmail || email)) {
-              await fetch('http://localhost:8000/billing/credits/add', {
+              await fetch('https://srv01.loopsync.cloud/billing/credits/add', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -308,7 +308,7 @@ const UpgradeCheckoutPage = () => {
       }
       // Collect current prepaid credits before upgrading
       try {
-        const creditsResp = await fetch('http://localhost:8000/billing/credits', {
+        const creditsResp = await fetch('https://srv01.loopsync.cloud/billing/credits', {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${accessToken}` },
         });
@@ -318,7 +318,7 @@ const UpgradeCheckoutPage = () => {
         setPrepaidBeforeUpgrade(Number(currentPrepaid) || 0);
         setPrepaidEmail(String(currentEmail) || email);
       } catch {}
-      const response = await fetch('http://localhost:8000/upgrade/checkout', {
+      const response = await fetch('https://srv01.loopsync.cloud/upgrade/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

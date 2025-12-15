@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "https://srv01.loopsync.cloud";
 
 // Types for our API responses
 interface User {

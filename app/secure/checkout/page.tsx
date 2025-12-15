@@ -260,7 +260,7 @@ const SecurePaymentPage = () => {
         const planCode = searchParams?.get('plan') || 'PRO';
 
         const eligibilityResponse = await fetch(
-          'http://localhost:8000/subscriptions/check-eligibility',
+          'https://srv01.loopsync.cloud/subscriptions/check-eligibility',
           {
             method: 'POST',
             headers: {
@@ -280,7 +280,7 @@ const SecurePaymentPage = () => {
 
         const savePaymentDetails = async () => {
           try {
-            await fetch('http://localhost:8000/payment-methods/billing-address', {
+            await fetch('https://srv01.loopsync.cloud/payment-methods/billing-address', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ const SecurePaymentPage = () => {
               body: JSON.stringify({ ...billingAddress, isDefault: true })
             });
 
-            await fetch('http://localhost:8000/payment-methods/payment-method', {
+            await fetch('https://srv01.loopsync.cloud/payment-methods/payment-method', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -309,7 +309,7 @@ const SecurePaymentPage = () => {
           }
         };
 
-        const response = await fetch('http://localhost:8000/subscriptions/checkout', {
+        const response = await fetch('https://srv01.loopsync.cloud/subscriptions/checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -407,7 +407,7 @@ const SecurePaymentPage = () => {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) return;
 
-      const markEmailPromise = fetch('http://localhost:8000/subscriptions/mark-email-as-used', {
+      const markEmailPromise = fetch('https://srv01.loopsync.cloud/subscriptions/mark-email-as-used', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -416,7 +416,7 @@ const SecurePaymentPage = () => {
         body: JSON.stringify({ email })
       });
 
-      const updateAccountPromise = fetch('http://localhost:8000/subscriptions/update-account-type', {
+      const updateAccountPromise = fetch('https://srv01.loopsync.cloud/subscriptions/update-account-type', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -441,7 +441,7 @@ const SecurePaymentPage = () => {
           const planCode = planData?.code || searchParams?.get('plan') || 'PRO';
           const billingCycleParam = (billingCycle || searchParams?.get('billingCycle') || 'monthly').toUpperCase();
 
-          await fetch('http://localhost:8000/subscriptions/fallback-activate', {
+          await fetch('https://srv01.loopsync.cloud/subscriptions/fallback-activate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -455,7 +455,7 @@ const SecurePaymentPage = () => {
               email,
             }),
           });
-          const meRes = await fetch('http://localhost:8000/subscriptions/me', {
+          const meRes = await fetch('https://srv01.loopsync.cloud/subscriptions/me', {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${accessToken}`,
@@ -464,7 +464,7 @@ const SecurePaymentPage = () => {
           const meJson = await meRes.json();
           const subId = meJson?.subscription?.id as string | undefined;
           if (subId) {
-            await fetch('http://localhost:8000/billing/subscription/sync', {
+            await fetch('https://srv01.loopsync.cloud/billing/subscription/sync', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
