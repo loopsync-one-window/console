@@ -1,4 +1,4 @@
-export const CERES_BASE_URL = "http://localhost:9000"
+export const CERES_BASE_URL = "https://srv03.loopsync.cloud"
 
 export interface CeresAccessCodeResponse {
   provider: string

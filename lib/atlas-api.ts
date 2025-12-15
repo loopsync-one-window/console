@@ -1,4 +1,4 @@
-export const ATLAS_BASE_URL = "http://localhost:4000/api";
+export const ATLAS_BASE_URL = "https://srv02.loopsync.cloud/api";
 
 export interface AtlasAccessCodeResponse {
   provider: string;
