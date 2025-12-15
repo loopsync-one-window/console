@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { updatePromptMode, UpdatePromptModePayload, deletePromptMode } from "@/lib/atlas-api";
 
 export async function POST(request: Request) {
-  if (!process.env.ATLAS_API_KEY) {
-    return NextResponse.json({ message: "ATLAS_API_KEY is not set" }, { status: 500 });
-  }
+  // Removed ATLAS_API_KEY validation check
   try {
     const body = (await request.json()) as UpdatePromptModePayload;
     const { email, mode, prompt, provider, scope } = body || ({} as UpdatePromptModePayload);
@@ -20,9 +18,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!process.env.ATLAS_API_KEY) {
-    return NextResponse.json({ message: "ATLAS_API_KEY is not set" }, { status: 500 });
-  }
+  // Removed ATLAS_API_KEY validation check
   try {
     const { searchParams } = new URL(request.url);
     const provider = searchParams.get("provider") || "";

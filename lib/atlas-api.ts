@@ -1,5 +1,8 @@
 export const ATLAS_BASE_URL = "https://srv02.loopsync.cloud/api";
 
+// Define the ATLAS_API_KEY directly
+const ATLAS_API_KEY = "loopsync-system-00AC256b7A";
+
 export interface AtlasAccessCodeResponse {
   provider: string;
   appName: string;
@@ -91,7 +94,7 @@ export const getAtlasAccessCode = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
       email,
     },
     cache: "no-store",
@@ -115,7 +118,7 @@ export const updateAtlasAccessCode = async (
     method: "POST",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email }),
@@ -185,7 +188,7 @@ export const recoverAtlasAccessCode = async (
     method: "POST",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email }),
@@ -210,7 +213,7 @@ export const getAtlasUsageStatus = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     cache: "no-store",
   });
@@ -261,7 +264,7 @@ export const getPromptModeStatus = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     cache: "no-store",
   });
@@ -398,7 +401,7 @@ export const getSmartActions = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     cache: "no-store",
   });
@@ -431,7 +434,7 @@ export const updateSmartAction = async (
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     body: JSON.stringify(payload),
     cache: "no-store",
@@ -484,7 +487,7 @@ export const getAtlasCollections = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     cache: "no-store",
   });
@@ -546,7 +549,7 @@ export const getAtlasCollectionDetail = async (
     method: "GET",
     headers: {
       Accept: "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     cache: "no-store",
   });
@@ -588,7 +591,7 @@ export const registerAtlasUser = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Pepron-Key": process.env.ATLAS_API_KEY || "",
+      "X-Pepron-Key": ATLAS_API_KEY,
     },
     body: JSON.stringify({ email }),
     cache: "no-store",

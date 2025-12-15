@@ -11,9 +11,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   if (!email) {
     return NextResponse.json({ message: "email is required" }, { status: 400 });
   }
-  if (!process.env.ATLAS_API_KEY) {
-    return NextResponse.json({ message: "ATLAS_API_KEY is not set" }, { status: 500 });
-  }
+  // Removed ATLAS_API_KEY validation check
   try {
     const data = await getAtlasCollectionDetail(id, email);
     return NextResponse.json(data, { status: 200 });
