@@ -1485,7 +1485,7 @@ const OpenAccountContent = () => {
 // Export the component wrapped in Suspense
 export default function OpenAccount() {
   return (
-    <Suspense fallback={<div className="h-screen bg-[#07080a] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="h-screen bg-[#07080a] flex items-center justify-center"></div>}>
       <OpenAccountContent />
     </Suspense>
   );
