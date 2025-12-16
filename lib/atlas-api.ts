@@ -512,7 +512,7 @@ export const getAtlasCollections = async (
 export const getAtlasCollectionsClient = async (
   email: string
 ): Promise<AtlasCollectionsResponse> => {
-  const res = await fetch(`/api/v1/atlas/collections`, { cache: "no-store", headers: { "x-email": email } });
+  const res = await fetch(`/api/v1/atlas/collections?email=${encodeURIComponent(email)}`, { cache: "no-store" });
   const ct = res.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
     const data = await res.json();
@@ -568,10 +568,9 @@ export const getAtlasCollectionDetailClient = async (
   id: string,
   email: string
 ): Promise<AtlasCollectionDetail> => {
-  const res = await fetch(`/api/v1/atlas/collections/${encodeURIComponent(id)}`, {
+  const res = await fetch(`/api/v1/atlas/collections/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
     method: "GET",
     cache: "no-store",
-    headers: { "x-email": email },
   });
   const ct = res.headers.get("content-type") || "";
   if (ct.includes("application/json")) {

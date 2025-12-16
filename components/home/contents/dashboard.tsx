@@ -1,13 +1,41 @@
 "use client"
 import { ExternalLink, Code2, Zap, Users, FileText, Activity, Cable as Cube, TreeDeciduous, Paperclip, IndianRupee, Gift, AlertTriangle, Info, Cloud, CloudCheck, FerrisWheel, TreePine, ChevronRightIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { getBillingOverview, getSubscriptionMe, getTrialNotifyStatus, updateTrialNotifyStatus } from "@/lib/api"
+import { getBillingOverview, getSubscriptionMe, getTrialNotifyStatus, updateTrialNotifyStatus, getCachedBillingOverview } from "@/lib/api"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getProfileMe, getCachedProfile, addCredits } from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+
+// Define types for our cached data
+interface CachedDashboardData {
+  overview: {
+    subscription: {
+      planName: string
+      status: string
+      startDate: string
+      endDate: string
+      daysRemaining: number
+      autoRenew: boolean
+    }
+    credits: {
+      prepaid: { balance: number }
+      free: { balance: number }
+      usageCap: { total: number; remaining: number }
+    }
+    usage: { total: number; prepaidUsed: number }
+    nextInvoice: number
+  } | null
+  firstName: string
+  isFreeTrial: boolean
+}
+
+// Global cache variables
+let cachedDashboardData: CachedDashboardData | null = null
+let dashboardCacheTimestamp: number = 0
+const CACHE_TTL = 15 * 60 * 1000 // 15 minutes
 
 export function Dashboard() {
   const router = useRouter()
@@ -37,39 +65,109 @@ export function Dashboard() {
   const [isReloading, setIsReloading] = useState<boolean>(false)
   // State to track if user data has been successfully loaded
   const [userDataLoaded, setUserDataLoaded] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   useEffect(() => {
     (async () => {
       try {
+        // Check if we have valid cached data
+        const now = Date.now()
+        if (cachedDashboardData && dashboardCacheTimestamp > now) {
+          // Use cached data
+          setOverview(cachedDashboardData.overview)
+          setFirstName(cachedDashboardData.firstName)
+          setIsFreeTrial(cachedDashboardData.isFreeTrial)
+          setUserDataLoaded(true)
+          setIsLoading(false)
+          return
+        }
+
+        // Load fresh data
+        setIsLoading(true)
+        
+        // Get billing overview
         const res = await getBillingOverview()
-        if (res?.success && res?.data) setOverview(res.data)
-      } catch {}
-    })()
-  }, [])
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const sub = await getSubscriptionMe()
-        if (sub?.success && sub?.subscription) setIsFreeTrial(Boolean(sub.subscription.isFreeTrial))
+        if (res?.success && res?.data) {
+          setOverview(res.data)
+          // Cache the overview data
+          if (cachedDashboardData) {
+            cachedDashboardData.overview = res.data
+          }
+        }
+        
+        // Get user profile
         const cached = getCachedProfile?.()
         let full = cached?.fullName as string | undefined
         if (!full) {
           const data = await getProfileMe()
           full = data?.fullName
         }
+        
         // Check if we have valid user data
         if (full) {
           const name = (full || '').trim()
-          setFirstName(name ? name.split(/\s+/)[0] : 'User')
+          const firstNameValue = name ? name.split(/\s+/)[0] : 'User'
+          setFirstName(firstNameValue)
           setUserDataLoaded(true)
+          
+          // Cache the user data
+          if (cachedDashboardData) {
+            cachedDashboardData.firstName = firstNameValue
+          } else {
+            cachedDashboardData = {
+              overview: res?.success && res?.data ? res.data : null,
+              firstName: firstNameValue,
+              isFreeTrial: false
+            }
+          }
         } else {
-          // No valid user data, redirect to login
-          router.replace("/open-account?login=true")
+          // Set default values if no user data
+          setFirstName('User')
+          setUserDataLoaded(true)
+          
+          // Create cache with default values
+          if (!cachedDashboardData) {
+            cachedDashboardData = {
+              overview: res?.success && res?.data ? res.data : null,
+              firstName: 'User',
+              isFreeTrial: false
+            }
+          }
         }
-      } catch {
-        // Error loading user data, redirect to login
-        router.replace("/open-account?login=true")
+        
+        // Get subscription info
+        const sub = await getSubscriptionMe()
+        if (sub?.success && sub?.subscription) {
+          const isFreeTrialValue = Boolean(sub.subscription.isFreeTrial)
+          setIsFreeTrial(isFreeTrialValue)
+          
+          // Cache the subscription data
+          if (cachedDashboardData) {
+            cachedDashboardData.isFreeTrial = isFreeTrialValue
+          }
+        } else {
+          // Set default for isFreeTrial if no subscription data
+          if (cachedDashboardData) {
+            cachedDashboardData.isFreeTrial = false
+          }
+        }
+        
+        // Update cache timestamp
+        dashboardCacheTimestamp = Date.now() + CACHE_TTL
+      } catch (error) {
+        console.error("Error loading dashboard data:", error)
+        // Even if there's an error, we should still show the dashboard
+        setUserDataLoaded(true)
+        // Set default cache on error
+        if (!cachedDashboardData) {
+          cachedDashboardData = {
+            overview: null,
+            firstName: 'User',
+            isFreeTrial: false
+          }
+        }
+      } finally {
+        setIsLoading(false)
       }
     })()
   }, [router])
@@ -114,8 +212,6 @@ export function Dashboard() {
   const capConsumed = capTotal - capRemaining
   const days = overview?.subscription?.daysRemaining ?? 0
 
-  const isLoading = overview == null
-
   const renderAmount = (v: number | undefined | null) => {
     const val = v || 0
     const formatted = (val / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -124,28 +220,6 @@ export function Dashboard() {
         <span className="text-xl mr-1">₹</span>
         <span>{formatted}</span>
       </span>
-    )
-  }
-
-  // Don't render anything if user data hasn't loaded yet
-  if (!userDataLoaded) {
-    return (
-      <main className="flex-1 overflow-auto bg-background relative scrollbar-hide">
-        <div className="flex items-center justify-center h-full">
-          <div className="w-10 h-10 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </main>
-    )
-  }
-
-  // Don't render anything if user data hasn't loaded yet
-  if (!userDataLoaded) {
-    return (
-      <main className="flex-1 overflow-auto bg-background relative scrollbar-hide">
-        <div className="flex items-center justify-center h-full">
-          <div className="w-10 h-10 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </main>
     )
   }
 

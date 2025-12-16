@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,13 +9,19 @@ import { Info, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
+// Mock data for browsers
+const mockBrowsers = [
+  { id: "1", name: "Chrome", logo: "/browser/chrome.png", version: "5.2.9" },
+  { id: "2", name: "Firefox", logo: "/browser/firefox.png", version: "5.2.9" },
+]
+
 // Mock data for products
 const mockProducts = [
   {
     id: "1",
     name: "Atlas",
     version: "5.2.9",
-    description: "Capture and analyze web requests directly from your browser",
+    description: "Atlas helps you understand anything on your screen instantly. Press a shortcut, select a screen region, and get AI-powered answers in seconds.",
     logo: "/apps/atlas.png",
     installed: false,
     isPaid: true,
@@ -59,9 +65,18 @@ export function AllProducts() {
   const [apps, setApps] = useState(mockApps)
   const [category, setCategory] = useState<"all" | "recent" | "popular">("all")
   const [platform, setPlatform] = useState<"all" | "mac" | "windows">("all")
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState<string>("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selected, setSelected] = useState<(typeof mockProducts)[number] | null>(null)
+  const [notifyButtonText, setNotifyButtonText] = useState("Notify Me")
+  const [installedProducts, setInstalledProducts] = useState<Record<string, boolean>>({})
+  const [detectedBrowser, setDetectedBrowser] = useState<string | null>(null)
+  const [selectedBrowser, setSelectedBrowser] = useState<string | null>(null)
+
+  // Initialize without auto-detection
+  useEffect(() => {
+    setDetectedBrowser(null);
+  }, []);
 
   const handleInstallExtension = (id: string) => {
     setProducts(products.map(ext => 
@@ -71,11 +86,32 @@ export function AllProducts() {
     const extension = products.find(ext => ext.id === id)
     if (extension) {
       toast({
-        title: "Extension Installed",
-        description: `${extension.name} has been successfully installed.`,
+        title: "Extension Add",
+        description: `${extension.name} has been successfully added. Please select your browser to continue.`,
       })
+      setInstalledProducts(prev => ({ ...prev, [id]: true }))
+      // No auto-detection, let user manually select
+      setDetectedBrowser(null);
     }
   }
+  
+  // Extract browser detection to a separate function so we can call it anytime
+  const detectBrowser = () => {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) {
+      return "Chrome";
+    } else if (userAgent.includes("Firefox")) {
+      return "Firefox";
+    } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+      return "Safari";
+    } else if (userAgent.includes("Edg")) {
+      return "Edge";
+    } else if (userAgent.includes("OPR") || userAgent.includes("Opera")) {
+      return "Opera";
+    } else {
+      return "Unknown";
+    }
+  };
 
   const handleUninstallExtension = (id: string) => {
     setProducts(products.map(ext => 
@@ -125,7 +161,7 @@ export function AllProducts() {
 
 {/* Hero Section */}
 <div className="px-8 xl:px-12 mt-4 mb-16">
-  <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
+  <div className="relative rounded-3xl overflow-hidden bg-black/40 border border-white/5">
 
     {/* Radial faded grid background */}
     <div
@@ -141,11 +177,15 @@ export function AllProducts() {
           linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
         `,
-        backgroundSize: "auto, 40px 40px, 40px 40px",
+        backgroundSize: "auto, 5px 5px, 5px 5px",
       }}
     />
 
     <div className="relative flex flex-col items-center text-center gap-6 p-10 md:p-16 min-h-[420px]">
+      {/* Lottie Animation at bottom left */}
+      {/* <div className="absolute bottom-[-2%] left-4 w-55 h-55">
+        <Lottie animationData={santaAnimation} loop={true} autoPlay={true} />
+      </div> */}
 
       {/* Centered Logo */}
       <img
@@ -168,7 +208,9 @@ export function AllProducts() {
       <div className="mt-2 w-full flex justify-center">
         <input
           type="text"
-          placeholder="Search extensions..."
+          placeholder="Search extensions and apps..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           className="
             w-full max-w-md px-5 py-3 
             rounded-full
@@ -242,7 +284,7 @@ export function AllProducts() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-10">
       {products
         .filter((p) => (platform === "all" ? true : (p as any).platform === platform))
-        .filter((p) => (query ? p.name.toLowerCase().includes(query.toLowerCase()) : true))
+        .filter((p) => (query ? p.name.toLowerCase().includes(query.toLowerCase()) || p.description.toLowerCase().includes(query.toLowerCase()) : true))
         .sort((a, b) => {
           if (category === "recent") return new Date((b as any).addedAt).getTime() - new Date((a as any).addedAt).getTime()
           if (category === "popular") return (b as any).downloads - (a as any).downloads
@@ -287,7 +329,7 @@ export function AllProducts() {
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-white text-base flex items-center gap-2">
                     {p.name}
-                    {p.id === "1" && (
+                    {(p.id === "1" || p.id === "2") && (
                       <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
                     )}
                   </CardTitle>
@@ -297,37 +339,35 @@ export function AllProducts() {
                   {p.description}
                 </CardDescription>
                 <div className="mt-4 flex items-center gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => handleInstallExtension(p.id)}
-                    className="bg-white text-black hover:bg-white/90 rounded-full"
-                  >
-                    Install
-                  </Button>
+                  {p.installed ? (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-white text-black font-semibold rounded-full cursor-pointer !opacity-100"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      Add
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleInstallExtension(p.id)}
+                      className="bg-white text-black font-semibold rounded-full cursor-pointer"
+                    >
+                      Add
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      toast({ title: "Manage Extension", description: `Opening management for ${p.name}` })
+                      toast({ title: "Read Manual", description: `Learn how ${p.name} works` })
                     }
-                    className="text-white rounded-full"
+                    className="text-white font-semibold rounded-full cursor-pointer"
                   >
-                    Manage
+                    Read Manual
                   </Button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white hover:bg-white/10"
-                        onClick={(e) => { e.stopPropagation(); setSelected(p); setIsModalOpen(true) }}
-                      >
-                        <Info className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">More info</TooltipContent>
-                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -343,7 +383,10 @@ export function AllProducts() {
         <p className="text-xl font-semibold text-white">Apps</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-6">
-        {apps.slice(0, 3).map((a, idx) => (
+        {apps
+          .filter((a) => (query ? a.name.toLowerCase().includes(query.toLowerCase()) || a.description.toLowerCase().includes(query.toLowerCase()) : true))
+          .slice(0, 3)
+          .map((a, idx) => (
           <Card
             key={a.id + idx}
             className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
@@ -374,6 +417,9 @@ export function AllProducts() {
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-white text-base flex items-center gap-2">
                       {a.name}
+                      {a.id === "101" && (
+                        <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
+                      )}
                     </CardTitle>
                     <Badge variant="outline" className="text-white/70">v{a.version}</Badge>
                   </div>
@@ -381,23 +427,34 @@ export function AllProducts() {
                     {a.description}
                   </CardDescription>
                   <div className="mt-4 flex items-center gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleInstallApp(a.id)}
-                      className="bg-white text-black hover:bg-white/90 rounded-full"
-                    >
-                      Install
-                    </Button>
+                    {a.installed ? (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-white text-black font-semibold rounded-full cursor-pointer !opacity-100"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        Install
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleInstallApp(a.id)}
+                        className="bg-white text-black font-semibold rounded-full cursor-pointer"
+                      >
+                        Install
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        toast({ title: "Manage App", description: `Opening management for ${a.name}` })
+                        toast({ title: "Read Manual", description: `Learn how ${a.name} works` })
                       }
-                      className="text-white rounded-full"
+                      className="text-white font-semibold rounded-full cursor-pointer"
                     >
-                      Manage
+                      Read Manual
                     </Button>
                   </div>
                 </div>
@@ -415,14 +472,20 @@ export function AllProducts() {
         <p className="mt-2 text-white/70 text-sm">We're curating more extensions and experiences. Stay tuned.</p>
         <div className="mt-6 flex items-center justify-center gap-3">
           <Button
-  variant="outline"
-  size="sm"
-  className="rounded-full text-black bg-white font-semibold border-white/20 backdrop-blur-sm
-             hover:border-white/40 hover:bg-white/5 hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
-             transition-all duration-300"
->
-  Notify Me
-</Button>
+            variant="outline"
+            size="sm"
+            className="rounded-full text-black bg-white font-semibold border-white/20 backdrop-blur-sm
+               hover:border-white/40 hover:bg-white/5 hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
+               transition-all duration-300"
+            onClick={() => {
+              setNotifyButtonText("You are up to date");
+              setTimeout(() => {
+                setNotifyButtonText("Notify Me");
+              }, 2000);
+            }}
+          >
+            {notifyButtonText}
+          </Button>
 
 {/* <Button
   variant="outline"
@@ -444,8 +507,14 @@ export function AllProducts() {
   
 
   {selected && (
-    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <DialogContent className="bg-black/40 border border-white/10 rounded-2xl backdrop-blur-xl p-0 max-w-4xl overflow-hidden">
+    <Dialog open={isModalOpen} onOpenChange={(open) => {
+      setIsModalOpen(open);
+      // Reset states when dialog closes
+      if (!open) {
+        setSelectedBrowser(null);
+      }
+    }}>
+      <DialogContent className="bg-black/40 border border-white/5 rounded-3xl backdrop-blur-xl p-0 max-w-4xl overflow-hidden">
         <div className="relative">
           <div className="p-6">
             <DialogHeader>
@@ -454,30 +523,23 @@ export function AllProducts() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <DialogTitle className="text-white text-xl">{selected.name}</DialogTitle>
-                    {selected.id === "1" && (
+                    {(selected.id === "1" || selected.id === "2") && (
                       <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
                     )}
                     <Badge variant="outline" className="text-white/70">v{selected.version}</Badge>
                   </div>
                   <DialogDescription className="text-white/70 mt-1">{selected.description}</DialogDescription>
                   <div className="mt-4 flex items-center gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleInstallExtension(selected.id)}
-                      className="bg-white text-black hover:bg-white/90 rounded-full"
-                    >
-                      Install
-                    </Button>
+
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        toast({ title: "Manage Extension", description: `Opening management for ${selected.name}` })
+                        toast({ title: "Read Manual", description: `Learn how ${selected.name} works` })
                       }
-                      className="text-white rounded-full"
+                      className="text-white font-semibold rounded-full cursor-pointer"
                     >
-                      Manage
+                      Read Manual
                     </Button>
                   </div>
                 </div>
@@ -485,36 +547,68 @@ export function AllProducts() {
             </DialogHeader>
           </div>
 
-          <div className="px-6">
-            <div className="overflow-x-auto">
-              <div className="flex items-start gap-4 min-w-full pb-4">
-                <video src="/video/ceres.mp4" controls className="w-[360px] h-[220px] rounded-xl border border-white/10 bg-black/50" />
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <img
-                    key={i}
-                    src="/placeholder.jpg"
-                    alt="Preview"
-                    className="w-[360px] h-[220px] rounded-xl border border-white/10 bg-black/50 object-cover"
-                  />
+          {/* Browser Grid Section - Only show after installation */}
+          {selected && installedProducts[selected.id] && (
+            <div className="px-6 pb-6">
+              <h3 className="text-white font-semibold mb-4">Select your browser to continue:</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {mockBrowsers.map(browser => (
+                  <Card 
+                    key={browser.id}
+                    className={`relative overflow-hidden rounded-3xl border border-white/5 bg-black/50 backdrop-blur-xl transition-colors cursor-pointer ${
+                      selectedBrowser === browser.name 
+                        ? 'ring-2 ring-white/5 bg-white/5' 
+                        : 'hover:bg-black/60'
+                    }`}
+                    onClick={() => {
+                      // Set the selected browser to the one the user clicked on
+                      setSelectedBrowser(browser.name);
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="relative">
+                          <img 
+                            src={browser.logo} 
+                            alt={browser.name} 
+                            className="w-12 h-12 rounded-lg"
+                          />
+                          {selectedBrowser === browser.name && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-white font-bold text-xl">{browser.name}</span>
+
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </div>
-          </div>
+              {selectedBrowser && (
+                <div className="mt-4 text-center">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      toast({ 
+                        title: "Extension Added", 
+                        description: `${selected?.name} has been added to ${selectedBrowser}.` 
+                      });
+                      setIsModalOpen(false);
+                    }}
+                    className="bg-blue-500 text-white font-semibold rounded-full cursor-pointer hover:bg-blue-600"
+                  >
+                    Add to {selectedBrowser}
+                  </Button>
+                </div>
+              )}
 
-          <div className="p-6">
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-white font-semibold">Developer Details</p>
-                <Badge variant="outline" className="text-white/70">Official</Badge>
-              </div>
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="text-white/80">Publisher: LoopSync</div>
-                <div className="text-white/80">Website: loopsync.cloud</div>
-                <div className="text-white/80">Platform: {selected.platform}</div>
-                <div className="text-white/80">Added: {selected.addedAt}</div>
-              </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

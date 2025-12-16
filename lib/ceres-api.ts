@@ -206,7 +206,7 @@ export const getCeresCollections = async (
 export const getCeresCollectionsClient = async (
   email: string
 ): Promise<CeresCollectionsResponse> => {
-  const res = await fetch(`/api/v1/ceres/collections`, { cache: "no-store", headers: { "x-email": email } })
+  const res = await fetch(`/api/v1/ceres/collections?email=${encodeURIComponent(email)}`, { cache: "no-store" })
   const ct = res.headers.get("content-type") || ""
   if (ct.includes("application/json")) {
     const data = await res.json()
@@ -246,10 +246,9 @@ export const getCeresCollectionDetailClient = async (
   id: string,
   email: string
 ): Promise<CeresCollectionDetail> => {
-  const res = await fetch(`/api/v1/ceres/collections/${encodeURIComponent(id)}`, {
+  const res = await fetch(`/api/v1/ceres/collections/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
     method: "GET",
     cache: "no-store",
-    headers: { "x-email": email },
   })
   const ct = res.headers.get("content-type") || ""
   if (ct.includes("application/json")) {
