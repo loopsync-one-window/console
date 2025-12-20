@@ -39,7 +39,7 @@ interface PaymentSuccessData {
 
 const SecurePaymentPage = () => {
   const router = useRouter();
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -100,7 +100,7 @@ const SecurePaymentPage = () => {
     const normalized = planCode.replace(/ /g, '_');
     const plan = plans.find(p => p.code === normalized || p.code === planCode);
     if (!plan) return { price: 0, displayPrice: '₹0' };
-    
+
     const price = billingCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
     return {
       price,
@@ -145,7 +145,7 @@ const SecurePaymentPage = () => {
     { id: 'indusind', name: 'IndusInd Bank', icon: '/payment/paypal.svg' },
   ];
 
-  const filteredBanks = banks.filter(bank => 
+  const filteredBanks = banks.filter(bank =>
     bank.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -201,7 +201,7 @@ const SecurePaymentPage = () => {
     return () => clearTimeout(timer);
   }, [searchParams]);
 
-    // REMOVE THE EARLY RETURN (this was causing the hook order bug)
+  // REMOVE THE EARLY RETURN (this was causing the hook order bug)
   // ❌ if (!searchParams) return (...)
 
   const handleRazorpayPayment = async (orderId: string, amount: number, currency: string) => {
@@ -473,7 +473,7 @@ const SecurePaymentPage = () => {
               body: JSON.stringify({ subscriptionId: subId }),
             });
           }
-        } catch (e) {}
+        } catch (e) { }
         setTimeout(() => router.push('/home'), 2000);
       } else {
         alert('Account update issue. Please contact support.');
@@ -496,7 +496,7 @@ const SecurePaymentPage = () => {
   }, [showPaymentSuccessModal, paymentSuccessData]);
 
 
-    return (
+  return (
     <div className="flex h-screen w-full">
 
       {/* ✔ SAFE LOADING FALLBACK (replaces the old early return) */}
@@ -511,7 +511,7 @@ const SecurePaymentPage = () => {
 
       {/* Cancel Payment Modal */}
       <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-        <DialogContent className="bg-white border border-white/20 shadow-2xl max-w-md rounded-2xl">
+        <DialogContent className="bg-white border border-white/20 shadow-2xl p-4 max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-900">Cancel Payment?</DialogTitle>
             <DialogDescription className="text-gray-700 mt-2">
@@ -520,8 +520,8 @@ const SecurePaymentPage = () => {
           </DialogHeader>
 
           <DialogFooter className="flex gap-3 mt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowCancelModal(false)}
               className="bg-black relative overflow-hidden shimmer rounded-full font-semibold cursor-pointer border border-white/30 hover:bg-black/80"
             >
@@ -529,8 +529,8 @@ const SecurePaymentPage = () => {
               <span className="relative z-10">Continue Payment</span>
             </Button>
 
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => router.push('https://loopsync.cloud')}
               className="bg-red-500 rounded-full font-semibold cursor-pointer border border-white/30 hover:bg-red-600"
             >
@@ -634,9 +634,9 @@ const SecurePaymentPage = () => {
 
         {/* Logo */}
         <div className="flex items-center mb-8">
-          <img 
-            src="/resources/logo.svg" 
-            alt="LoopSync Logo" 
+          <img
+            src="/resources/logo.svg"
+            alt="LoopSync Logo"
             className="h-10 w-auto"
           />
         </div>
@@ -652,7 +652,7 @@ const SecurePaymentPage = () => {
             {/* Back + Badge */}
             <div className="flex items-center justify-between mb-4 ml-11 mr-6">
 
-              <div 
+              <div
                 className="flex items-center cursor-pointer text-white px-4 py-2 border border-white/10 rounded-full hover:bg-white/10 transition-all"
                 onClick={() => setShowCancelModal(true)}
               >
@@ -668,7 +668,7 @@ const SecurePaymentPage = () => {
             </div>
 
             <h2 className="text-[16px] ml-11 font-medium text-white/70 mb-6">
-              Subscribe to <br/>
+              Subscribe to <br />
               <span className="font-semibold text-white">
                 LoopSync One Window™ {planData ? formatPlanName(planData.code) : 'PRO'}
               </span>
@@ -690,13 +690,13 @@ const SecurePaymentPage = () => {
 
               <div className="flex flex-col leading-none mt-1">
                 <span className="text-white text-[14px] font-semibold">per</span>
-              <span className="text-white text-[14px] font-semibold">
+                <span className="text-white text-[14px] font-semibold">
                   {billingCycle === 'annual' ? 'year' : 'month'}
                 </span>
               </div>
             </div>
 
-            
+
 
             {/* Divider */}
             <div className="ml-11 mt-7 mb-6 border-b border-dashed border-white/20" style={{ width: '330px' }}></div>
@@ -704,9 +704,9 @@ const SecurePaymentPage = () => {
             {/* One Window logo + description */}
             <div className="ml-11 mt-8">
               <div className="flex items-center gap-3">
-                <img 
-                  src="/icon.svg" 
-                  alt="LoopSync Logo" 
+                <img
+                  src="/icon.svg"
+                  alt="LoopSync Logo"
                   className="h-8 w-auto opacity-100 rounded-full invert"
                 />
 
@@ -793,31 +793,31 @@ const SecurePaymentPage = () => {
                   {isEligibleForFreeTrial && planData?.code === 'PRO'
                     ? '₹0'
                     : planData
-                    ? (billingCycle === 'annual'
+                      ? (billingCycle === 'annual'
                         ? (planData.code === 'PRO' ? '₹7,399' : '₹12,599')
                         : `₹${(planData.price / 100).toLocaleString()}`)
-                    : (billingCycle === 'annual'
+                      : (billingCycle === 'annual'
                         ? (searchParams?.get('plan') === 'PRO_PRIME-X'
-                            ? '₹12,599' : '₹7,399')
+                          ? '₹12,599' : '₹7,399')
                         : '₹759')}
                 </span>
               </div>
             </div>
 
-<div className="ml-11 mt-3 w-[330px]">
-  <div className="bg-white/5 text-white/70 text-center border border-black px-3 py-2 rounded-none font-semibold text-[12px] flex items-center justify-center gap-2">
-    
-    {/* Icon Circle */}
-    <span className="w-6 h-6 flex items-center justify-center rounded-full border border-white/20 bg-white/10 relative overflow-hidden shimmer">
-      <ShieldCheck className="w-3 h-3 text-white opacity-90 stroke-3" />
-    </span>
+            <div className="ml-11 mt-3 w-[330px]">
+              <div className="bg-white/5 text-white/70 text-center border border-black px-3 py-2 rounded-none font-semibold text-[12px] flex items-center justify-center gap-2">
 
-    <span>
-      Checkout Experience by <span className="text-white font-bold">TOUCHPAY.ONE</span>
-    </span>
+                {/* Icon Circle */}
+                <span className="w-6 h-6 flex items-center justify-center rounded-full border border-white/20 bg-white/10 relative overflow-hidden shimmer">
+                  <ShieldCheck className="w-3 h-3 text-white opacity-90 stroke-3" />
+                </span>
 
-  </div>
-</div>
+                <span>
+                  Checkout Experience by <span className="text-white font-bold">TOUCHPAY.ONE</span>
+                </span>
+
+              </div>
+            </div>
 
 
           </div>
@@ -826,7 +826,7 @@ const SecurePaymentPage = () => {
 
       {/* RIGHT SIDE WHITE PANEL */}
       <div className={`relative flex-1 bg-white flex flex-col items-center p-8 ${isLoading ? 'blur-sm' : ''}`} style={{ overflowY: 'auto' }}>
-        
+
         <div className="w-full max-w-md">
 
           <h1 className="text-2xl font-bold text-gray-900 pt-5">
@@ -847,10 +847,10 @@ const SecurePaymentPage = () => {
             <div className="mt-4 w-full max-w-md">
               <div className="text-sm font-semibold text-gray-900 mb-2">Plan</div>
               <div className="flex items-center gap-1 border border-black/10 rounded-full p-1 w-full">
-                {['PRO','PRO_PRIME-X'].map((code) => (
+                {['PRO', 'PRO_PRIME-X'].map((code) => (
                   <button
                     key={code}
-                    className={`px-3 py-2 text-xs font-semibold rounded-full flex-1 text-center ${ (selectedPlanCode === code) ? 'bg-black text-white' : 'text-black bg-transparent' }`}
+                    className={`px-3 py-2 text-xs font-semibold rounded-full flex-1 text-center ${(selectedPlanCode === code) ? 'bg-black text-white' : 'text-black bg-transparent'}`}
                     onClick={() => {
                       setSelectedPlanCode(code);
                       const next = new URLSearchParams(window.location.search);
@@ -860,19 +860,19 @@ const SecurePaymentPage = () => {
                       setPlanData(null);
                     }}
                   >
-                    {code.replace('_',' ')}
+                    {code.replace('_', ' ')}
                   </button>
                 ))}
               </div>
 
               <div className="text-sm font-semibold text-gray-900 mt-3 mb-2">Billing Cycle</div>
               <div className="flex items-center gap-1 border border-black/10 rounded-full p-1 w-full">
-                {['monthly','annual'].map((cyc) => (
+                {['monthly', 'annual'].map((cyc) => (
                   <button
                     key={cyc}
-                    className={`px-3 py-2 text-xs font-semibold rounded-full flex-1 text-center ${ (billingCycle === cyc) ? 'bg-black text-white' : 'text-black bg-transparent' }`}
+                    className={`px-3 py-2 text-xs font-semibold rounded-full flex-1 text-center ${(billingCycle === cyc) ? 'bg-black text-white' : 'text-black bg-transparent'}`}
                     onClick={() => {
-                      setBillingCycle(cyc as 'monthly'|'annual');
+                      setBillingCycle(cyc as 'monthly' | 'annual');
                       const next = new URLSearchParams(window.location.search);
                       next.set('billingCycle', cyc);
                       window.history.replaceState(null, '', `${window.location.pathname}?${next.toString()}`);
@@ -897,10 +897,10 @@ const SecurePaymentPage = () => {
               {/* RAZORPAY OPTION */}
               <label className="flex items-center justify-between cursor-pointer">
                 <div className="flex items-center gap-3">
-                  <input 
-                    type="radio" 
-                    name="payment-method" 
-                    className="h-4 w-4 accent-black cursor-pointer" 
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    className="h-4 w-4 accent-black cursor-pointer"
                     checked={selectedPaymentMethod === 'razorpay'}
                     onChange={() => setSelectedPaymentMethod('razorpay')}
                   />
@@ -1123,19 +1123,18 @@ const SecurePaymentPage = () => {
           <div className="mt-8">
 
             <button
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-base flex items-center justify-center ${
-                (selectedPaymentMethod === 'razorpay' &&
-                 billingAddress.addressLine1 &&
-                 billingAddress.phoneNumber &&
-                 billingAddress.city &&
-                 billingAddress.pinCode &&
-                 billingAddress.country &&
-                 billingAddress.state &&
-                 billingAddress.phoneNumber.length === 10 &&
-                 billingAddress.pinCode.length === 6)
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-base flex items-center justify-center ${(selectedPaymentMethod === 'razorpay' &&
+                billingAddress.addressLine1 &&
+                billingAddress.phoneNumber &&
+                billingAddress.city &&
+                billingAddress.pinCode &&
+                billingAddress.country &&
+                billingAddress.state &&
+                billingAddress.phoneNumber.length === 10 &&
+                billingAddress.pinCode.length === 6)
                 ? "bg-black text-white hover:bg-black/80 cursor-pointer"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+                }`}
               onClick={handleSubscribe}
               disabled={isSubscribing || !(
                 selectedPaymentMethod === 'razorpay' &&
@@ -1182,7 +1181,7 @@ const SecurePaymentPage = () => {
           {/* Terms */}
           <div className="mt-4 text-center mb-8">
             <p className="text-xs text-black">
-              By subscribing, you agree to recurring <a href="https://loopsync.cloud/policies" className="font-semibold underline">LoopSync One Window</a>™ charges<br/>
+              By subscribing, you agree to recurring <a href="https://loopsync.cloud/policies" className="font-semibold underline">LoopSync One Window</a>™ charges<br />
               under our <a href="https://loopsync.cloud/policies/terms-of-use" className="font-semibold underline">terms</a> and <a href="https://loopsync.cloud/policies/privacy-policy" className="font-semibold underline">privacy</a> policies until you cancel.
             </p>
           </div>
@@ -1197,7 +1196,7 @@ const SecurePaymentPage = () => {
                 <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
                   <span>Select Bank</span>
 
-                  <button 
+                  <button
                     onClick={() => setShowBankModal(false)}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -1240,11 +1239,10 @@ const SecurePaymentPage = () => {
                             setSelectedBank(bank.id);
                             setShowBankModal(false);
                           }}
-                          className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                            selectedBank === bank.id
-                              ? 'bg-black/5'
-                              : 'hover:bg-gray-100'
-                          }`}
+                          className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedBank === bank.id
+                            ? 'bg-black/5'
+                            : 'hover:bg-gray-100'
+                            }`}
                         >
                           <img src={bank.icon} className="h-7 w-7 mr-3 rounded-md" />
 
@@ -1254,7 +1252,7 @@ const SecurePaymentPage = () => {
 
                           {selectedBank === bank.id && (
                             <svg className="ml-auto h-5 w-5 text-black" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 1 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 1 1 1.414 0z" clipRule="evenodd"/>
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 1 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 1 1 1.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
                         </div>
@@ -1284,9 +1282,9 @@ const SecurePaymentPage = () => {
           </Dialog>
 
 
+        </div>
       </div>
-    </div>
-    <style jsx>{`
+      <style jsx>{`
       .shimmer::before {
         content: '';
         position: absolute;
@@ -1305,7 +1303,7 @@ const SecurePaymentPage = () => {
         100% { left: 120%; }
       }
     `}</style>
-  </div>
+    </div>
   );
 };
 

@@ -110,7 +110,7 @@ const PricingCard = memo(({ plan, isAnnual, onStartClick }: { plan: any; isAnnua
           </div>
 
           {/* More Features */}
-          <button 
+          <button
             className="text-[12px] text-white/70 hover:text-white transition-colors inline-flex items-center font-bold gap-1 group/more"
             onClick={() => setIsExpanded(!isExpanded)}
           >
@@ -131,7 +131,7 @@ const PricingCard = memo(({ plan, isAnnual, onStartClick }: { plan: any; isAnnua
                       <li key={itemIndex} className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-white/30 mt-1.5 flex-shrink-0" />
                         <span className="text-[12px] text-white/80">{item}</span>
-                        </li>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -156,9 +156,9 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
     password: ""
   });
   const [error, setError] = useState("");
-  
+
   const router = useRouter();
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -166,25 +166,25 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
       [name]: value
     }));
   };
-  
-  const isFormValid = formData.fullName.trim() !== "" && 
-                     formData.email.trim() !== "" && 
-                     formData.password.trim() !== "";
-  
+
+  const isFormValid = formData.fullName.trim() !== "" &&
+    formData.email.trim() !== "" &&
+    formData.password.trim() !== "";
+
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
-    
+
     setEmailLoading(true);
     setError("");
-    
+
     try {
       const user = await signupWithEmail(
         formData.fullName,
         formData.email,
         formData.password
       );
-      
+
       // Successful signup - redirect to verification or next step
       console.log("Email signup successful:", user);
       // Pass the email, userId, and fullName to the verification step
@@ -200,7 +200,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
       setEmailLoading(false);
     }
   };
-  
+
   const handleGoogleSignup = () => {
     // Redirect to Google OAuth endpoint
     window.location.href = `${API_BASE_URL}/auth/google`;
@@ -210,7 +210,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
     <div className="w-full max-w-sm flex flex-col items-center justify-center py-8 pt-24">
       {/* Heading */}
       <h1 className="text-5xl font-light tracking-tight mb-12 text-white text-center">Create your account</h1>
-      
+
       {/* Error message */}
       {error && (
         <div className="w-full mb-4 p-3 text-center bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
@@ -305,11 +305,10 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
       <button
         onClick={handleEmailSignup}
         disabled={emailLoading || !isFormValid}
-        className={`w-full rounded-full px-6 py-3 mb-6 font-semibold text-base flex items-center justify-center ${
-          emailLoading || !isFormValid 
-            ? "bg-white/20 text-white/50 cursor-not-allowed" 
-            : "bg-white text-black hover:bg-gray-200 transition-colors"
-        }`}
+        className={`w-full rounded-full px-6 py-3 mb-6 font-semibold text-base flex items-center justify-center ${emailLoading || !isFormValid
+          ? "bg-white/20 text-white/50 cursor-not-allowed"
+          : "bg-white text-black hover:bg-gray-200 transition-colors"
+          }`}
       >
         {emailLoading ? (
           <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -326,7 +325,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
         </a>
       </p>
 
-            {/* Divider */}
+      {/* Divider */}
       <div className="flex items-center gap-3 mt-10 w-full">
         <div className="flex-1 h-px bg-white/20"></div>
       </div>
@@ -380,7 +379,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
   const handleStartClick = (planCode: string) => {
     setSelectedPlan(planCode);
     setIsLoading(true);
-    
+
     // After 4 seconds, redirect to payment page with plan information
     setTimeout(() => {
       // Pass plan code and billing cycle as query parameters (properly encoded)
@@ -394,10 +393,10 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       setUrlUpdated(true);
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.set('pro', 'true');
-      
+
       // Remove login parameter if present
       newSearchParams.delete('login');
-      
+
       router.replace(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
     }
   }, [router, pathname, searchParams, urlUpdated]);
@@ -417,12 +416,14 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       detailedFeatures: [
         { category: "Free Trial", items: ["5 Requests / day"] },
         { category: "PRO", items: ["80 Requests / day", "500 total monthly quota"] },
-        { category: "Included Features", items: [
-          "Multi-Model Access (Limited) - Access multiple AI models with reduced parallel outputs.",
-          "Code Sync (Limited) - Sync captured code across devices with basic restrictions.",
-          "Dual Response View - View up to 2 AI responses side-by-side.",
-          "Dashboard Output (Limited) - Access simplified dashboard insights with capped data display."
-        ]}
+        {
+          category: "Included Features", items: [
+            "Multi-Model Access (Limited) - Access multiple AI models with reduced parallel outputs.",
+            "Code Sync (Limited) - Sync captured code across devices with basic restrictions.",
+            "Dual Response View - View up to 2 AI responses side-by-side.",
+            "Dashboard Output (Limited) - Access simplified dashboard insights with capped data display."
+          ]
+        }
       ]
     },
     {
@@ -438,13 +439,15 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       moreFeatures: 7,
       detailedFeatures: [
         { category: "Requests", items: ["Unlimited Requests / day", "1,500 total monthly quota"] },
-        { category: "Included Features", items: [
-          "Full Multi-Model Access - Leverage all 8 AI models simultaneously for richer, cross-verified insights.",
-          "Advanced Code Sync - Sync and manage your code across devices without limits.",
-          "Unlimited Response View - Compare and view all model outputs side-by-side for complete reasoning.",
-          "Enhanced Dashboard Output - Access full dashboard analytics, summaries, and structured insights.",
-          "Priority Processing - Faster response times and priority allocation for all requests."
-        ]}
+        {
+          category: "Included Features", items: [
+            "Full Multi-Model Access - Leverage all 8 AI models simultaneously for richer, cross-verified insights.",
+            "Advanced Code Sync - Sync and manage your code across devices without limits.",
+            "Unlimited Response View - Compare and view all model outputs side-by-side for complete reasoning.",
+            "Enhanced Dashboard Output - Access full dashboard analytics, summaries, and structured insights.",
+            "Priority Processing - Faster response times and priority allocation for all requests."
+          ]
+        }
       ]
     },
   ];
@@ -474,11 +477,11 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
           animation: fadeIn 0.3s ease forwards;
         }
       `}</style>
-      
+
       {userData && (
         <div className="flex justify-center mb-6">
           <div className="flex items-center rounded-full gap-4 px-5 py-1 bg-white/5 border-t-1 border-b-1 border-white/20 backdrop-blur-md shadow-lg">
-            
+
             {/* Avatar */}
             <div className="relative w-10 mt-1 mb-1 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-md">
               <div className="w-full h-full rounded-full uppercase bg-white flex items-center justify-center text-black font-bold text-lg shadow-md">
@@ -499,7 +502,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
         </div>
       )}
 
-      
+
       {/* <div className="inline-flex items-center justify-center mb-4 w-full">
         <div className="px-3 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
           <span className="text-[14px] text-white font-medium">You're Almost There</span>
@@ -519,18 +522,16 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       <div className="inline-flex gap-1.5 p-2 rounded-full border border-white/20 bg-white/5">
         <button
           onClick={() => setIsAnnual(false)}
-          className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all ${
-            !isAnnual ? "bg-white text-black" : "text-white/70 hover:text-white"
-          }`}
+          className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all ${!isAnnual ? "bg-white text-black" : "text-white/70 hover:text-white"
+            }`}
         >
           Monthly
         </button>
 
         <button
           onClick={() => setIsAnnual(true)}
-          className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all ${
-            isAnnual ? "bg-white text-black" : "text-white/70 hover:text-white"
-          }`}
+          className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all ${isAnnual ? "bg-white text-black" : "text-white/70 hover:text-white"
+            }`}
         >
           Annually
         </button>
@@ -544,7 +545,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
           ))}
         </div>
       </div>
-      
+
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -572,7 +573,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
   });
   const [error, setError] = useState("");
   const router = useRouter();
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -580,21 +581,21 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
       [name]: value
     }));
   };
-  
+
   const handleSignInClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!formData.email || !formData.password) return;
-    
+
     setIsLoading(true);
     setError("");
-    
+
     try {
       const response = await loginWithEmail(formData.email, formData.password);
-      
+
       // Store tokens and user details
       saveAuthTokens({ accessToken: response.accessToken, refreshToken: response.refreshToken, expiresAt: response.expiresAt });
       localStorage.setItem("user", JSON.stringify(response.user));
-      
+
       // Check account type and redirect accordingly
       if (response.user.accountType === 'VISITOR') {
         // For VISITOR users, redirect to plan selection page with user data
@@ -700,7 +701,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
 
       {/* Forgot Password Link */}
       <div className="w-full text-right mb-6">
-        <button 
+        <button
           onClick={onForgotPassword}
           className="text-white/70 font-semibold text-sm hover:text-white hover:underline transition-colors"
         >
@@ -785,15 +786,15 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
   const [resendLoading, setResendLoading] = useState(false); // Add loading state for resend
   const [verificationSuccess, setVerificationSuccess] = useState(false); // Add state for verification success
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-  
+
   const handleInputChange = (index: number, value: string) => {
     // Allow only digits
     if (!/^\d*$/.test(value)) return;
-    
+
     const newCode = [...verificationCode];
     newCode[index] = value;
     setVerificationCode(newCode);
-    
+
     // Auto-focus next input if value entered
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus();
@@ -813,21 +814,21 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
       setError("Please enter a 6-digit verification code");
       return;
     }
-    
+
     setIsLoading(true);
     setError("");
     setSuccess(""); // Clear any success message
-    
+
     try {
       const response = await verifyEmailOTP(userId, code);
       console.log("Verification successful:", response);
       setVerificationSuccess(true);
       setSuccess("Email successfully verified!");
-      
+
       // Store tokens after verification
       saveAuthTokens({ accessToken: response.accessToken, refreshToken: response.refreshToken });
       localStorage.setItem("user", JSON.stringify(response.user));
-      
+
       // Call onVerified after a short delay to show the success message
       setTimeout(() => {
         onVerified();
@@ -849,7 +850,7 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
     setResendLoading(true);
     setError("");
     setSuccess("");
-    
+
     try {
       const response = await resendVerificationOTP(email);
       console.log("Resend code response:", response);
@@ -876,25 +877,25 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
     <div className="w-full max-w-sm flex flex-col items-center justify-center py-8 pt-24">
       {/* Heading */}
       <h1 className="text-4xl font-light tracking-tight mb-4 text-white text-center">Verify your email</h1>
-      
+
       <p className="text-white/70 text-center mb-8 mt-25">
         Enter the 6-digit code sent to <span className="font-semibold text-white">{email}</span>
       </p>
-      
+
       {/* Error message */}
       {error && (
         <div className="w-full mb-4 p-3 text-center text-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
           {error}
         </div>
       )}
-      
+
       {/* Success message */}
       {success && (
         <div className="w-full mb-4 p-3 text-center bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
           {success}
         </div>
       )}
-      
+
       {/* Verification Code Inputs */}
       <div className="flex justify-center gap-3 mb-8">
         {verificationCode.map((digit, index) => (
@@ -913,7 +914,7 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
           />
         ))}
       </div>
-      
+
       {/* Verify Button */}
       <button
         onClick={handleVerify}
@@ -928,12 +929,12 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
           "Verify"
         )}
       </button>
-      
+
       {/* Resend Code */}
       <div className="text-center text-white/70 text-sm mb-2">
         Didn't receive the code?
       </div>
-      <button 
+      <button
         className="text-white font-semibold text-sm hover:underline mb-8 flex items-center justify-center"
         onClick={handleResendCode}
         disabled={resendLoading || verificationSuccess}
@@ -947,9 +948,9 @@ const EmailVerification = memo(({ userId, email, onVerified, onBack }: { userId:
           "Resend code"
         )}
       </button>
-      
+
       {/* Back to Signup */}
-      <button 
+      <button
         className="text-white/70 font-semibold text-sm hover:text-white hover:underline"
         onClick={onBack}
         disabled={verificationSuccess}
@@ -975,36 +976,36 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-  
+
   const handleInputChange = (index: number, value: string) => {
     // Allow only digits
     if (!/^\d*$/.test(value)) return;
-    
+
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
-    
+
     // Auto-focus next input if value entered
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus();
     }
   };
-  
+
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     // Handle backspace to move to previous input
     if (e.key === "Backspace" && !code[index] && index > 0 && inputRefs.current[index - 1]) {
       inputRefs.current[index - 1]?.focus();
     }
   };
-  
+
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    
+
     setIsLoading(true);
     setError("");
     setSuccess("");
-    
+
     try {
       const response = await requestPasswordReset(email);
       setSuccess(response.message);
@@ -1020,21 +1021,21 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
       setIsLoading(false);
     }
   };
-  
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const resetCode = code.join("");
-    
+
     if (!email || resetCode.length !== 6 || !newPassword || newPassword !== confirmPassword) return;
-    
+
     setIsLoading(true);
     setError("");
     setSuccess("");
-    
+
     try {
       const response = await resetPassword(email, resetCode, newPassword);
       setSuccess(response.message);
-      
+
       // After successful reset, show success message for a moment then go back to login
       setTimeout(() => {
         onBack();
@@ -1050,26 +1051,26 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
       setIsLoading(false);
     }
   };
-  
+
   if (step === 'request') {
     return (
       <div className="w-full max-w-sm flex flex-col items-center justify-center py-8 pt-24">
         {/* Heading */}
         <h1 className="text-5xl font-light tracking-tight mb-12 text-white text-center">Reset Password</h1>
-        
+
         {/* Back Button */}
-        <button 
+        <button
           onClick={onBack}
           className="self-start mb-6 text-white/70 mt-10 hover:text-white flex items-center gap-2 transition-colors"
         >
           <ChevronLeft size={20} />
           Back to Login
         </button>
-        
+
         <p className="text-white text-center mb-8">
           Enter your email address and we'll send you a code to reset your password.
         </p>
-        
+
         {/* Email Input */}
         <form onSubmit={handleRequestReset} className="w-full">
           <input
@@ -1079,21 +1080,21 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
             placeholder="Email"
             className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 mb-6 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
           />
-          
+
           {/* Error Message */}
           {error && (
             <div className="w-full mb-4 text-red-400 text-sm text-center">
               {error}
             </div>
           )}
-          
+
           {/* Success Message */}
           {success && (
             <div className="w-full mb-4 text-green-400 text-sm text-center">
               {success}
             </div>
           )}
-          
+
           {/* Submit Button */}
           <button
             type="submit"
@@ -1110,26 +1111,26 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
       </div>
     );
   }
-  
+
   // Reset password step
   return (
     <div className="w-full max-w-sm flex flex-col items-center justify-center py-8 pt-24">
       {/* Heading */}
       <h1 className="text-5xl font-light tracking-tight mb-12 text-white text-center">Reset Password</h1>
-      
+
       {/* Back Button */}
-      <button 
+      <button
         onClick={onBack}
         className="self-start mb-6 text-white/70 mt-10 hover:text-white flex items-center gap-2 transition-colors"
       >
         <ChevronLeft size={20} />
         Back to Login
       </button>
-      
+
       <p className="text-white text-center mb-8">
         Enter the 6-digit code sent to your email and create a new password.
       </p>
-      
+
       <form onSubmit={handleResetPassword} className="w-full">
         {/* Verification Code Inputs */}
         <div className="flex justify-center gap-3 mb-8">
@@ -1147,7 +1148,7 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
             />
           ))}
         </div>
-        
+
         {/* New Password Input */}
         <div className="relative w-full mb-6">
           <input
@@ -1166,7 +1167,7 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        
+
         {/* Confirm Password Input */}
         <div className="relative w-full mb-6">
           <input
@@ -1185,28 +1186,28 @@ const PasswordReset = memo(({ onBack }: { onBack: () => void }) => {
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        
+
         {/* Password Match Validation */}
         {newPassword && confirmPassword && newPassword !== confirmPassword && (
           <div className="w-full mb-4 text-red-400 text-sm text-center">
             Passwords do not match
           </div>
         )}
-        
+
         {/* Error Message */}
         {error && (
           <div className="w-full mb-4 text-red-400 text-sm text-center">
             {error}
           </div>
         )}
-        
+
         {/* Success Message */}
         {success && (
           <div className="w-full mb-4 text-green-400 text-sm text-center">
             {success}
           </div>
         )}
-        
+
         {/* Submit Button */}
         <button
           type="submit"
@@ -1239,7 +1240,7 @@ const OpenAccountContent = () => {
   const [signupUserId, setSignupUserId] = useState(""); // Store userId from signup form
   const [signupFullName, setSignupFullName] = useState(""); // Store fullName from signup form
   const [userData, setUserData] = useState<{ email: string; fullName: string } | null>(null); // Store user data for profile display
-  
+
   // Check if login parameter exists
   const loginParam = searchParams.get('login');
   // Check if pro parameter exists
@@ -1250,53 +1251,71 @@ const OpenAccountContent = () => {
   const userDataParam = searchParams.get('userData');
   // Check for reset parameter
   const resetParam = searchParams.get('reset');
-  
-  // Handle user data from Google OAuth
+
+  const accessTokenParam = searchParams.get('accessToken');
+  const refreshTokenParam = searchParams.get('refreshToken');
+  const expiresAtParam = searchParams.get('expiresAt');
+
+  // Handle user data and tokens from Google OAuth
   useEffect(() => {
     if (userDataParam) {
       try {
         const decodedData = JSON.parse(decodeURIComponent(userDataParam));
         setUserData(decodedData);
+
+        // If we have an access token, this is a successful login/signup
+        // Save the tokens and user data to storage
+        if (accessTokenParam) {
+          saveAuthTokens({
+            accessToken: accessTokenParam,
+            refreshToken: refreshTokenParam || undefined,
+            expiresAt: expiresAtParam || undefined
+          });
+          localStorage.setItem("user", JSON.stringify(decodedData));
+
+          // Optionally clean up the URL or redirect to remove tokens
+          // For now, let's leave it as the state updates might trigger other effects
+        }
       } catch (e) {
         console.error('Error parsing user data from query parameters', e);
       }
     }
-  }, [userDataParam]);
-  
+  }, [userDataParam, accessTokenParam, refreshTokenParam, expiresAtParam]);
+
   // Handle reset parameter
   useEffect(() => {
     if (resetParam === 'true') {
       setShowPasswordReset(true);
     }
   }, [resetParam]);
-  
+
   // Redirect to not-found page if no valid parameters
   useEffect(() => {
     if (loginParam === null && proParam === null && verifyEmailParam === null && !userDataParam) {
       router.replace('/not-found');
     }
   }, [loginParam, proParam, verifyEmailParam, userDataParam, router]);
-  
+
   // If no valid parameters, don't render the page content
   if (loginParam === null && proParam === null && verifyEmailParam === null && !userDataParam) {
     return null;
   }
-  
+
   // Determine if we should show login or signup form
   const isLogin = loginParam === 'true';
   // Determine if we should show the PRO plan directly
   const isPro = proParam === 'true';
   // Determine if we should show email verification
   const isVerifyEmail = verifyEmailParam === 'true';
-  
+
   // Set URL parameter on initial load
   useEffect(() => {
     // If no relevant parameters are present, set appropriate defaults
-    if (searchParams.get('login') === null && 
-        searchParams.get('pro') === null && 
-        searchParams.get('verifyEmail') === null && 
-        searchParams.get('reset') === null &&
-        !urlParamSet) {
+    if (searchParams.get('login') === null &&
+      searchParams.get('pro') === null &&
+      searchParams.get('verifyEmail') === null &&
+      searchParams.get('reset') === null &&
+      !urlParamSet) {
       setUrlParamSet(true);
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.set('login', 'false');
@@ -1307,21 +1326,21 @@ const OpenAccountContent = () => {
   // Update URL when verification state changes
   useEffect(() => {
     if (!showVerification) return;
-    
+
     const newSearchParams = new URLSearchParams(searchParams.toString());
-    
+
     // Show verification UI - set verifyEmail=true and remove others
     newSearchParams.set('verifyEmail', 'true');
     newSearchParams.delete('login');
     newSearchParams.delete('pro');
-    
+
     router.replace(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
   }, [showVerification, pathname, router]);
 
   // Update URL when pricing state changes
   useEffect(() => {
     if (!showPricing) return;
-    
+
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set('pro', 'true');
     newSearchParams.delete('verifyEmail');
@@ -1332,7 +1351,7 @@ const OpenAccountContent = () => {
   // Update URL when password reset state changes
   useEffect(() => {
     const currentReset = searchParams.get('reset');
-    
+
     if (showPasswordReset && currentReset !== 'true') {
       // Show password reset UI - set login=true and add reset param
       const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -1350,7 +1369,7 @@ const OpenAccountContent = () => {
       router.replace(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
     }
   }, [showPasswordReset, pathname, router, isLogin]);
-  
+
   // Define gradient colors for signup (blue) and login (red)
   const signupColors = [
     "#0f172a", // deep navy (base)
@@ -1375,9 +1394,9 @@ const OpenAccountContent = () => {
       {/* Header */}
       <header className="absolute top-0 left-0 backdrop-blur-sm right-0 flex items-center justify-between px-8 py-6 z-10">
         <div className="text-3xl font-bold tracking-tight">
-          <img 
-            src="/resources/logo.svg" 
-            alt="LoopSync Logo" 
+          <img
+            src="/resources/logo.svg"
+            alt="LoopSync Logo"
             className="h-9 w-auto brightness-150 contrast-125"
           />
         </div>
@@ -1400,9 +1419,9 @@ const OpenAccountContent = () => {
           ) : isPro ? (
             <PricingContent userData={userData || undefined} />
           ) : isVerifyEmail || showVerification ? (
-            <EmailVerification 
+            <EmailVerification
               userId={signupUserId}
-              email={signupEmail} 
+              email={signupEmail}
               onVerified={() => {
                 setShowVerification(false);
                 setShowPricing(true);
@@ -1411,7 +1430,7 @@ const OpenAccountContent = () => {
                   email: signupEmail,
                   fullName: signupFullName
                 });
-              }} 
+              }}
               onBack={() => {
                 setShowVerification(false);
                 // Update URL to show signup form
@@ -1419,7 +1438,7 @@ const OpenAccountContent = () => {
                 newSearchParams.set('login', 'false');
                 newSearchParams.delete('verifyEmail');
                 router.replace(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
-              }} 
+              }}
             />
           ) : showPricing ? (
             <PricingContent userData={userData || undefined} />
@@ -1436,8 +1455,8 @@ const OpenAccountContent = () => {
         {/* Right Column - Visual Background */}
         <div className="relative overflow-hidden h-screen flex items-center justify-center bg-black">
           {/* Animated gradient blinds */}
-          <GradientBlinds 
-            angle={50} 
+          <GradientBlinds
+            angle={50}
             gradientColors={isLogin ? loginColors : signupColors}
             animateColors={false}
             transitionDuration={1500}
@@ -1447,15 +1466,15 @@ const OpenAccountContent = () => {
           <div className="absolute inset-0 flex items-center justify-center z-30 p-4">
             <div className="w-full max-w-2xl">
               <div className="bg-transparent text-white py-20 px-6 rounded-3xl flex flex-col items-center relative">
-            <div className="text-center mb-10 relative z-20">
-              <h1 className="text-6xl font-bold">One Window<sup className="text-sm ml-2 align-super">TM</sup></h1>
-              <p className="text-white font-semibold text-2xl">A spectrum of models.</p>
-              <p className="text-white text-2xl mt-30">
-                "Choose a <span className="text-white font-bold italic">faster</span> model when speed matters
-                <br/>and a <span className="text-white font-bold italic">smarter</span> one for more complex tasks"
-              </p>
-            </div>
-          </div>
+                <div className="text-center mb-10 relative z-20">
+                  <h1 className="text-6xl font-bold">One Window<sup className="text-sm ml-2 align-super">TM</sup></h1>
+                  <p className="text-white font-semibold text-2xl">A spectrum of models.</p>
+                  <p className="text-white text-2xl mt-30">
+                    "Choose a <span className="text-white font-bold italic">faster</span> model when speed matters
+                    <br />and a <span className="text-white font-bold italic">smarter</span> one for more complex tasks"
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
