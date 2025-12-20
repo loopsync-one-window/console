@@ -67,15 +67,24 @@ export function Settings() {
       const res = await confirmDeletion(otp);
       setIsOtpOpen(false);
       toast({ title: 'Success', description: res.message || 'Your account is scheduled for deletion.' });
+      
+      // Clear all tokens from localStorage
       try {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('expiresAt');
         localStorage.removeItem('user');
-      } catch {}
+      } catch (e) {
+        console.error('Error clearing localStorage:', e);
+      }
+      
+      // Logout from API
       try {
         await logoutAny();
-      } catch {}
+      } catch (e) {
+        console.error('Error logging out from API:', e);
+      }
+      
       setShowExitOverlay(true);
       setTimeout(() => {
         window.location.href = 'https://loopsync.cloud';

@@ -397,7 +397,7 @@ export function AccessCode() {
         <DialogHeader>
           <DialogTitle className="text-white mb-4">Confirm Change</DialogTitle>
           <DialogDescription className="text-white">
-            You can change your access code up to <span className="font-bold text-white">3-4 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
+            You can change your access code up to <span className="font-bold text-white">3 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
           </DialogDescription>
         </DialogHeader>
         {isBlocked && (

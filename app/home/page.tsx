@@ -21,17 +21,20 @@ export default function HomePage() {
   const [autopayStatus, setAutopayStatus] = useState<AutopayStatusResponse | null>(null)
   const [skipOnboarding, setSkipOnboarding] = useState(false)
   const [hasCheckedOnboard, setHasCheckedOnboard] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     try {
       const { accessToken } = getStoredTokens()
       if (!accessToken) {
-        router.replace("/open-account?login=true")
+        // Redirect to login page smoothly
+        router.push("/open-account?login=true")
         return
       }
       setAllowed(true)
-    } catch {
-      router.replace("/open-account?login=true")
+    } catch (error) {
+      // Redirect to login page smoothly if any error occurs
+      router.push("/open-account?login=true")
     }
   }, [router])
 
@@ -39,33 +42,87 @@ export default function HomePage() {
     let cancelled = false
     const run = async () => {
       if (!allowed) return
+      
       try {
-        const s = await getOnboardStatus()
-        if (!cancelled) setSkipOnboarding(Boolean(s?.onboard))
-      } catch {} finally {
-        if (!cancelled) setHasCheckedOnboard(true)
+        // Wait for all necessary data to load before hiding the loader
+        const [onboardResult, statusResult] = await Promise.all([
+          getOnboardStatus(),
+          getAutopayStatus()
+        ])
+        
+        if (!cancelled) {
+          setSkipOnboarding(Boolean(onboardResult?.onboard))
+          setAutopayStatus(statusResult)
+          
+          const shouldOpen =
+            statusResult?.isAutopayCancelled === true ||
+            statusResult?.shouldRestrict === true ||
+            statusResult?.local?.autoRenew === false ||
+            (typeof statusResult?.local?.status === "string" && statusResult?.local?.status.toUpperCase() !== "ACTIVE")
+            
+          setMustShowCancelModal(Boolean(shouldOpen))
+          setHasCheckedOnboard(true)
+          
+          // Only hide loader when all data is loaded
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error)
+        // If there's an unauthorized error, redirect to login
+        if (error instanceof Error && error.message.includes("Unauthorized")) {
+          try {
+            // Clear any invalid tokens
+            localStorage.removeItem("accessToken")
+            localStorage.removeItem("refreshToken")
+            localStorage.removeItem("expiresAt")
+            localStorage.removeItem("user")
+          } catch (e) {
+            console.error("Error clearing tokens:", e)
+          }
+          // Redirect to login page
+          router.push("/open-account?login=true")
+        } else {
+          // For other errors, still hide the loader but show the page
+          if (!cancelled) {
+            setHasCheckedOnboard(true)
+            setIsLoading(false)
+          }
+        }
       }
-      try {
-        const status = await getAutopayStatus()
-        if (cancelled) return
-        setAutopayStatus(status)
-        const shouldOpen =
-          status?.isAutopayCancelled === true ||
-          status?.shouldRestrict === true ||
-          status?.local?.autoRenew === false ||
-          (typeof status?.local?.status === "string" && status?.local?.status.toUpperCase() !== "ACTIVE")
-        setMustShowCancelModal(Boolean(shouldOpen))
-      } catch {}
     }
-    run()
+    
+    if (allowed) {
+      run()
+    }
+    
     return () => {
       cancelled = true
     }
-  }, [allowed])
+  }, [allowed, router])
 
   useConfettiSound(allowed && hasCheckedOnboard && !skipOnboarding)
 
   if (!allowed) return null
+  
+  // Show loader while data is loading
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="loader">
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="text"><span>Loading</span></div>
+          <div className="line"></div>
+        </div>
+      </div>
+    )
+  }
   
   return (
     <SidebarProvider

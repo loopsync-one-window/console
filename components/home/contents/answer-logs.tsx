@@ -28,7 +28,7 @@ export function AnswerLogs() {
   const showControls = false
   const [atlasPage, setAtlasPage] = useState(1)
   const [ceresPage, setCeresPage] = useState(1)
-  const PAGE_SIZE = 20
+  const PAGE_SIZE = 10
 
   useEffect(() => {
     setAtlasPage(1)

@@ -84,7 +84,7 @@ export function Dashboard() {
 
         // Load fresh data
         setIsLoading(true)
-        
+
         // Get billing overview
         const res = await getBillingOverview()
         if (res?.success && res?.data) {
@@ -94,7 +94,7 @@ export function Dashboard() {
             cachedDashboardData.overview = res.data
           }
         }
-        
+
         // Get user profile
         const cached = getCachedProfile?.()
         let full = cached?.fullName as string | undefined
@@ -102,14 +102,14 @@ export function Dashboard() {
           const data = await getProfileMe()
           full = data?.fullName
         }
-        
+
         // Check if we have valid user data
         if (full) {
           const name = (full || '').trim()
           const firstNameValue = name ? name.split(/\s+/)[0] : 'User'
           setFirstName(firstNameValue)
           setUserDataLoaded(true)
-          
+
           // Cache the user data
           if (cachedDashboardData) {
             cachedDashboardData.firstName = firstNameValue
@@ -124,7 +124,7 @@ export function Dashboard() {
           // Set default values if no user data
           setFirstName('User')
           setUserDataLoaded(true)
-          
+
           // Create cache with default values
           if (!cachedDashboardData) {
             cachedDashboardData = {
@@ -134,13 +134,13 @@ export function Dashboard() {
             }
           }
         }
-        
+
         // Get subscription info
         const sub = await getSubscriptionMe()
         if (sub?.success && sub?.subscription) {
           const isFreeTrialValue = Boolean(sub.subscription.isFreeTrial)
           setIsFreeTrial(isFreeTrialValue)
-          
+
           // Cache the subscription data
           if (cachedDashboardData) {
             cachedDashboardData.isFreeTrial = isFreeTrialValue
@@ -151,7 +151,7 @@ export function Dashboard() {
             cachedDashboardData.isFreeTrial = false
           }
         }
-        
+
         // Update cache timestamp
         dashboardCacheTimestamp = Date.now() + CACHE_TTL
       } catch (error) {
@@ -246,81 +246,81 @@ export function Dashboard() {
 
 
       <div className="relative z-10 p-8">
-    <Dialog
-  open={isTrialModalOpen && isFreeTrial}
->
-  <DialogContent
-    showCloseButton={false}
-    onPointerDownOutside={(e) => e.preventDefault()}
-    onInteractOutside={(e) => e.preventDefault()}
-    onEscapeKeyDown={(e) => e.preventDefault()}
-    className="max-w-xl rounded-3xl border border-white/10 bg-white text-white p-0 overflow-hidden shadow-lg data-[state=open]:duration-600 data-[state=open]:ease-out data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:slide-in-from-top-6 data-[state=closed]:duration-300 data-[state=closed]:ease-in data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-top-6"
-  >
-    <div className="px-6 py-6">
-      <DialogHeader className="mb-3">
-        <div className="flex items-center gap-2">
-          <DialogTitle className="text-xl text-black rounded-full font-semibold"><ChevronRightIcon className="relative inline bottom-0.5 text-black/15"/> 7-day Free Trial</DialogTitle>
-        </div>
-      </DialogHeader>
+        <Dialog
+          open={isTrialModalOpen && isFreeTrial}
+        >
+          <DialogContent
+            showCloseButton={false}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+            className="max-w-xl rounded-3xl border border-white/10 bg-white text-white p-0 overflow-hidden shadow-lg data-[state=open]:duration-600 data-[state=open]:ease-out data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:slide-in-from-top-6 data-[state=closed]:duration-300 data-[state=closed]:ease-in data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-top-6"
+          >
+            <div className="px-6 py-6">
+              <DialogHeader className="mb-3">
+                <div className="flex items-center gap-2">
+                  <DialogTitle className="text-xl text-black rounded-full font-semibold"><ChevronRightIcon className="relative inline bottom-0.5 text-black/15" /> 7-day Free Trial</DialogTitle>
+                </div>
+              </DialogHeader>
 
-      <div className="space-y-4 text-[16px] leading-relaxed text-black/80">
-        <p>
-          You're currently enjoying a <span className="font-semibold text-black">7-day free trial</span>. 
-          To keep your access uninterrupted, please keep the 
-          <span className="font-semibold text-black"> recurring autopay enabled</span>.
-        </p>
+              <div className="space-y-4 text-[16px] leading-relaxed text-black/80">
+                <p>
+                  You're currently enjoying a <span className="font-semibold text-black">7-day free trial</span>.
+                  To keep your access uninterrupted, please keep the
+                  <span className="font-semibold text-black"> recurring autopay enabled</span>.
+                </p>
 
-        <p>
-          If you choose to cancel, you can do so anytime before the final 
-          <span className="font-semibold text-black"> 24 hours</span> of your trial period. If you cancel or pause within the trial period, your trial will end immediately and your account will be scheduled for automatic deletion.
-        </p>
-      </div>
-    </div>
+                <p>
+                  If you choose to cancel, you can do so anytime before the final
+                  <span className="font-semibold text-black"> 24 hours</span> of your trial period. If you cancel or pause within the trial period, your trial will end immediately and your account will be scheduled for automatic deletion.
+                </p>
+              </div>
+            </div>
 
-    <DialogFooter 
-  className="flex items-center justify-between px-6 py-4 border-t-3 border-black/10 bg-black/5"
->
-  <Button
-    size="lg"
-    onClick={async () => {
-      let email = getCachedProfile?.()?.email || ""
-      if (!email) {
-        try {
-          const p = await getProfileMe()
-          email = p?.email || ""
-        } catch {}
-      }
-      const ref = `REF-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`
-      try {
-        await Promise.all([
-          updateTrialNotifyStatus(true),
-          email ? addCredits({ email, type: "free", amount: 34900, reason: "7-Day Free Trial Credit Bonus", referenceId: ref }) : Promise.resolve({}),
-        ])
-      } catch {}
-      setIsTrialModalOpen(false)
-      setAgree(false)
-      setIsReloading(true)
-      try {
-        try {
-          const res = await getBillingOverview({ force: true })
-          if (res?.success && res?.data) setOverview(res.data)
-        } catch {}
-        try {
-          const sub = await getSubscriptionMe()
-          if (sub?.success && sub?.subscription) setIsFreeTrial(Boolean(sub.subscription.isFreeTrial))
-        } catch {}
-      } finally {
-        setIsReloading(false)
-      }
-    }}
-    className="rounded-full bg-black text-white hover:bg-black/90 hover:text-white text-[16px] cursor-pointer font-semibold"
-  >
-    Agree
-  </Button>
-</DialogFooter>
+            <DialogFooter
+              className="flex items-center justify-between px-6 py-4 border-t-3 border-black/10 bg-black/5"
+            >
+              <Button
+                size="lg"
+                onClick={async () => {
+                  let email = getCachedProfile?.()?.email || ""
+                  if (!email) {
+                    try {
+                      const p = await getProfileMe()
+                      email = p?.email || ""
+                    } catch { }
+                  }
+                  const ref = `REF-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+                  try {
+                    await Promise.all([
+                      updateTrialNotifyStatus(true),
+                      email ? addCredits({ email, type: "free", amount: 34900, reason: "7-Day Free Trial Credit Bonus", referenceId: ref }) : Promise.resolve({}),
+                    ])
+                  } catch { }
+                  setIsTrialModalOpen(false)
+                  setAgree(false)
+                  setIsReloading(true)
+                  try {
+                    try {
+                      const res = await getBillingOverview({ force: true })
+                      if (res?.success && res?.data) setOverview(res.data)
+                    } catch { }
+                    try {
+                      const sub = await getSubscriptionMe()
+                      if (sub?.success && sub?.subscription) setIsFreeTrial(Boolean(sub.subscription.isFreeTrial))
+                    } catch { }
+                  } finally {
+                    setIsReloading(false)
+                  }
+                }}
+                className="rounded-full bg-black text-white hover:bg-black/90 hover:text-white text-[16px] cursor-pointer font-semibold"
+              >
+                Agree
+              </Button>
+            </DialogFooter>
 
-  </DialogContent>
-</Dialog>
+          </DialogContent>
+        </Dialog>
 
 
         {/* Welcome Header */}
@@ -330,15 +330,15 @@ export function Dashboard() {
         </div>
 
         {/* Usage Snapshot Section */}
-        <div className="mb-8 rounded-3xl border border-white/5 bg-transparent backdrop-blur-sm p-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">Usage Snapshot for {monthLabel}</h2>
-          {isFreeTrial ? (
-            <span className="text-sm px-4 py-2 bg-transparent border border-white/5 border-2 font-semibold text-white">7-day free trial · Free credits apply · Usage pauses after credits are used</span>
-          ) : (
-            <p className="text-sm text-muted-foreground">Next billing period starts in {isLoading ? <span className="inline-block bg-white/5 animate-pulse rounded-full w-12 h-4 align-middle" /> : <span className="font-semibold text-white">{days}</span>} days</p>
-          )}
-        </div>
+        <div className="mb-8 rounded-3xl border border-white/5 bg-black p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground">Usage Snapshot for {monthLabel}</h2>
+            {isFreeTrial ? (
+              <span className="text-sm px-4 py-2 bg-transparent border border-white/5 border-2 font-semibold text-white">7-day free trial · Free credits apply · Usage pauses after credits are used</span>
+            ) : (
+              <p className="text-sm text-muted-foreground">Next billing period starts in {isLoading ? <span className="inline-block bg-white/5 animate-pulse rounded-full w-12 h-4 align-middle" /> : <span className="font-semibold text-white">{days}</span>} days</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-3 gap-8 mb-8">
             {/* Usage Cap */}
@@ -494,8 +494,8 @@ export function Dashboard() {
                     rgba(255, 255, 255, 0.06) 60%,
                     transparent 100%
                   ),
-                  linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+                  linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
                 `,
                 backgroundSize: "auto, 40px 40px, 40px 40px",
               }}

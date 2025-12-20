@@ -111,7 +111,7 @@ export function HomeHeader() {
   ]
 
   return (
-    <header className="border-b-5 border-white/5 border-border bg-background px-6 py-3.5 flex items-center justify-between h-16">
+    <header className="border-b-2 border-white/5 border-border bg-black px-6 py-3.5 flex items-center justify-between h-16">
       {/* Left side - Tabs */}
       <div className="flex items-center gap-4">
 
