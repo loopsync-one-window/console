@@ -511,7 +511,7 @@ const SecurePaymentPage = () => {
 
       {/* Cancel Payment Modal */}
       <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-        <DialogContent className="bg-white border border-white/20 shadow-2xl p-4 max-w-md rounded-2xl">
+        <DialogContent className="bg-white border border-white/20 shadow-2xl max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-900">Cancel Payment?</DialogTitle>
             <DialogDescription className="text-gray-700 mt-2">
