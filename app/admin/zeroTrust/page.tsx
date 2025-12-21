@@ -27,6 +27,12 @@ import {
     DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -429,22 +435,48 @@ export default function AdminZeroTrustPage() {
                                                         })}
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => openNotifyUser(user.id)}
-                                                            className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
-                                                        >
-                                                            <Mail className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => confirmDeleteUser(user)}
-                                                            className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 rounded-full"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Non-subscriber Indicator */}
+                                                            {(() => {
+                                                                const isSubscribed = activeSubscribers.some(sub => sub.user.id === user.id);
+                                                                if (!isSubscribed) {
+                                                                    const daysSince = Math.floor((new Date().getTime() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+                                                                    return (
+                                                                        <div className="flex items-center gap-2 mr-2">
+                                                                            <TooltipProvider>
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger asChild>
+                                                                                        <div className="w-2 h-2 rounded-full bg-yellow-500 cursor-help" />
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent className="bg-white border-white/10 font-semibold rounded-full text-black text-xs">
+                                                                                        <p>No Active Subscription</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            </TooltipProvider>
+                                                                            <span className="text-xs text-neutral-500 font-semibold">{daysSince}d</span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })()}
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => openNotifyUser(user.id)}
+                                                                className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Mail className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => confirmDeleteUser(user)}
+                                                                className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

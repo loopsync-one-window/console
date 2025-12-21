@@ -42,27 +42,31 @@ export default function HomePage() {
     let cancelled = false
     const run = async () => {
       if (!allowed) return
-      
+
       try {
         // Wait for all necessary data to load before hiding the loader
-        const [onboardResult, statusResult] = await Promise.all([
+        const [onboardResult, statusResult, profile] = await Promise.all([
           getOnboardStatus(),
-          getAutopayStatus()
+          getAutopayStatus(),
+          getProfileMe()
         ])
-        
+
         if (!cancelled) {
+          if (profile.fullName === "User") {
+            throw new Error("Unauthorized")
+          }
           setSkipOnboarding(Boolean(onboardResult?.onboard))
           setAutopayStatus(statusResult)
-          
+
           const shouldOpen =
             statusResult?.isAutopayCancelled === true ||
             statusResult?.shouldRestrict === true ||
             statusResult?.local?.autoRenew === false ||
             (typeof statusResult?.local?.status === "string" && statusResult?.local?.status.toUpperCase() !== "ACTIVE")
-            
+
           setMustShowCancelModal(Boolean(shouldOpen))
           setHasCheckedOnboard(true)
-          
+
           // Only hide loader when all data is loaded
           setIsLoading(false)
         }
@@ -90,11 +94,11 @@ export default function HomePage() {
         }
       }
     }
-    
+
     if (allowed) {
       run()
     }
-    
+
     return () => {
       cancelled = true
     }
@@ -103,7 +107,7 @@ export default function HomePage() {
   useConfettiSound(allowed && hasCheckedOnboard && !skipOnboarding)
 
   if (!allowed) return null
-  
+
   // Show loader while data is loading
   if (isLoading) {
     return (
@@ -123,7 +127,7 @@ export default function HomePage() {
       </div>
     )
   }
-  
+
   return (
     <SidebarProvider
       key={hasCheckedOnboard ? (skipOnboarding ? "dash" : "onboard") : "pending"}
@@ -193,18 +197,18 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
     setIsLoggingOut(true)
     try {
       await logoutAny()
-    } catch {}
+    } catch { }
     try {
       localStorage.removeItem("accessToken")
       localStorage.removeItem("refreshToken")
       localStorage.removeItem("expiresAt")
       localStorage.removeItem("user")
-    } catch {}
+    } catch { }
     router.push("/")
     setIsLoggingOut(false)
   }
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={() => { }}>
       <DialogContent
         className="bg-red-900 text-white rounded-3xl border border-white/10 max-w-md"
         showCloseButton={false}
@@ -223,7 +227,7 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
             <X className="size-5 cursor-pointer text-white" />
           )}
         </button>
-        
+
         <div className="flex flex-col items-center text-center gap-4">
           <div className="rounded-full bg-red-800 p-4">
             <Timer className="size-8 text-white" />
