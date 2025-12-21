@@ -74,6 +74,7 @@ export function AllProducts() {
   const [installedProducts, setInstalledProducts] = useState<Record<string, boolean>>({})
   const [detectedBrowser, setDetectedBrowser] = useState<string | null>(null)
   const [selectedBrowser, setSelectedBrowser] = useState<string | null>(null)
+  const [isInstallingGame, setIsInstallingGame] = useState(false)
 
   // Initialize without auto-detection
   useEffect(() => {
@@ -151,6 +152,28 @@ export function AllProducts() {
         description: `${app.name} has been successfully uninstalled.`,
       })
     }
+  }
+
+  const handleGameInstall = (id: string) => {
+    setIsInstallingGame(true)
+
+    try {
+      // Trigger download
+      const link = document.createElement("a");
+      link.href = "/apps/games/DiamondPlateau.exe";
+      link.download = "DiamondPlateau.exe";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Download failed", e);
+    }
+
+    // Simulate install time
+    setTimeout(() => {
+      setIsInstallingGame(false)
+      handleInstallApp(id)
+    }, 5000)
   }
 
   return (
@@ -444,7 +467,7 @@ export function AllProducts() {
                             <Button
                               variant="default"
                               size="sm"
-                              onClick={() => handleInstallApp(a.id)}
+                              onClick={() => a.id === "101" ? handleGameInstall(a.id) : handleInstallApp(a.id)}
                               className="bg-white text-black font-semibold rounded-full cursor-pointer"
                             >
                               Install
@@ -718,6 +741,31 @@ export function AllProducts() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Game Install Modal */}
+      <Dialog open={isInstallingGame} onOpenChange={setIsInstallingGame}>
+        <DialogContent className="bg-white border border-white/20 shadow-2xl max-w-md rounded-2xl [&>button]:hidden text-black"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}>
+          <div className="flex flex-col items-center justify-center py-10 px-6 text-center animate-in fade-in zoom-in-95 duration-500">
+            <img
+              src="/apps/daimond.png"
+              alt="Diamond Plateau"
+              className="w-24 h-24 rounded-2xl shadow-2xl mb-8 ring-1 ring-black/5"
+            />
+
+            <div className="relative mb-6">
+              <div className="h-8 w-8 rounded-full border-[3px] border-black/5"></div>
+              <div className="absolute inset-0 h-8 w-8 rounded-full border-[3px] border-black border-t-transparent animate-spin"></div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Installing Diamond Plateau</h3>
+            <p className="text-sm text-gray-500 font-medium leading-relaxed">
+              Downloading and setting up files...
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
 
