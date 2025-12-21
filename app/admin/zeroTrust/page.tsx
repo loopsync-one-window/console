@@ -713,13 +713,13 @@ export default function AdminZeroTrustPage() {
                                             <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Total Usage</div>
                                             <div className="text-2xl font-bold text-white">₹{(selectedUserDetail.usage?.total / 100).toLocaleString()}</div>
                                         </div>
-                                        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex flex-col items-center justify-center text-center">
-                                            <div className="text-xs font-medium text-emerald-500/70 uppercase tracking-wider mb-2">Free Credits</div>
-                                            <div className="text-2xl font-bold text-emerald-400">₹{(selectedUserDetail.credits?.free / 100).toLocaleString()}</div>
+                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+                                            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Free Credits</div>
+                                            <div className="text-2xl font-bold text-white">₹{(selectedUserDetail.credits?.free / 100).toLocaleString()}</div>
                                         </div>
-                                        <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex flex-col items-center justify-center text-center">
-                                            <div className="text-xs font-medium text-blue-500/70 uppercase tracking-wider mb-2">Prepaid Credits</div>
-                                            <div className="text-2xl font-bold text-blue-400">₹{(selectedUserDetail.credits?.prepaid / 100).toLocaleString()}</div>
+                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+                                            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Prepaid Credits</div>
+                                            <div className="text-2xl font-bold text-white">₹{(selectedUserDetail.credits?.prepaid / 100).toLocaleString()}</div>
                                         </div>
                                     </div>
 
