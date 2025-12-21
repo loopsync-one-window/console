@@ -606,71 +606,74 @@ const SecurePaymentPage = () => {
       {/* Payment Success Modal */}
       <Dialog open={showPaymentSuccessModal} onOpenChange={setShowPaymentSuccessModal}>
         <DialogContent className="bg-white border border-white/20 shadow-2xl max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Payment Successful
-            </DialogTitle>
+          {isProcessingSuccess ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in zoom-in-95 duration-500">
+              <div className="relative mb-6">
+                <div className="h-16 w-16 rounded-full border-[3px] border-black/5"></div>
+                <div className="absolute inset-0 h-16 w-16 rounded-full border-[3px] border-black border-t-transparent animate-spin"></div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 tracking-tight">Activating your account</h3>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                Please do not hit back or close this window.
+              </p>
+            </div>
+          ) : (
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Payment Successful
+              </DialogTitle>
 
-            <DialogDescription className="text-gray-700 mt-2">
-              {paymentSuccessData && (
-                <div className="space-y-4">
+              <DialogDescription className="text-gray-700 mt-2">
+                {paymentSuccessData && (
+                  <div className="space-y-4">
 
-                  <div className="text-center py-4">
-                    <div className="text-2xl font-bold text-gray-900">
-                      ₹{(paymentSuccessData.amount / 100).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      Amount Paid
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="text-gray-500">Start Date</div>
-                        <div className="font-medium">{paymentSuccessData.startDate}</div>
+                    <div className="text-center py-4">
+                      <div className="text-2xl font-bold text-gray-900">
+                        ₹{(paymentSuccessData.amount / 100).toLocaleString()}
                       </div>
-
-                      <div>
-                        <div className="text-gray-500">End Date</div>
-                        <div className="font-medium">{paymentSuccessData.endDate}</div>
-                      </div>
-
-                      <div className="border-t border-gray-200 pt-2 mt-2 col-span-2"></div>
-
-                      <div>
-                        <div className="text-gray-500">Duration</div>
-                        <div className="font-medium">{paymentSuccessData.duration}</div>
-                      </div>
-
-                      <div>
-                        <div className="text-gray-500">Charge</div>
-                        <div className="font-medium">{paymentSuccessData.billingCycle}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        Amount Paid
                       </div>
                     </div>
-                  </div>
 
-                  <div className="pt-4 text-center text-sm text-gray-500">
-                    {isProcessingSuccess ? (
-                      <div className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Account activation in progress
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="text-gray-500">Start Date</div>
+                          <div className="font-medium">{paymentSuccessData.startDate}</div>
+                        </div>
+
+                        <div>
+                          <div className="text-gray-500">End Date</div>
+                          <div className="font-medium">{paymentSuccessData.endDate}</div>
+                        </div>
+
+                        <div className="border-t border-gray-200 pt-2 mt-2 col-span-2"></div>
+
+                        <div>
+                          <div className="text-gray-500">Duration</div>
+                          <div className="font-medium">{paymentSuccessData.duration}</div>
+                        </div>
+
+                        <div>
+                          <div className="text-gray-500">Charge</div>
+                          <div className="font-medium">{paymentSuccessData.billingCycle}</div>
+                        </div>
                       </div>
-                    ) : (
-                      "Account activation in progress"
-                    )}
-                  </div>
+                    </div>
 
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
+                    <div className="pt-4 text-center text-sm text-gray-500">
+                      Validating payment details...
+                    </div>
+
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+          )}
         </DialogContent>
       </Dialog>
 
