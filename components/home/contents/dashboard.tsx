@@ -203,6 +203,15 @@ export function Dashboard() {
     })()
   }, [])
 
+  // Auto-mark trial notify as done if not in free trial
+  useEffect(() => {
+    if (hasCheckedTrialNotify && userDataLoaded && !isFreeTrial && trialNotify === false) {
+      updateTrialNotifyStatus(true)
+        .then(() => setTrialNotify(true))
+        .catch(() => { })
+    }
+  }, [hasCheckedTrialNotify, userDataLoaded, isFreeTrial, trialNotify])
+
   useEffect(() => {
     if (hasCheckedTrialNotify && isFreeTrial && trialNotify === false) {
       setIsTrialModalOpen(true)
@@ -351,8 +360,8 @@ export function Dashboard() {
         <div className="mb-8 rounded-3xl border border-white/5 bg-black p-8">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Usage Snapshot for {monthLabel}</h2>
-            {isFreeTrial ? (
-              <span className="text-sm px-4 py-2 bg-transparent border border-white/5 border-2 font-semibold text-white">7-day free trial · Free credits apply · Usage pauses after credits are used</span>
+            {(userDataLoaded && isFreeTrial) ? (
+              <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
             ) : (
               <p className="text-sm text-muted-foreground">Next billing period starts in {isLoading ? <span className="inline-block bg-white/5 animate-pulse rounded-full w-12 h-4 align-middle" /> : <span className="font-semibold text-white">{days}</span>} days</p>
             )}

@@ -72,8 +72,11 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error("Error loading user data:", error)
-        // If there's an unauthorized error, redirect to login
-        if (error instanceof Error && error.message.includes("Unauthorized")) {
+        // If there's an unauthorized or invalid token error, redirect to login
+        if (
+          error instanceof Error &&
+          (error.message.includes("Unauthorized") || error.message.includes("Invalid token"))
+        ) {
           try {
             // Clear any invalid tokens
             localStorage.removeItem("accessToken")

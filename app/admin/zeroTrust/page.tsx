@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AdminZeroTrustPage() {
     const [isLocked, setIsLocked] = useState(true);
@@ -51,6 +52,7 @@ export default function AdminZeroTrustPage() {
     const [activeSubscribers, setActiveSubscribers] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshing, setRefreshing] = useState(false);
+    const [hideTrialUsers, setHideTrialUsers] = useState(false);
 
     // Notification State
     const [notifyOpen, setNotifyOpen] = useState(false);
@@ -487,6 +489,21 @@ export default function AdminZeroTrustPage() {
                         </TabsContent>
 
                         <TabsContent value="subscribers" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="flex items-center justify-between mb-4 px-1">
+                                <div className="text-sm text-neutral-400 font-medium">
+                                    Displaying <span className="text-white">{activeSubscribers.filter(s => hideTrialUsers ? !s.isFreeTrial : true).length}</span> results
+                                </div>
+                                <div className="flex items-center gap-2 bg-neutral-900/50 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                                    <Checkbox
+                                        id="hideTrial"
+                                        checked={hideTrialUsers}
+                                        onCheckedChange={(c) => setHideTrialUsers(c === true)}
+                                        className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                                    />
+                                    <Label htmlFor="hideTrial" className="text-xs text-neutral-400 font-medium cursor-pointer">Hide Trial Users</Label>
+                                </div>
+                            </div>
+
                             <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
                                 <Table>
                                     <TableHeader className="bg-neutral-900/80 border-b border-white/5">
@@ -500,70 +517,74 @@ export default function AdminZeroTrustPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {activeSubscribers.length === 0 ? (
+                                        {activeSubscribers
+                                            .filter(sub => hideTrialUsers ? !sub.isFreeTrial : true)
+                                            .length === 0 ? (
                                             <TableRow className="border-none hover:bg-transparent">
                                                 <TableCell colSpan={6} className="h-48 text-center text-neutral-600">
-                                                    No active subscribers found.
+                                                    No subscribers found matching filters.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            activeSubscribers.map((sub, idx) => (
-                                                <TableRow key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group">
-                                                    <TableCell className="pl-6 py-4">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium text-white group-hover:text-teal-200 transition-colors">{sub.user.fullName}</span>
-                                                            <span className="text-xs text-neutral-500">{sub.user.email}</span>
-                                                            {sub.isFreeTrial && (
-                                                                <span className="inline-flex mt-1 text-[10px] font-bold text-blue-400 tracking-wide uppercase">
-                                                                    Trial Active
+                                            activeSubscribers
+                                                .filter(sub => hideTrialUsers ? !sub.isFreeTrial : true)
+                                                .map((sub, idx) => (
+                                                    <TableRow key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group">
+                                                        <TableCell className="pl-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-white group-hover:text-teal-200 transition-colors">{sub.user.fullName}</span>
+                                                                <span className="text-xs text-neutral-500">{sub.user.email}</span>
+                                                                {sub.isFreeTrial && (
+                                                                    <span className="inline-flex mt-1 text-[10px] font-bold text-blue-400 tracking-wide uppercase">
+                                                                        Trial Active
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-300">
+                                                                    {sub.plan.code.charAt(0)}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-sm text-neutral-200">{sub.plan.displayName || sub.plan.name}</div>
+                                                                    <div className="text-[10px] text-neutral-500 font-mono">{sub.plan.code}</div>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm text-neutral-300">
+                                                                    {sub.plan.currency} <span className="font-semibold text-white">{(sub.amountPaise / 100).toFixed(2)}</span>
                                                                 </span>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-300">
-                                                                {sub.plan.code.charAt(0)}
+                                                                <span className="text-xs text-neutral-500 capitalize">{sub.plan.billingCycle.toLowerCase()}</span>
                                                             </div>
-                                                            <div>
-                                                                <div className="text-sm text-neutral-200">{sub.plan.displayName || sub.plan.name}</div>
-                                                                <div className="text-[10px] text-neutral-500 font-mono">{sub.plan.code}</div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className={`text-sm font-medium ${sub.daysRemaining < 3 ? "text-rose-400" : "text-neutral-300"}`}>
+                                                                {sub.daysRemaining} days left
                                                             </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm text-neutral-300">
-                                                                {sub.plan.currency} <span className="font-semibold text-white">{(sub.amountPaise / 100).toFixed(2)}</span>
-                                                            </span>
-                                                            <span className="text-xs text-neutral-500 capitalize">{sub.plan.billingCycle.toLowerCase()}</span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className={`text-sm font-medium ${sub.daysRemaining < 3 ? "text-rose-400" : "text-neutral-300"}`}>
-                                                            {sub.daysRemaining} days left
-                                                        </div>
-                                                        <div className="text-xs text-neutral-500">
-                                                            Expires {new Date(sub.expiresAt).toLocaleDateString()}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-500 border border-emerald-500/20">
-                                                            Active
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-right pr-6">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => openNotifyUser(sub.user.id)}
-                                                            className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
-                                                        >
-                                                            <Mail className="h-4 w-4" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
+                                                            <div className="text-xs text-neutral-500">
+                                                                Expires {new Date(sub.expiresAt).toLocaleDateString()}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-500 border border-emerald-500/20">
+                                                                Active
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right pr-6">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => openNotifyUser(sub.user.id)}
+                                                                className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Mail className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
                                         )}
                                     </TableBody>
                                 </Table>
