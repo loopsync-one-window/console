@@ -57,7 +57,7 @@ export function Dashboard() {
     usage: { total: number; prepaidUsed: number }
     nextInvoice: number
   } | null>(null)
-  const [firstName, setFirstName] = useState<string>("User")
+  const [firstName, setFirstName] = useState<string>("")
   const [isFreeTrial, setIsFreeTrial] = useState<boolean>(false)
   const [isTrialModalOpen, setIsTrialModalOpen] = useState<boolean>(false)
   const [agree, setAgree] = useState<boolean>(false)
@@ -439,7 +439,7 @@ export function Dashboard() {
 
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Welcome, {firstName}</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Welcome {firstName}</h1>
           {/* <p className="text-muted-foreground text-lg">Overview of your usage and billing</p> */}
         </div>
 
