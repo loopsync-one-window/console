@@ -320,7 +320,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
           }`}
       >
         {emailLoading ? (
-          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           "Continue"
         )}
@@ -738,10 +738,13 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
       <button
         onClick={handleSignInClick}
         disabled={isLoading || !formData.email || !formData.password}
-        className="w-full bg-white/10 text-white rounded-full px-6 py-3 mb-6 font-semibold text-base hover:bg-white/10 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`w-full rounded-full px-6 py-3 mb-6 font-semibold text-base flex items-center justify-center ${isLoading || !formData.email || !formData.password
+          ? "bg-white/5 text-white/50 cursor-not-allowed"
+          : "bg-white text-black hover:bg-gray-200 transition-colors"
+          }`}
       >
         {isLoading ? (
-          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           "Sign in"
         )}
