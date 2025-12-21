@@ -21,7 +21,7 @@ const mockProducts = [
   {
     id: "1",
     name: "Atlas",
-    version: "2.2.9",
+    version: "9.2.9",
     description: "Atlas helps you understand anything on your screen instantly. Press a shortcut, select a screen region, and get AI-powered answers in seconds. Customizable and powerful.",
     logo: "/apps/atlas.png",
     installed: false,
@@ -169,7 +169,7 @@ export function AllProducts() {
             <Dithering
               style={{ height: "100%", width: "100%" }}
               colorBack="hsl(0, 0%, 0%)"
-              colorFront="#2a2572"
+              colorFront="#3b31c9ff"
               shape={"cat" as any}
               type="4x4"
               pxSize={3}
@@ -586,17 +586,17 @@ export function AllProducts() {
                             {/* Add badges for unavailable browsers */}
                             {selected?.id === "1" && browser.name === "Chrome" && (
                               <Badge variant="outline" className="text-white/70 border-white/50">
-                                Available in 48 hours
+                                Available in 72 hours
                               </Badge>
                             )}
                             {selected?.id === "2" && browser.name === "Chrome" && (
                               <Badge variant="outline" className="text-white/70 border-white/50">
-                                Available in 48 hours
+                                Available in 72 hours
                               </Badge>
                             )}
                             {selected?.id === "2" && browser.name === "Firefox" && (
                               <Badge variant="outline" className="text-white/70 border-white/50">
-                                Available in 48 hours
+                                Available in 72 hours
                               </Badge>
                             )}
                           </div>

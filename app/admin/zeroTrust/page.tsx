@@ -7,6 +7,7 @@ import {
     getActiveSubscribersDetailed,
     notifyAllUsers,
     notifyUser,
+    deleteUser,
     AdminUser,
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -51,6 +52,11 @@ export default function AdminZeroTrustPage() {
     const [notifyTitle, setNotifyTitle] = useState("");
     const [notifyMessage, setNotifyMessage] = useState("");
     const [sendingNotify, setSendingNotify] = useState(false);
+
+    // Delete User State
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -146,11 +152,13 @@ export default function AdminZeroTrustPage() {
         fetchData();
     };
 
-    const filteredUsers = users.filter((u) =>
-        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredUsers = users
+        .filter((u) =>
+            u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.id.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const handleSendNotification = async () => {
         if (!notifyTitle || !notifyMessage) {
@@ -188,6 +196,28 @@ export default function AdminZeroTrustPage() {
         setNotifyOpen(true);
     };
 
+    const confirmDeleteUser = (user: AdminUser) => {
+        setUserToDelete(user);
+        setDeleteOpen(true);
+    };
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteUser(userToDelete.id);
+            toast.success("User deleted successfully");
+            setUsers(users.filter(u => u.id !== userToDelete.id));
+            setDeleteOpen(false);
+        } catch (error) {
+            console.error("Failed to delete user", error);
+            toast.error("Failed to delete user");
+        } finally {
+            setIsDeleting(false);
+            setUserToDelete(null);
+        }
+    };
+
 
     if (isLocked) {
         return (
@@ -201,7 +231,7 @@ export default function AdminZeroTrustPage() {
                         </div>
                         <div className="text-center space-y-1">
                             <h1 className="text-2xl font-semibold tracking-tight text-white">Security Check</h1>
-                            <p className="text-sm text-neutral-500">Enter admin PIN to access console.</p>
+                            <p className="text-sm text-neutral-500">Enter PIN to access console.</p>
                         </div>
                     </div>
 
@@ -209,7 +239,7 @@ export default function AdminZeroTrustPage() {
                         <div className="relative">
                             <Input
                                 type={showPin ? "text" : "password"}
-                                placeholder="Enter 6-digit PIN"
+                                placeholder="Enter 4-digit PIN"
                                 value={pinInput}
                                 onChange={(e) => {
                                     setPinError(false);
@@ -217,7 +247,7 @@ export default function AdminZeroTrustPage() {
                                         setPinInput(e.target.value);
                                     }
                                 }}
-                                className={`bg-neutral-900/50 rounded-full border-white/10 h-12 text-center text-lg tracking-[0.5em] font-mono placeholder:tracking-normal placeholder:font-sans transition-all focus-visible:ring-emerald-500/50 ${pinError ? "border-red-500/50 ring-red-500/20" : ""
+                                className={`bg-neutral-900/50 rounded-full border-white/10 h-12 text-center text-lg tracking-[0.5em] font-mono placeholder:tracking-normal placeholder:font-sans transition-all focus-visible:ring-white/0 ${pinError ? "border-red-500/50 ring-red-500/20" : ""
                                     }`}
                                 autoFocus
                             />
@@ -254,9 +284,9 @@ export default function AdminZeroTrustPage() {
     const totalActiveSubs = Array.isArray(activeSubscribers) ? activeSubscribers.length : 0;
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-teal-500/30 selection:text-teal-200 lg:flex">
+        <div className="h-screen bg-black text-white font-sans selection:bg-teal-500/30 selection:text-teal-200 flex flex-col lg:flex-row overflow-hidden">
             {/* Left Sidebar Panel */}
-            <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-white/10 bg-neutral-900/40 backdrop-blur-xl p-6 lg:p-8 flex flex-col gap-8 lg:h-screen lg:sticky lg:top-0 z-20">
+            <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-white/10 bg-neutral-900/40 backdrop-blur-xl p-6 lg:p-8 flex flex-col gap-8 z-20 shrink-0">
                 {/* Header / Brand */}
                 <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -311,7 +341,7 @@ export default function AdminZeroTrustPage() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 p-6 md:p-10 lg:p-12 min-w-0 bg-black">
+            <main className="flex-1 p-6 md:p-10 lg:p-12 min-w-0 bg-black h-full overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8">
 
                     <Tabs defaultValue="users" className="space-y-8">
@@ -406,6 +436,14 @@ export default function AdminZeroTrustPage() {
                                                             className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
                                                         >
                                                             <Mail className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => confirmDeleteUser(user)}
+                                                            className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 rounded-full"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -556,6 +594,37 @@ export default function AdminZeroTrustPage() {
                                 ) : (
                                     "Send"
                                 )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                    <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
+                        <DialogHeader>
+                            <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                                <AlertTriangle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <DialogTitle className="text-center text-xl font-semibold text-white">Delete User?</DialogTitle>
+                            <DialogDescription className="text-center text-neutral-400 text-sm">
+                                Are you sure you want to delete <span className="text-white font-bold">{userToDelete?.fullName}</span>. This action cannot be undone and will remove all associated data.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="grid grid-cols-2 gap-3 mt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteOpen(false)}
+                                className="bg-transparent border-white/10 text-neutral-400 hover:bg-white/5 hover:text-white rounded-full w-full"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleDeleteUser}
+                                disabled={isDeleting}
+                                className="bg-red-800 hover:bg-red-900 text-white rounded-full w-full"
+                            >
+                                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Delete"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -68,7 +68,7 @@ export function Sidebar() {
     <div className="w-64 border-r-2 border-white/5 border-border bg-black flex flex-col relative overflow-hidden">
       {/* Gradient blur overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/70 to-transparent z-10 pointer-events-none"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-indigo-900 via-black/70 to-transparent z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent z-10 pointer-events-none"></div>
 
       {/* Header */}
       <div className="w-full  p-3 flex items-center justify-between h-16 relative z-20">

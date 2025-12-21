@@ -45,10 +45,10 @@ export function AnswerLogs() {
         try {
           const raw = localStorage.getItem('user')
           if (raw) email = (JSON.parse(raw) as { email: string }).email || email
-        } catch {}
+        } catch { }
         const { collections } = await getAtlasCollectionsClient(email)
         setAtlasCollections(collections || [])
-      } catch {}
+      } catch { }
     })()
   }, [])
 
@@ -59,15 +59,15 @@ export function AnswerLogs() {
         try {
           const raw = localStorage.getItem('user')
           if (raw) email = (JSON.parse(raw) as { email: string }).email || email
-        } catch {}
+        } catch { }
         const { collections } = await getCeresCollectionsClient(email)
         setCeresCollections(collections || [])
-      } catch {}
+      } catch { }
     })()
   }, [])
 
-  const downloadSelected = () => {}
-  const exportSelected = () => {}
+  const downloadSelected = () => { }
+  const exportSelected = () => { }
   const onView = async (id: string) => {
     setOpenView(true)
     setLoadingView(true)
@@ -80,7 +80,7 @@ export function AnswerLogs() {
       try {
         const raw = localStorage.getItem('user')
         if (raw) email = (JSON.parse(raw) as { email: string }).email || email
-      } catch {}
+      } catch { }
       const data = await getAtlasCollectionDetailClient(id, email)
       setViewing(data)
     } catch (e: any) {
@@ -103,7 +103,7 @@ export function AnswerLogs() {
       try {
         const raw = localStorage.getItem('user')
         if (raw) email = (JSON.parse(raw) as { email: string }).email || email
-      } catch {}
+      } catch { }
       const data = await getCeresCollectionDetailClient(id, email)
       setViewingCeres(data)
     } catch (e: any) {
@@ -192,87 +192,95 @@ export function AnswerLogs() {
                 </CardHeader>
                 <CardContent>
                   <Table>
-                      <TableHeader>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead className="text-white/70">Owner</TableHead>
+                        <TableHead className="text-white/70">Interaction</TableHead>
+                        <TableHead>Session</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {atlasCollections.length === 0 ? (
                         <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead className="text-white/70">Owner</TableHead>
-                          <TableHead className="text-white/70">Interaction</TableHead>
-                          <TableHead>Session</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableCell colSpan={7} className="h-24 text-center text-white/50">
+                            Collection not found
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {atlasCollections
+                      ) : (
+                        atlasCollections
                           .slice((atlasPage - 1) * PAGE_SIZE, atlasPage * PAGE_SIZE)
                           .map((log) => (
-                          <TableRow key={log.id}>
-                            <TableCell className="font-medium text-white/90">{log.id.replace(/\D/g, '')}</TableCell>
-                            <TableCell className="text-white/80">{log.date}</TableCell>
-                            <TableCell className="text-white/80">{log.time}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-white/80">{log.owner}</Badge>
-                            </TableCell>
-                            <TableCell className="text-white/90">{log.interaction}</TableCell>
-                            <TableCell className="text-white/80">{log.session}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm" className="rounded-full text-black font-semibold cursor-pointer bg-white hover:bg-white/90 hover:text-black" onClick={() => onView(log.id)}>
-                              <ExternalLink className="h-4 w-4" />
-                              View
-                            </Button>
-                                {showControls && (
-                                  <Button variant="outline" size="sm" className="rounded-full text-white">
-                                    <Download className="h-4 w-4" />
-                                    Save
+                            <TableRow key={log.id}>
+                              <TableCell className="font-medium text-white/90">{log.id.replace(/\D/g, '')}</TableCell>
+                              <TableCell className="text-white/80">{log.date}</TableCell>
+                              <TableCell className="text-white/80">{log.time}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-white/80">{log.owner}</Badge>
+                              </TableCell>
+                              <TableCell className="text-white/90">{log.interaction}</TableCell>
+                              <TableCell className="text-white/80">{log.session}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" size="sm" className="rounded-full text-black font-semibold cursor-pointer bg-white hover:bg-white/90 hover:text-black" onClick={() => onView(log.id)}>
+                                    <ExternalLink className="h-4 w-4" />
+                                    View
                                   </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                                  {showControls && (
+                                    <Button variant="outline" size="sm" className="rounded-full text-white">
+                                      <Download className="h-4 w-4" />
+                                      Save
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      )}
+                    </TableBody>
+                  </Table>
+                  {atlasCollections.length > PAGE_SIZE && (
+                    <Pagination className="mt-4">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setAtlasPage((p) => Math.max(1, p - 1))
+                            }}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(atlasCollections.length / PAGE_SIZE) }, (_, i) => i + 1).map((p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              href="#"
+                              isActive={p === atlasPage}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setAtlasPage(p)
+                              }}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
                         ))}
-                      </TableBody>
-                    </Table>
-                    {atlasCollections.length > PAGE_SIZE && (
-                      <Pagination className="mt-4">
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setAtlasPage((p) => Math.max(1, p - 1))
-                              }}
-                            />
-                          </PaginationItem>
-                          {Array.from({ length: Math.ceil(atlasCollections.length / PAGE_SIZE) }, (_, i) => i + 1).map((p) => (
-                            <PaginationItem key={p}>
-                              <PaginationLink
-                                href="#"
-                                isActive={p === atlasPage}
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setAtlasPage(p)
-                                }}
-                              >
-                                {p}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                          <PaginationItem>
-                            <PaginationNext
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                const max = Math.ceil(atlasCollections.length / PAGE_SIZE)
-                                setAtlasPage((p) => Math.min(max, p + 1))
-                              }}
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    )}
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              const max = Math.ceil(atlasCollections.length / PAGE_SIZE)
+                              setAtlasPage((p) => Math.min(max, p + 1))
+                            }}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -299,87 +307,95 @@ export function AnswerLogs() {
                 </CardHeader>
                 <CardContent>
                   <Table>
-                      <TableHeader>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead className="text-white/70">Owner</TableHead>
+                        <TableHead className="text-white/70">Interaction</TableHead>
+                        <TableHead>Session</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ceresCollections.length === 0 ? (
                         <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead className="text-white/70">Owner</TableHead>
-                          <TableHead className="text-white/70">Interaction</TableHead>
-                          <TableHead>Session</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableCell colSpan={7} className="h-24 text-center text-white/50">
+                            Collection not found
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {ceresCollections
+                      ) : (
+                        ceresCollections
                           .slice((ceresPage - 1) * PAGE_SIZE, ceresPage * PAGE_SIZE)
                           .map((log) => (
-                          <TableRow key={log.id}>
-                            <TableCell className="font-medium text-white/90">{log.id}</TableCell>
-                            <TableCell className="text-white/80">{log.date}</TableCell>
-                            <TableCell className="text-white/80">{log.time}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-white/80">{log.owner}</Badge>
-                            </TableCell>
-                            <TableCell className="text-white/90">{log.interaction}</TableCell>
-                            <TableCell className="text-white/80">{log.session}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button variant="outline" size="sm" className="rounded-full text-white" onClick={() => onViewCeres(log.id)}>
-                                  <ExternalLink className="h-4 w-4" />
-                                  View
-                                </Button>
-                                {showControls && (
-                                  <Button variant="outline" size="sm" className="rounded-full text-white">
-                                    <Download className="h-4 w-4" />
-                                    Save
+                            <TableRow key={log.id}>
+                              <TableCell className="font-medium text-white/90">{log.id}</TableCell>
+                              <TableCell className="text-white/80">{log.date}</TableCell>
+                              <TableCell className="text-white/80">{log.time}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-white/80">{log.owner}</Badge>
+                              </TableCell>
+                              <TableCell className="text-white/90">{log.interaction}</TableCell>
+                              <TableCell className="text-white/80">{log.session}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" size="sm" className="rounded-full text-white" onClick={() => onViewCeres(log.id)}>
+                                    <ExternalLink className="h-4 w-4" />
+                                    View
                                   </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                                  {showControls && (
+                                    <Button variant="outline" size="sm" className="rounded-full text-white">
+                                      <Download className="h-4 w-4" />
+                                      Save
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      )}
+                    </TableBody>
+                  </Table>
+                  {ceresCollections.length > PAGE_SIZE && (
+                    <Pagination className="mt-4 ">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setCeresPage((p) => Math.max(1, p - 1))
+                            }}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.ceil(ceresCollections.length / PAGE_SIZE) }, (_, i) => i + 1).map((p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              href="#"
+                              isActive={p === ceresPage}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setCeresPage(p)
+                              }}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
                         ))}
-                      </TableBody>
-                    </Table>
-                    {ceresCollections.length > PAGE_SIZE && (
-                      <Pagination className="mt-4 ">
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setCeresPage((p) => Math.max(1, p - 1))
-                              }}
-                            />
-                          </PaginationItem>
-                          {Array.from({ length: Math.ceil(ceresCollections.length / PAGE_SIZE) }, (_, i) => i + 1).map((p) => (
-                            <PaginationItem key={p}>
-                              <PaginationLink
-                                href="#"
-                                isActive={p === ceresPage}
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setCeresPage(p)
-                                }}
-                              >
-                                {p}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                          <PaginationItem>
-                            <PaginationNext
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                const max = Math.ceil(ceresCollections.length / PAGE_SIZE)
-                                setCeresPage((p) => Math.min(max, p + 1))
-                              }}
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    )}
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              const max = Math.ceil(ceresCollections.length / PAGE_SIZE)
+                              setCeresPage((p) => Math.min(max, p + 1))
+                            }}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -412,64 +428,64 @@ export function AnswerLogs() {
             <p className="text-red-400 text-sm">{viewError}</p>
           ) : viewing ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 h-full flex-1 min-h-0">
-  {[
-    { key: 'gemini', label: 'Compute-Max', data: viewing.responses.gemini },
-    { key: 'openai', label: 'R3 Advanced', data: viewing.responses.openai },
-    { key: 'grok', label: 'Vision Pro', data: viewing.responses.grok },
-  ].map((p) => (
-    <div
-      key={p.key}
-      className="
+              {[
+                { key: 'gemini', label: 'Compute-Max', data: viewing.responses.gemini },
+                { key: 'openai', label: 'R3 Advanced', data: viewing.responses.openai },
+                { key: 'grok', label: 'Vision Pro', data: viewing.responses.grok },
+              ].map((p) => (
+                <div
+                  key={p.key}
+                  className="
         relative flex flex-col rounded-3xl
         border border-white/10
         bg-transparent
         overflow-hidden
       "
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-        <div>
-          <p className="text-xl font-semibold text-white">{p.label}</p>
-          {/* <p className="text-xs text-white/50 tracking-wide uppercase">
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                    <div>
+                      <p className="text-xl font-semibold text-white">{p.label}</p>
+                      {/* <p className="text-xs text-white/50 tracking-wide uppercase">
             {p.key}
           </p> */}
-        </div>
+                    </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:text-white rounded-full hover:bg-white/5 cursor-pointer"
-          onClick={() => {
-            navigator.clipboard.writeText(p.data?.content || '')
-          }}
-          title="Copy response"
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-      </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:text-white rounded-full hover:bg-white/5 cursor-pointer"
+                      onClick={() => {
+                        navigator.clipboard.writeText(p.data?.content || '')
+                      }}
+                      title="Copy response"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-      {/* Content */}
-      <div className="flex-1 min-h-0 px-4 py-3 overflow-hidden">
-        <ScrollArea className="h-full pr-2">
-          <div
-            className="
+                  {/* Content */}
+                  <div className="flex-1 min-h-0 px-4 py-3 overflow-hidden">
+                    <ScrollArea className="h-full pr-2">
+                      <div
+                        className="
               text-sm text-white/90
               leading-relaxed
               whitespace-pre-wrap
               break-words
             "
-          >
-            {p.data?.content || (
-              <span className="text-white/40 italic">
-                No response available
-              </span>
-            )}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  ))}
-</div>
+                      >
+                        {p.data?.content || (
+                          <span className="text-white/40 italic">
+                            No response available
+                          </span>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              ))}
+            </div>
 
           ) : viewingCeres ? (
             <div className="grid grid-cols-1 md:grid-cols-1 gap-5 h-full flex-1 min-h-0">

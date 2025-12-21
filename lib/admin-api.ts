@@ -143,3 +143,15 @@ export const notifyUser = async (userId: string, title: string, description: str
     });
     return handleResponse(response);
 };
+
+export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
