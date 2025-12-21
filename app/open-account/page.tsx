@@ -1,8 +1,8 @@
 "use client"
 
-import GradientBlinds from "@/components/GradientBlinds"
+import { Dithering } from "@paper-design/shaders-react"
 import ModelShowcase from "@/components/ModelShowcase"
-import { Mail, ChevronDown, Eye, EyeOff, Package, Building, Plus, ChevronRight, ChevronLeft } from "lucide-react"
+import { Mail, ChevronDown, Eye, EyeOff, Package, Building, Plus, ChevronRight, ChevronLeft, Zap, Brain, TreeDeciduousIcon } from "lucide-react"
 import { useState, useCallback, memo, useEffect, useRef } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { Suspense } from "react"
@@ -149,6 +149,7 @@ PricingCard.displayName = "PricingCard"
 // Memoized form component to prevent re-renders that could affect the WebGL context
 const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: string; userId: string; fullName: string }) => void }) => {
   const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -202,8 +203,9 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
   };
 
   const handleGoogleSignup = () => {
+    setGoogleLoading(true);
     // Redirect to Google OAuth endpoint
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google/login`;
   };
 
   return (
@@ -220,30 +222,37 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
 
       {/* Continue with Google */}
       <button
-        onClick={() => window.location.href = `${API_BASE_URL}/auth/google/login`}
-        className="w-full border border-white/30 text-black rounded-full px-6 py-3 mb-8 font-semibold text-base flex items-center justify-center gap-3 hover:border-white/50 transition-colors bg-white"
+        onClick={handleGoogleSignup}
+        disabled={googleLoading}
+        className="w-full border border-white/30 text-black cursor-pointer rounded-full px-6 py-3 mb-8 font-semibold text-base flex items-center justify-center gap-3 hover:border-white/50 transition-colors bg-white disabled:opacity-70 disabled:cursor-not-allowed"
         aria-label="Continue with Google"
       >
-        <svg className="w-7 h-7" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="11.5" fill="none" stroke="none" />
-          <path
-            fill="#4285F4"
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          />
-          <path
-            fill="#34A853"
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.15-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          />
-          <path
-            fill="#FBBC05"
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          />
-          <path
-            fill="#EA4335"
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          />
-        </svg>
-        Continue with Google
+        {googleLoading ? (
+          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <>
+            <svg className="w-7 h-7" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="11.5" fill="none" stroke="none" />
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.15-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </>
+        )}
       </button>
 
       {/* Divider */}
@@ -264,7 +273,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
           value={formData.fullName}
           onChange={handleInputChange}
           placeholder="Full name"
-          className="flex-1 font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
+          className="flex-1 font-semibold bg-transparent backdrop-blur-sm border border-white/10 rounded-full px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/10 transition-colors"
           required
         />
       </div>
@@ -276,7 +285,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
         value={formData.email}
         onChange={handleInputChange}
         placeholder="Email"
-        className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 mb-4 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
+        className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/10 rounded-full px-4 py-3 mb-4 text-white placeholder-white/50 focus:outline-none focus:border-white/10 transition-colors"
         required
       />
 
@@ -288,7 +297,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
           value={formData.password}
           onChange={handleInputChange}
           placeholder="Password"
-          className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 pr-12 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
+          className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/10 rounded-full px-4 py-3 pr-12 text-white placeholder-white/50 focus:outline-none focus:border-white/10 transition-colors"
           required
         />
         <button
@@ -306,7 +315,7 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
         onClick={handleEmailSignup}
         disabled={emailLoading || !isFormValid}
         className={`w-full rounded-full px-6 py-3 mb-6 font-semibold text-base flex items-center justify-center ${emailLoading || !isFormValid
-          ? "bg-white/20 text-white/50 cursor-not-allowed"
+          ? "bg-white/5 text-white/50 cursor-not-allowed"
           : "bg-white text-black hover:bg-gray-200 transition-colors"
           }`}
       >
@@ -318,25 +327,25 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
       </button>
 
       {/* Sign In Link */}
-      <p className="text-center text-white/70 font-semibold text-sm">
+      <p className="text-center text-white/70 font-medium text-sm">
         Already have an account?{" "}
-        <a href="?login=true" className="text-white hover:underline font-bold">
+        <a href="?login=true" className="text-white hover:underline font-semibold">
           Sign in
         </a>
       </p>
 
       {/* Divider */}
       <div className="flex items-center gap-3 mt-10 w-full">
-        <div className="flex-1 h-px bg-white/20"></div>
+        <div className="flex-1 h-px bg-white/5"></div>
       </div>
 
       {/* Legal Links */}
-      <div className="mt-8 text-center text-sm text-gray-400">
+      <div className="mt-8 text-center text-sm text-white/50">
         <p>
           By continuing, you agree to{" "}
           <a
             href="https://loopsync.cloud/policies"
-            className="text-white font-semibold underline hover:font-bold cursor-pointer"
+            className="text-white font-semibold hover:font-bold cursor-pointer"
           >
             One Window™ Policies
           </a>
@@ -566,6 +575,7 @@ PricingContent.displayName = 'PricingContent';
 // Login Form Component
 const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -622,6 +632,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
   };
 
   const handleGoogleLogin = () => {
+    setGoogleLoading(true);
     // Redirect to Google OAuth endpoint for login
     window.location.href = `${API_BASE_URL}/auth/google/login`;
   };
@@ -634,29 +645,36 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
       {/* Continue with Google */}
       <button
         onClick={handleGoogleLogin}
-        className="w-full border border-white/30 text-black rounded-full px-6 py-3 mb-8 font-semibold text-base flex items-center justify-center gap-3 hover:border-white/50 transition-colors bg-white"
+        disabled={googleLoading}
+        className="w-full border border-white/30 cursor-pointer text-black rounded-full px-6 py-3 mb-8 font-semibold text-base flex items-center justify-center gap-3 hover:border-white/50 transition-colors bg-white disabled:opacity-70 disabled:cursor-not-allowed"
         aria-label="Continue with Google"
       >
-        <svg className="w-7 h-7" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="11.5" fill="none" stroke="none" />
-          <path
-            fill="#4285F4"
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          />
-          <path
-            fill="#34A853"
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          />
-          <path
-            fill="#FBBC05"
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          />
-          <path
-            fill="#EA4335"
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          />
-        </svg>
-        Continue with Google
+        {googleLoading ? (
+          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <>
+            <svg className="w-7 h-7" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="11.5" fill="none" stroke="none" />
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </>
+        )}
       </button>
 
       {/* Divider */}
@@ -676,7 +694,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
         value={formData.email}
         onChange={handleInputChange}
         placeholder="Email"
-        className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 mb-4 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
+        className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/10 rounded-full px-4 py-3 mb-4 text-white placeholder-white/50 focus:outline-none focus:border-white/10 transition-colors"
       />
 
       {/* Password Input */}
@@ -687,7 +705,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
           value={formData.password}
           onChange={handleInputChange}
           placeholder="Password"
-          className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/20 rounded-full px-4 py-3 pr-12 text-white placeholder-white/50 focus:outline-none focus:border-white/70 transition-colors"
+          className="w-full font-semibold bg-transparent backdrop-blur-sm border border-white/10 rounded-full px-4 py-3 pr-12 text-white placeholder-white/50 focus:outline-none focus:border-white/10 transition-colors"
         />
         <button
           type="button"
@@ -720,7 +738,7 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
       <button
         onClick={handleSignInClick}
         disabled={isLoading || !formData.email || !formData.password}
-        className="w-full bg-white text-black rounded-full px-6 py-3 mb-6 font-semibold text-base hover:bg-gray-200 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-white/10 text-white rounded-full px-6 py-3 mb-6 font-semibold text-base hover:bg-white/10 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -730,25 +748,25 @@ const LoginForm = memo(({ onForgotPassword }: { onForgotPassword?: () => void })
       </button>
 
       {/* Sign Up Link */}
-      <p className="text-center text-white/70 font-semibold text-sm">
+      <p className="text-center text-white/70 font-medium text-sm">
         Don't have an account?{" "}
-        <a href="?login=false" className="text-white hover:underline font-bold">
+        <a href="?login=false" className="text-white hover:underline font-semibold">
           Sign up
         </a>
       </p>
 
       {/* Divider */}
       <div className="flex items-center gap-3 mt-10 w-full">
-        <div className="flex-1 h-px bg-white/20"></div>
+        <div className="flex-1 h-px bg-white/5"></div>
       </div>
 
       {/* Legal Links */}
-      <div className="mt-8 text-center text-sm text-gray-400">
+      <div className="mt-8 text-center text-sm text-white/50">
         <p>
           By continuing, you agree to{" "}
           <a
             href="https://loopsync.cloud/policies"
-            className="text-white font-semibold underline hover:font-bold cursor-pointer"
+            className="text-white font-semibold hover:font-bold cursor-pointer"
           >
             One Window™ Policies
           </a>
@@ -1371,28 +1389,12 @@ const OpenAccountContent = () => {
   }, [showPasswordReset, pathname, router, isLogin]);
 
   // Define gradient colors for signup (blue) and login (red)
-  const signupColors = [
-    "#0f172a", // deep navy (base)
-    "#1e3a8a", // dark royal blue
-    "#1d4ed8", // bright cobalt
-    "#2563eb", // vivid blue
-    "#3b82f6", // sky blue highlight
-    "#1e40af", // mid blue
-  ];
 
-  const loginColors = [
-    "#290101", // deep burgundy (base)
-    "#7a0404", // dark red
-    "#b91c1c", // bright red
-    "#dc2626", // vivid red
-    "#ef4444", // light red highlight
-    "#991b1b", // mid red
-  ];
 
   return (
-    <div className="h-screen bg-[#07080a] text-white overflow-hidden relative">
+    <div className="h-screen bg-[#000000] text-white overflow-hidden relative">
       {/* Header */}
-      <header className="absolute top-0 left-0 backdrop-blur-sm right-0 flex items-center justify-between px-8 py-6 z-10">
+      <header className="absolute top-0 left-0 backdrop-blur-sm right-0 flex items-center justify-between px-8 py-6 z-999">
         <div className="text-3xl font-bold tracking-tight">
           <img
             src="/resources/logo.svg"
@@ -1400,7 +1402,7 @@ const OpenAccountContent = () => {
             className="h-9 w-auto brightness-150 contrast-125"
           />
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 border border-white/10 rounded-full">
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full">
           <span className="text-sm font-semibold">You are signing into LoopSync Cloud Console</span>
           <ChevronDown className="w-4 h-4 mt-1 text-white" />
         </div>
@@ -1455,21 +1457,64 @@ const OpenAccountContent = () => {
         {/* Right Column - Visual Background */}
         <div className="relative overflow-hidden h-screen flex items-center justify-center bg-black">
           {/* Animated gradient blinds */}
-          <GradientBlinds
-            angle={50}
-            gradientColors={isLogin ? loginColors : signupColors}
-            animateColors={false}
-            transitionDuration={1500}
-            startDelay={1.5}
+          {/* Animated gradient blinds */}
+          <Dithering
+            style={{ height: "100%", width: "100%" }}
+            colorBack="hsl(0, 0%, 0%)"
+            colorFront={isLogin ? "#3b31c9ff" : "#c7dc26ff"}
+            shape={"cat" as any}
+            type="4x4"
+            pxSize={3}
+            offsetX={0}
+            offsetY={0}
+            scale={0.8}
+            rotation={0}
+            speed={1.1}
           />
           {/* Model Showcase */}
-          <div className="absolute inset-0 flex items-center justify-center z-30 p-4">
+          <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/10 backdrop-blur-3xl">
             <div className="w-full max-w-2xl">
-              <div className="bg-transparent text-white py-20 px-6 rounded-3xl flex flex-col items-center relative">
+              <div className="text-white py-20 px-6 flex flex-col items-center relative">
                 <div className="text-center mb-10 relative z-20">
                   <h1 className="text-6xl font-bold">One Window<sup className="text-sm ml-2 align-super">TM</sup></h1>
                   <p className="text-white font-semibold text-2xl">A spectrum of models.</p>
-                  <p className="text-white text-2xl mt-30">
+
+                  <div className="mt-12 mb-12 w-full">
+                    <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-6">Top Models</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* LS Compute-Max */}
+                      <div className="p-4 border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-default flex flex-col items-center gap-3 backdrop-blur-md group hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                          <TreeDeciduousIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-sm">LS Compute-Max</p>
+                        </div>
+                      </div>
+
+                      {/* R3 Advanced */}
+                      <div className="p-4 border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-default flex flex-col items-center gap-3 backdrop-blur-md group hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                          <TreeDeciduousIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-sm">R3 Advanced</p>
+                        </div>
+                      </div>
+
+                      {/* Vision Pro */}
+                      <div className="p-4 border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-default flex flex-col items-center gap-3 backdrop-blur-md group hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                          <TreeDeciduousIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-sm">Vision Pro</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-white text-xl mt-4 max-w-lg mx-auto leading-relaxed">
                     "Choose a <span className="text-white font-bold italic">faster</span> model when speed matters
                     <br />and a <span className="text-white font-bold italic">smarter</span> one for more complex tasks"
                   </p>

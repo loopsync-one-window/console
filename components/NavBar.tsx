@@ -79,9 +79,9 @@ export default function Navbar() {
             className="flex items-center justify-center gap-2"
             href="/"
           >
-            <img 
-              src="/resources/logo.svg" 
-              alt="LoopSync Logo" 
+            <img
+              src="/resources/logo.svg"
+              alt="LoopSync Logo"
               className="h-9 w-auto brightness-150 contrast-125"
             />
           </a>
@@ -99,7 +99,7 @@ export default function Navbar() {
             <span className="relative z-20">Pricing</span>
           </a>
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/download-manual">
-            <span className="relative z-20">Download Manual</span>
+            <span className="relative z-20">Manual</span>
           </a>
 
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/company">
@@ -112,35 +112,35 @@ export default function Navbar() {
           {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/contact">
             <span className="relative z-20">Contact Us</span>
           </a> */}
-          
+
           {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="https://investors.intellaris.co" target="_blank" rel="noopener noreferrer">
             <span className="relative z-20 mb-1">Investor Relations</span>
             <ExternalLink className="w-4 h-4 ml-1 mb-1 inline text-white font-bold" />
           </a> */}
         </div>
 
-        
+
         <div className="flex items-center gap-3">
 
           {isAuthenticated ? (
             <Link href="https://loopsync.cloud/home">
               <button
-                className="relative inline-flex cursor-pointer items-center gap-2 px-6 py-2 font-semibold text-red-50 bg-gradient-to-tr from-blue-900 via-blue-700 to-blue-900/10 ring-2 ring-blue-900/20 rounded-full overflow-hidden hover:opacity-90 transition-opacity before:absolute before:top-4 before:left-1/2 before:-translate-x-1/2 before:w-[100px] before:h-[100px] before:rounded-full before:bg-gradient-to-b before:from-red-50/10 before:blur-xl"
+                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
               >
-                Go to Console
+                Open Console
               </button>
             </Link>
           ) : (
             <>
               <a
                 href="https://loopsync.cloud/open-account?login=true"
-                className="rounded-full font-bold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border border-white/30 text-white bg-transparent hover:border-white/50"
+                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border border-white/10 text-white bg-transparent hover:border-white/10"
               >
                 Login
               </a>
               <a
                 href="https://loopsync.cloud/open-account?login=false"
-                className="rounded-full font-bold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border bg-gradient-to-r from-blue-900 to-blue-700 border-blue-500/30 text-white hover:from-blue-800 hover:to-blue-500"
+                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
               >
                 Open Account
               </a>

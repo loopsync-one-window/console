@@ -49,16 +49,16 @@ const GradientBlinds: React.FC<GradientBlindsProps> = ({
   dpr,
   paused = false,
   gradientColors = ["#0f1629", "#1e3a8a", "#2563eb", "#1d4ed8"],
-  angle = 0,
-  noise = 0.3,
-  blindCount = 16,
+  angle = 90,
+  noise = 0.0,
+  blindCount = 12,
   blindMinWidth = 60,
   mouseDampening = 0.15,
   mirrorGradient = false,
   spotlightRadius = 0.5,
   spotlightSoftness = 1,
   spotlightOpacity = 1,
-  distortAmount = 0,
+  distortAmount = 0.0,
   shineDirection = "left",
   mixBlendMode = "lighten",
   animateColors = false,
@@ -375,7 +375,7 @@ void main() {
 
       const callIfFn = <T extends object, K extends keyof T>(obj: T | null, key: K) => {
         if (obj && typeof obj[key] === "function") {
-          ;(obj[key] as unknown as () => void).call(obj)
+          ; (obj[key] as unknown as () => void).call(obj)
         }
       }
       callIfFn(programRef.current, "remove")
