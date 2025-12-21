@@ -11,12 +11,12 @@ export default function MobileScreeningPage() {
     e.preventDefault();
     // In a real app, you would send this email to your backend
     console.log("Email submitted:", email);
-    
+
     setIsSubmitting(true);
-    
+
     // Clear the input field
     setEmail("");
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -49,14 +49,14 @@ export default function MobileScreeningPage() {
         </div>
 
         {/* Message */}
-        <h1 className="text-2xl font-bold mb-4">Aww, We're Sad <br/>to See You Go!</h1>
-        
+        <h1 className="text-2xl font-bold mb-4">Aww, We're Sad <br />to See You Go!</h1>
+
         <p className="text-white/80 mb-8">
-            Currently not supported on mobile. For the best experience, use a desktop. Enter your email, and we'll send setup instructions.
+          Currently not supported on mobile. For the best experience, please use a desktop.
         </p>
 
         {/* Email Form */}
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
+        {/* <form onSubmit={handleSubmit} className="w-full space-y-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Mail className="h-5 w-5 text-white/50" />
@@ -79,7 +79,7 @@ export default function MobileScreeningPage() {
           >
             {isSubmitting ? "Instructions Sent!" : "Send Instructions"}
           </button>
-        </form>
+        </form> */}
       </div>
     </div>
   );
