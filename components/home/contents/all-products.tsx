@@ -48,9 +48,9 @@ const mockProducts = [
 const mockApps = [
   {
     id: "101",
-    name: "Diamond Plateau",
+    name: "Rage Platformer",
     version: "1.0.0",
-    description: "A minimalist desktop game that gamifies your productivity.",
+    description: "A visually refined 2D platformer developed using Unreal Engine 5, combining tight controls, engaging level design, and fluid character movement.",
     logo: "/apps/daimond.png",
     installed: false,
     isPaid: false,
@@ -160,8 +160,8 @@ export function AllProducts() {
     try {
       // Trigger download
       const link = document.createElement("a");
-      link.href = "/apps/games/DiamondPlateau.exe";
-      link.download = "DiamondPlateau.exe";
+      link.href = "https://loopsync-game-builds.s3.ap-south-1.amazonaws.com/Rage-Platformer.zip";
+      link.download = "Rage-Platformer.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -444,9 +444,6 @@ export function AllProducts() {
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-white text-base flex items-center gap-2">
                             {a.name}
-                            {a.id === "101" && (
-                              <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4 brightness-0 invert" />
-                            )}
                           </CardTitle>
                           <Badge variant="outline" className="text-white/70">v{a.version}</Badge>
                         </div>
@@ -751,7 +748,7 @@ export function AllProducts() {
           <div className="flex flex-col items-center justify-center py-10 px-6 text-center animate-in fade-in zoom-in-95 duration-500">
             <img
               src="/apps/daimond.png"
-              alt="Diamond Plateau"
+              alt="Rage Platformer"
               className="w-24 h-24 rounded-2xl shadow-2xl mb-8 ring-1 ring-black/5"
             />
 
@@ -759,7 +756,7 @@ export function AllProducts() {
               <div className="h-8 w-8 rounded-full border-[3px] border-black/5"></div>
               <div className="absolute inset-0 h-8 w-8 rounded-full border-[3px] border-black border-t-transparent animate-spin"></div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Installing Diamond Plateau</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Installing Rage Platformer</h3>
             <p className="text-sm text-gray-500 font-medium leading-relaxed">
               Downloading and setting up files...
             </p>

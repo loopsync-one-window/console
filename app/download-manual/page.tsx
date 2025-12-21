@@ -78,7 +78,7 @@ export default function DownloadManualPage() {
       `}</style>
       {/* Added Navbar */}
       <Navbar />
-      
+
       {/* Main content container with padding to account for fixed navbar */}
       <div className="pt-20 flex flex-col items-center justify-center px-4 flex-grow">
         {/* Background gradient effect */}
@@ -123,10 +123,10 @@ export default function DownloadManualPage() {
                   <div className="flex-grow text-center md:text-left">
                     {/* Title */}
                     <h3 className="text-2xl font-bold text-white mb-2">LoopSync Atlas Manual</h3>
-                    
+
                     {/* Description */}
                     <p className="text-[14px] text-white/80 mb-6">
-                      Comprehensive guide covering all features, setup instructions, troubleshooting tips, 
+                      Comprehensive guide covering all features, setup instructions, troubleshooting tips,
                       and best practices for maximizing your LoopSync Atlas experience.
                     </p>
 
@@ -143,7 +143,7 @@ export default function DownloadManualPage() {
                     </div>
 
                     {/* Download Button */}
-                    <button 
+                    <button
                       className="flex items-center justify-center md:justify-start gap-2 text-black font-semibold bg-white hover:bg-white px-6 py-3 rounded-full text-sm transition-all border border-white/10 w-full md:w-auto"
                       onClick={handleDownload}
                       disabled={isDownloading}
@@ -165,17 +165,17 @@ export default function DownloadManualPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Additional Info */}
           <div className="w-full max-w-2xl mb-16">
             <div className="bg-transparent border border-white/10 rounded-lg p-6">
               <h3 className="text-xl font-bold text-white mb-4">Need Help?</h3>
               <p className="text-white/80 text-sm mb-4">
-                If you have any questions about using LoopSync Atlas or need assistance with the manual, 
+                If you have any questions about using LoopSync Atlas or need assistance with the manual,
                 our support team is ready to help.
               </p>
-              <Link 
-                href="https://loopsync.cloud/one-window/support/resources" 
+              <Link
+                href="https://loopsync.cloud/one-window/support/resources"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-white font-semibold bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm transition-all border border-white/10"
@@ -185,23 +185,23 @@ export default function DownloadManualPage() {
               </Link>
             </div>
           </div>
-          
+
           {/* Footer */}
           <div className="mt-16 w-full py-8 border-t border-white/10">
             {/* Center Content */}
             <div className="text-center text-white text-sm space-y-1">
-            <p>
-            © 2025{" "}
-            <a
-              href="https://www.intellaris.co"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold underline hover:font-bold cursor-pointer"
-            >
-              Intellaris Private Limited
-            </a>
-            . All rights reserved.
-          </p>
+              <p>
+                © 2025{" "}
+                <a
+                  href="https://www.intellaris.co"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold underline hover:font-bold cursor-pointer"
+                >
+                  Intellaris Private Limited
+                </a>
+                . All rights reserved.
+              </p>
               <p className="flex flex-wrap justify-center items-center gap-x-2 text-white/70">
                 <a href="/policies/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
                 <span className="text-white/40">|</span>
