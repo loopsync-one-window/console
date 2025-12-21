@@ -69,6 +69,7 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [trialCreditsClaimed, setTrialCreditsClaimed] = useState<boolean>(false)
   const [isClaimingCredits, setIsClaimingCredits] = useState<boolean>(false)
+  const [isCheckingClaimStatus, setIsCheckingClaimStatus] = useState<boolean>(true)
 
   useEffect(() => {
     (async () => {
@@ -225,15 +226,23 @@ export function Dashboard() {
 
   useEffect(() => {
     if (userDataLoaded && isFreeTrial) {
+      setIsCheckingClaimStatus(true)
       getTrialCreditsStatus()
         .then(res => setTrialCreditsClaimed(res.claimed))
         .catch(() => { })
+        .finally(() => setIsCheckingClaimStatus(false))
     }
   }, [userDataLoaded, isFreeTrial])
 
+  const [showProcessingModal, setShowProcessingModal] = useState<boolean>(false)
+
   const handleClaimCredits = async () => {
     setIsClaimingCredits(true)
+    setShowProcessingModal(true)
     try {
+      // Intentional delay for UX
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
       let email = getCachedProfile?.()?.email || ""
       if (!email) {
         try {
@@ -272,6 +281,7 @@ export function Dashboard() {
     } catch (e) {
       toast.error("An error occurred")
     } finally {
+      setShowProcessingModal(false)
       setIsClaimingCredits(false)
     }
   }
@@ -406,6 +416,27 @@ export function Dashboard() {
         </Dialog>
 
 
+        {/* Processing Modal */}
+        <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
+          <DialogContent
+            className="bg-white border border-white/20 shadow-2xl max-w-md rounded-2xl [&>button]:hidden"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in zoom-in-95 duration-500">
+              <div className="relative mb-6">
+                <div className="h-16 w-16 rounded-full border-[3px] border-black/5"></div>
+                <div className="absolute inset-0 h-16 w-16 rounded-full border-[3px] border-black border-t-transparent animate-spin"></div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 tracking-tight">Claiming free credits</h3>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                Please do not hit back or close this window.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Welcome, {firstName}</h1>
@@ -419,12 +450,14 @@ export function Dashboard() {
             {(userDataLoaded && isFreeTrial) ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
-                {trialCreditsClaimed ? (
-                  <span className="text-xs px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 font-medium">Already Claimed</span>
-                ) : (
-                  <Button onClick={handleClaimCredits} disabled={isClaimingCredits} size="sm" className="h-9 rounded-full bg-white text-black hover:bg-neutral-200 font-semibold px-4 transition-all">
-                    {isClaimingCredits ? "Claiming..." : "Claim ₹400 free credits"}
-                  </Button>
+                {!isCheckingClaimStatus && (
+                  trialCreditsClaimed ? (
+                    <span className="text-sm px-3 py-2 bg-black border border-white/10 rounded-full text-white font-semibold">Already Claimed</span>
+                  ) : (
+                    <Button onClick={handleClaimCredits} disabled={isClaimingCredits} size="sm" className="h-9 rounded-full bg-white text-black hover:bg-neutral-200 font-semibold px-4 transition-all">
+                      {isClaimingCredits ? "Claiming..." : "Claim ₹400 free credits"}
+                    </Button>
+                  )
                 )}
               </div>
             ) : (
