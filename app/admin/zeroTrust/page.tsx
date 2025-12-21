@@ -8,6 +8,7 @@ import {
     notifyAllUsers,
     notifyUser,
     deleteUser,
+    getAdminUserDetails,
     AdminUser,
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -65,6 +66,12 @@ export default function AdminZeroTrustPage() {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // User Details State
+    const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
+    const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+    const [detailedUser, setDetailedUser] = useState<AdminUser | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -226,6 +233,23 @@ export default function AdminZeroTrustPage() {
         }
     };
 
+    const handleViewDetails = async (user: AdminUser) => {
+        setDetailedUser(user);
+        setViewDetailsOpen(true);
+        setLoadingDetails(true);
+        try {
+            const data = await getAdminUserDetails(user.email);
+            if (data.success) {
+                setSelectedUserDetail(data.data);
+            } else {
+                toast.error("Failed to fetch details: " + (data.message || "Unknown error"));
+            }
+        } catch (e) {
+            toast.error("Error fetching details");
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
 
     if (isLocked) {
         return (
@@ -465,6 +489,15 @@ export default function AdminZeroTrustPage() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
+                                                                onClick={() => handleViewDetails(user)}
+                                                                className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
                                                                 onClick={() => openNotifyUser(user.id)}
                                                                 className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
                                                             >
@@ -649,6 +682,94 @@ export default function AdminZeroTrustPage() {
                                 )}
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* User Details Modal */}
+                <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
+                    <DialogContent className="sm:max-w-[700px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6 outline-none">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-3 text-lg font-semibold text-white">
+                                <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white font-bold">
+                                    {detailedUser?.fullName?.charAt(0) || 'U'}
+                                </div>
+                                <div>
+                                    <div>{detailedUser?.fullName}</div>
+                                    <div className="text-xs text-neutral-500 font-normal">{detailedUser?.email}</div>
+                                </div>
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        {loadingDetails ? (
+                            <div className="flex h-60 items-center justify-center">
+                                <Loader2 className="h-8 w-8 animate-spin text-neutral-500" />
+                            </div>
+                        ) : (
+                            selectedUserDetail && (
+                                <div className="space-y-6">
+                                    {/* Credits Grid */}
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-center justify-center text-center">
+                                            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Total Usage</div>
+                                            <div className="text-2xl font-bold text-white">₹{(selectedUserDetail.usage?.total / 100).toLocaleString()}</div>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex flex-col items-center justify-center text-center">
+                                            <div className="text-xs font-medium text-emerald-500/70 uppercase tracking-wider mb-2">Free Credits</div>
+                                            <div className="text-2xl font-bold text-emerald-400">₹{(selectedUserDetail.credits?.free / 100).toLocaleString()}</div>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex flex-col items-center justify-center text-center">
+                                            <div className="text-xs font-medium text-blue-500/70 uppercase tracking-wider mb-2">Prepaid Credits</div>
+                                            <div className="text-2xl font-bold text-blue-400">₹{(selectedUserDetail.credits?.prepaid / 100).toLocaleString()}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Invoices */}
+                                    <div>
+                                        <h3 className="text-sm font-medium text-neutral-300 mb-3 flex items-center gap-2">
+                                            <FileText className="w-4 h-4 text-neutral-500" />
+                                            Latest Invoices / Transactions
+                                        </h3>
+                                        <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                            {!selectedUserDetail.invoices || selectedUserDetail.invoices.length === 0 ? (
+                                                <div className="p-8 text-center text-sm text-neutral-500">
+                                                    No recent invoice or transaction history found.
+                                                </div>
+                                            ) : (
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-white/5 text-neutral-400 font-medium text-xs uppercase tracking-wider sticky top-0 backdrop-blur-md">
+                                                        <tr>
+                                                            <th className="px-4 py-3 font-medium">Date</th>
+                                                            <th className="px-4 py-3 font-medium">Amount</th>
+                                                            <th className="px-4 py-3 font-medium">Description</th>
+                                                            <th className="px-4 py-3 font-medium text-right">Reference</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5">
+                                                        {selectedUserDetail.invoices.map((inv: any, i: number) => (
+                                                            <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                                                <td className="px-4 py-3 text-neutral-400 whitespace-nowrap text-xs">
+                                                                    {new Date(inv.createdAt).toLocaleString()}
+                                                                </td>
+                                                                <td className={`px-4 py-3 font-medium whitespace-nowrap ${inv.amount > 0 ? "text-emerald-400" : "text-white"
+                                                                    }`}>
+                                                                    {inv.amount > 0 ? '+' : ''}{(inv.amount / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-neutral-300">
+                                                                    {inv.description || inv.reason || 'N/A'}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right text-neutral-500 text-xs font-mono">
+                                                                    {inv.referenceId || '-'}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        )}
                     </DialogContent>
                 </Dialog>
 

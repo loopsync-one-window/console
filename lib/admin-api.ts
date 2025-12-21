@@ -155,3 +155,16 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
     });
     return handleResponse(response);
 };
+
+export const getAdminUserDetails = async (email: string): Promise<any> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/billing/admin/user-details`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+};
