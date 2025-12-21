@@ -160,8 +160,8 @@ export function AllProducts() {
     try {
       // Trigger download
       const link = document.createElement("a");
-      link.href = "https://loopsync-game-builds.s3.ap-south-1.amazonaws.com/Rage-Platformer.zip";
-      link.download = "Rage-Platformer.zip";
+      link.href = "https://loopsync-game-builds.s3.ap-south-1.amazonaws.com/Rage+Platformer.zip";
+      link.download = "Rage Platformer.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
