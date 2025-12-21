@@ -1,13 +1,14 @@
 "use client"
 import { ExternalLink, Code2, Zap, Users, FileText, Activity, Cable as Cube, TreeDeciduous, Paperclip, IndianRupee, Gift, AlertTriangle, Info, Cloud, CloudCheck, FerrisWheel, TreePine, ChevronRightIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { getBillingOverview, getSubscriptionMe, getTrialNotifyStatus, updateTrialNotifyStatus, getCachedBillingOverview } from "@/lib/api"
+import { getBillingOverview, getSubscriptionMe, getTrialNotifyStatus, updateTrialNotifyStatus, getCachedBillingOverview, addTrialCredits, getTrialCreditsStatus } from "@/lib/api"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getProfileMe, getCachedProfile, addCredits } from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 // Define types for our cached data
 interface CachedDashboardData {
@@ -66,6 +67,8 @@ export function Dashboard() {
   // State to track if user data has been successfully loaded
   const [userDataLoaded, setUserDataLoaded] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [trialCreditsClaimed, setTrialCreditsClaimed] = useState<boolean>(false)
+  const [isClaimingCredits, setIsClaimingCredits] = useState<boolean>(false)
 
   useEffect(() => {
     (async () => {
@@ -220,6 +223,59 @@ export function Dashboard() {
     }
   }, [hasCheckedTrialNotify, isFreeTrial, trialNotify])
 
+  useEffect(() => {
+    if (userDataLoaded && isFreeTrial) {
+      getTrialCreditsStatus()
+        .then(res => setTrialCreditsClaimed(res.claimed))
+        .catch(() => { })
+    }
+  }, [userDataLoaded, isFreeTrial])
+
+  const handleClaimCredits = async () => {
+    setIsClaimingCredits(true)
+    try {
+      let email = getCachedProfile?.()?.email || ""
+      if (!email) {
+        try {
+          const p = await getProfileMe()
+          email = p?.email || ""
+        } catch { }
+      }
+      if (!email) {
+        toast.error("Could not verify user email")
+        return
+      }
+
+      const res = await addTrialCredits({
+        email,
+        type: "free",
+        amount: 40000,
+        reason: "Free trial credit",
+        referenceId: "REF-001"
+      })
+
+      if (res.success) {
+        setTrialCreditsClaimed(true)
+        toast.success("Successfully claimed ₹400 credits")
+        try {
+          const overview = await getBillingOverview({ force: true })
+          if (overview?.success && overview?.data) setOverview(overview.data)
+        } catch { }
+      } else {
+        if (res.message?.includes("already claimed") || ((res as any).code === 'ALREADY_CLAIMED')) {
+          setTrialCreditsClaimed(true)
+          toast.info("Credits already claimed")
+        } else {
+          toast.error(res.message || "Failed to claim credits")
+        }
+      }
+    } catch (e) {
+      toast.error("An error occurred")
+    } finally {
+      setIsClaimingCredits(false)
+    }
+  }
+
   const fmt = (v: number | undefined | null) => {
     if (v == null) return "₹0"
     return `₹${(v / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -361,7 +417,16 @@ export function Dashboard() {
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Usage Snapshot for {monthLabel}</h2>
             {(userDataLoaded && isFreeTrial) ? (
-              <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
+                {trialCreditsClaimed ? (
+                  <span className="text-xs px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 font-medium">Already Claimed</span>
+                ) : (
+                  <Button onClick={handleClaimCredits} disabled={isClaimingCredits} size="sm" className="h-9 rounded-full bg-white text-black hover:bg-neutral-200 font-semibold px-4 transition-all">
+                    {isClaimingCredits ? "Claiming..." : "Claim ₹400 free credits"}
+                  </Button>
+                )}
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">Next billing period starts in {isLoading ? <span className="inline-block bg-white/5 animate-pulse rounded-full w-12 h-4 align-middle" /> : <span className="font-semibold text-white">{days}</span>} days</p>
             )}

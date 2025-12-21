@@ -90,7 +90,7 @@ class ApiError extends Error {
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
   const data = await response.json();
-  
+
   if (!response.ok) {
     throw new ApiError(
       data.statusCode || response.status,
@@ -98,7 +98,7 @@ const handleResponse = async (response: Response) => {
       data.timestamp || new Date().toISOString()
     );
   }
-  
+
   return data;
 };
 
@@ -219,7 +219,7 @@ export const getOnboardStatus = async (): Promise<{ userId: string; onboard: boo
   if (response.status === 404) {
     try {
       await response.json();
-    } catch {}
+    } catch { }
     return { userId, onboard: false };
   }
   return handleResponse(response);
@@ -291,6 +291,27 @@ export const addCredits = async (payload: { email: string; type: "free" | "prepa
   return handleResponse(response);
 };
 
+export const addTrialCredits = async (payload: { email: string; type: "free"; amount: number; reason: string; referenceId: string }): Promise<{ success: boolean; message?: string }> => {
+  const token = await getAccessToken();
+  if (!token) throw new ApiError(401, "Missing access token", new Date().toISOString());
+  const response = await fetch(`${API_BASE_URL}/billing/trial/credits/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
+};
+
+export const getTrialCreditsStatus = async (): Promise<{ success: boolean; claimed: boolean }> => {
+  const token = await getAccessToken();
+  if (!token) throw new ApiError(401, "Missing access token", new Date().toISOString());
+  const response = await fetch(`${API_BASE_URL}/billing/trial/credits/status`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(response);
+};
+
 // Email Signup API
 export const signupWithEmail = async (
   fullName: string,
@@ -308,7 +329,7 @@ export const signupWithEmail = async (
       password,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -329,7 +350,7 @@ export const signupWithGoogle = async (
       fullName,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -348,7 +369,7 @@ export const loginWithEmail = async (
       password,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -365,7 +386,7 @@ export const requestPasswordReset = async (
       email,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -386,7 +407,7 @@ export const resetPassword = async (
       newPassword,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -405,7 +426,7 @@ export const verifyEmailOTP = async (
       code,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -422,7 +443,7 @@ export const resendVerificationOTP = async (
       email,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -441,7 +462,7 @@ export const verifyEmail = async (
       code,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -458,7 +479,7 @@ export const resendVerificationCode = async (
       email,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -727,24 +748,24 @@ interface BillingDetailsResponse {
   currency: string;
   billingEmail: string | null;
   billingAddress:
-    | {
-        id: string;
-        addressLine1?: string;
-        addressLine2?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        pinCode?: string;
-        phoneNumber?: string;
-      }
-    | null;
+  | {
+    id: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    pinCode?: string;
+    phoneNumber?: string;
+  }
+  | null;
   paymentMethod:
-    | {
-        id: string;
-        type: string;
-        providerDetails: unknown;
-      }
-    | null;
+  | {
+    id: string;
+    type: string;
+    providerDetails: unknown;
+  }
+  | null;
   paymentId: string | null;
 }
 
@@ -866,7 +887,7 @@ export const getPlanByCode = async (
       "Content-Type": "application/json",
     },
   });
-  
+
   return handleResponse(response);
 };
 
@@ -885,7 +906,7 @@ export const checkEligibility = async (
       email,
     }),
   });
-  
+
   return handleResponse(response);
 };
 
@@ -1104,7 +1125,7 @@ export interface SanitizePromptResponse {
     hasUnsafeParts: boolean;
     removedSections: string[];
     warnings: string[];
-};
+  };
 }
 
 export const sanitizePrompt = async (payload: {
