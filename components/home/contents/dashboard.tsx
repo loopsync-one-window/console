@@ -76,7 +76,25 @@ export function Dashboard() {
           // Use cached data
           setOverview(cachedDashboardData.overview)
           setFirstName(cachedDashboardData.firstName)
-          setIsFreeTrial(cachedDashboardData.isFreeTrial)
+
+          if (cachedDashboardData.isFreeTrial) {
+            // If cache thinks it's a free trial, Verify it! User might have paid recently.
+            try {
+              const sub = await getSubscriptionMe()
+              if (sub?.success && sub?.subscription) {
+                const freshIsFreeTrial = Boolean(sub.subscription.isFreeTrial)
+                setIsFreeTrial(freshIsFreeTrial)
+                cachedDashboardData.isFreeTrial = freshIsFreeTrial // Update cache
+              } else {
+                setIsFreeTrial(true) // Fallback to cache if request fails
+              }
+            } catch {
+              setIsFreeTrial(true)
+            }
+          } else {
+            setIsFreeTrial(false)
+          }
+
           setUserDataLoaded(true)
           setIsLoading(false)
           return

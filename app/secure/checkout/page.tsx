@@ -219,20 +219,40 @@ const SecurePaymentPage = () => {
         ? `LoopSync ${formatPlanName(planData.code)} Payment`
         : 'LoopSync Subscription Payment',
       order_id: orderId,
-      handler: function (response: any) {
-        const startDate = new Date();
-        const endDate = new Date();
-        if (billingCycle === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
-        else endDate.setMonth(endDate.getMonth() + 1);
+      handler: async function (response: any) {
+        setIsSubscribing(true);
+        try {
+          // Fetch payment actual details from server to confirm status
+          const detailsRes = await fetch('https://srv01.loopsync.cloud/billing/webhook/payment-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: response.razorpay_payment_id })
+          });
+          const details = await detailsRes.json();
 
-        setPaymentSuccessData({
-          amount,
-          startDate: startDate.toLocaleDateString(),
-          endDate: endDate.toLocaleDateString(),
-          duration: billingCycle === 'annual' ? '1 Year' : '1 Month',
-          billingCycle: billingCycle === 'annual' ? 'Annually' : 'Monthly'
-        });
-        setShowPaymentSuccessModal(true);
+          if (details.success && details.payment && details.payment.status === 'captured') {
+            const startDate = new Date();
+            const endDate = new Date();
+            if (billingCycle === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
+            else endDate.setMonth(endDate.getMonth() + 1);
+
+            setPaymentSuccessData({
+              amount, // Using the amount passed to function as fallback, but could use details.payment.amount
+              startDate: startDate.toLocaleDateString(),
+              endDate: endDate.toLocaleDateString(),
+              duration: billingCycle === 'annual' ? '1 Year' : '1 Month',
+              billingCycle: billingCycle === 'annual' ? 'Annually' : 'Monthly'
+            });
+            setShowPaymentSuccessModal(true);
+          } else {
+            alert('Payment verification failed or pending. Please contact support if amount deducted.');
+            setIsSubscribing(false);
+          }
+        } catch (e) {
+          console.error('Error verifying payment:', e);
+          alert('Error verifying payment. Please contact support.');
+          setIsSubscribing(false);
+        }
       },
       prefill: {
         email: email,
@@ -369,23 +389,66 @@ const SecurePaymentPage = () => {
       description: planData
         ? `LoopSync ${formatPlanName(planData.code)} Subscription`
         : 'LoopSync Subscription Authorization',
-      handler: function (response: any) {
-        const startDate = new Date();
-        const endDate = new Date();
-        if (billingCycle === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
-        else endDate.setMonth(endDate.getMonth() + 1);
+      handler: async function (response: any) {
+        setIsSubscribing(true);
+        try {
+          const promises = [];
 
-        const planCode = planData?.code || searchParams?.get('plan') || 'PRO';
-        const pricing = getPlanPricing(planCode);
+          // 1. Check Subscription Status
+          promises.push(
+            fetch('https://srv01.loopsync.cloud/billing/webhook/payment-details', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ subscriptionId: response.razorpay_subscription_id })
+            }).then(r => r.json())
+          );
 
-        setPaymentSuccessData({
-          amount: pricing.price * 100,
-          startDate: startDate.toLocaleDateString(),
-          endDate: endDate.toLocaleDateString(),
-          duration: billingCycle === 'annual' ? '1 Year' : '1 Month',
-          billingCycle: billingCycle === 'annual' ? 'Annually' : 'Monthly'
-        });
-        setShowPaymentSuccessModal(true);
+          // 2. Check Payment Status (if exists)
+          if (response.razorpay_payment_id) {
+            promises.push(
+              fetch('https://srv01.loopsync.cloud/billing/webhook/payment-details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: response.razorpay_payment_id })
+              }).then(r => r.json())
+            );
+          }
+
+          const results = await Promise.all(promises);
+          const subDetails = results[0];
+          const payDetails = results.length > 1 ? results[1] : null;
+
+          // Logic: If payment is captured OR subscription is valid (authorized/active)
+          const isPaymentCaptured = payDetails?.success && payDetails?.payment?.status === 'captured';
+          const isSubValid = subDetails?.success && subDetails?.subscription; // Razorpay sub object existence implies valid fetch
+
+          if (isPaymentCaptured || isSubValid) {
+            const startDate = new Date();
+            const endDate = new Date();
+            if (billingCycle === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
+            else endDate.setMonth(endDate.getMonth() + 1);
+
+            const planCode = planData?.code || searchParams?.get('plan') || 'PRO';
+            const pricing = getPlanPricing(planCode);
+
+            setPaymentSuccessData({
+              amount: pricing.price * 100,
+              startDate: startDate.toLocaleDateString(),
+              endDate: endDate.toLocaleDateString(),
+              duration: billingCycle === 'annual' ? '1 Year' : '1 Month',
+              billingCycle: billingCycle === 'annual' ? 'Annually' : 'Monthly'
+            });
+            setShowPaymentSuccessModal(true);
+          } else {
+            console.error('Verification failed', { subDetails, payDetails });
+            alert('Subscription verification failed. Please contact support.');
+            setIsSubscribing(false);
+          }
+        } catch (e) {
+          console.error('Error verifying subscription:', e);
+          alert('Error verifying subscription. Please contact support.');
+          setIsSubscribing(false);
+        }
       },
       prefill: {
         email,
