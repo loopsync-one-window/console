@@ -7,7 +7,7 @@ import { Home, RotateCcw } from "lucide-react";
 
 export default function NotFound() {
   const router = useRouter();
-  
+
   // Define gradient colors for the 404 page (purple theme)
   const notFoundColors = [
     "#1a001a", // deep purple (base)
@@ -40,7 +40,7 @@ export default function NotFound() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-              <Button 
+              <Button
                 onClick={() => router.back()}
                 variant="default"
                 className="bg-white text-black rounded-full px-6 py-3 font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
@@ -48,9 +48,9 @@ export default function NotFound() {
                 <RotateCcw size={18} />
                 Go Back
               </Button>
-              
-              <Button 
-                onClick={() => router.push('/')}  
+
+              <Button
+                onClick={() => router.push('/')}
                 variant="default"
                 className="bg-white text-black rounded-full px-6 py-3 font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
               >
@@ -61,18 +61,18 @@ export default function NotFound() {
           </div>
         </div>
 
-    {/* Right Column - Animated Background */}
-    <div className="relative h-screen overflow-hidden flex items-center justify-center bg-black">
-      <GradientBlinds 
-        angle={45} 
-        gradientColors={notFoundColors}
-        animateColors={true}
-        transitionDuration={2000}
-        startDelay={0.5}
-      />
+        {/* Right Column - Animated Background */}
+        <div className="relative h-screen overflow-hidden flex items-center justify-center bg-black">
+          <GradientBlinds
+            angle={45}
+            gradientColors={notFoundColors}
+            animateColors={true}
+            transitionDuration={2000}
+            startDelay={0.5}
+          />
 
-      
-    </div>
+
+        </div>
 
       </div>
     </div>

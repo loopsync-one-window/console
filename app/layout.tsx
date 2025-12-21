@@ -41,4 +41,3 @@ export default function RootLayout({
 
 
 
-// cd /var/www/loopsync/pro-loopsync-console
