@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { 
-  Smartphone, 
-  Database, 
-  Cloud, 
+import {
+  Smartphone,
+  Database,
+  Cloud,
   BarChart3,
   ArrowRight,
   CalculatorIcon,
@@ -145,7 +145,7 @@ export default function UseCasesPage() {
       `}</style>
       {/* Added Navbar */}
       <Navbar />
-      
+
       {/* Main content container with padding to account for fixed navbar */}
       <div className="pt-20 flex flex-col items-center justify-center px-4 flex-grow">
         {/* Background gradient effect */}
@@ -175,7 +175,7 @@ export default function UseCasesPage() {
                 {/* Card with glowing border */}
                 <div
                   className={`
-                    h-full bg-white/5 rounded-3xl border border-white/10 
+                    h-full bg-transparent rounded-3xl border border-white/10 
                     transition-all duration-300 overflow-hidden 
                     group-hover:border-white/20
                     group-hover:shadow-[0_0_15px_rgba(255,255,255,0.35)]
@@ -190,7 +190,7 @@ export default function UseCasesPage() {
 
                     {/* Title */}
                     <h3 className="text-xl font-bold text-white mb-2">{useCase.title}</h3>
-                    
+
                     {/* Description */}
                     <p className="text-[12px] text-white/80 mb-4 flex-grow">{useCase.description}</p>
 
@@ -213,7 +213,7 @@ export default function UseCasesPage() {
               </div>
             ))}
           </div>
-          
+
           <div className="w-full max-w-4xl mb-16">
             <div className="bg-transparent border border-white/10 rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="text-center sm:text-left">
@@ -222,8 +222,8 @@ export default function UseCasesPage() {
                   Join thousands of teams using LoopSync Atlas to capture and analyze digital content.
                 </p>
               </div>
-              <Link 
-                href="/pricing" 
+              <Link
+                href="/pricing"
                 className="flex items-center gap-2 text-black font-semibold bg-white hover:bg-white px-6 py-3 rounded-full text-sm transition-all border border-white/10 whitespace-nowrap"
               >
                 View Pricing
@@ -231,17 +231,17 @@ export default function UseCasesPage() {
               </Link>
             </div>
           </div>
-          
+
           <h2 className="text-5xl font-bold text-white mb-6 text-center">LoopSync Ceres Assist</h2>
           <p className="text-center text-gray-400 text-lg mb-12 max-w-4xl leading-relaxed">
-            Autonomous browser assistant for navigation, forms, extraction, and workflows with safe approvals.
+            Autonomous agentic browser assistant for navigation, forms, extraction, and workflows with safe approvals.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl mb-16">
             {ceresCases.map((useCase, index) => (
               <div key={index} className="relative group">
                 <div
                   className={`
-                    h-full bg-white/5 rounded-3xl border border-white/10 
+                    h-full bg-transparent rounded-3xl border border-white/10 
                     transition-all duration-300 overflow-hidden 
                     group-hover:border-white/20
                     group-hover:shadow-[0_0_15px_rgba(255,255,255,0.35)]
@@ -269,23 +269,23 @@ export default function UseCasesPage() {
               </div>
             ))}
           </div>
-          
+
           {/* Footer */}
           <div className="mt-16 w-full py-8 border-t border-white/10">
             {/* Center Content */}
             <div className="text-center text-white text-sm space-y-1">
-            <p>
-            © 2025{" "}
-            <a
-              href="https://www.intellaris.co"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold underline hover:font-bold cursor-pointer"
-            >
-              Intellaris Private Limited
-            </a>
-            . All rights reserved.
-          </p>
+              <p>
+                © 2025{" "}
+                <a
+                  href="https://www.intellaris.co"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold underline hover:font-bold cursor-pointer"
+                >
+                  Intellaris Private Limited
+                </a>
+                . All rights reserved.
+              </p>
               <p className="flex flex-wrap justify-center items-center gap-x-2 text-white/70">
                 <a href="/policies/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
                 <span className="text-white/40">|</span>

@@ -1147,3 +1147,24 @@ export const sanitizePrompt = async (payload: {
   });
   return handleResponse(response);
 };
+
+export const submitContactSupport = async (
+  name: string,
+  email: string,
+  topic: string,
+  message: string
+): Promise<{ success: boolean; message: string }> => {
+  const response = await fetch(`${API_BASE_URL}/support/contact`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      email,
+      topic,
+      message,
+    }),
+  });
+  return handleResponse(response);
+};
