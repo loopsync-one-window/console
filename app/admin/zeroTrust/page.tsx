@@ -106,7 +106,7 @@ export default function AdminZeroTrustPage() {
         const hashBuffer = await crypto.subtle.digest("SHA-256", data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-        return hashHex === "0ce74f7b99a170d90653671b2d734936a3f8349b834d2aae2d43bd1511769722";
+        return hashHex === "95bd39f9ee4294791c975a42598ae9d85d24ad63a6febb2acffce48a981b1620";
     };
 
     // Unlock Handler
