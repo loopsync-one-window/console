@@ -1294,14 +1294,16 @@ const OpenAccountContent = () => {
           });
           localStorage.setItem("user", JSON.stringify(decodedData));
 
-          // Optionally clean up the URL or redirect to remove tokens
-          // For now, let's leave it as the state updates might trigger other effects
+          // Redirect CUSTOMER users directly to home
+          if (decodedData.accountType === 'CUSTOMER') {
+            router.push('/home');
+          }
         }
       } catch (e) {
         console.error('Error parsing user data from query parameters', e);
       }
     }
-  }, [userDataParam, accessTokenParam, refreshTokenParam, expiresAtParam]);
+  }, [userDataParam, accessTokenParam, refreshTokenParam, expiresAtParam, router]);
 
   // Handle reset parameter
   useEffect(() => {

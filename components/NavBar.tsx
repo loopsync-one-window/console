@@ -6,7 +6,11 @@ import CountryCurrencyDropdown from "./CurrencyDropdown"
 import { getStoredTokens } from "@/lib/api"
 import Link from "next/link"
 
-export default function Navbar() {
+interface NavbarProps {
+  className?: string
+}
+
+export default function Navbar({ className }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -64,7 +68,7 @@ export default function Navbar() {
     <>
       {/* Desktop Header */}
       <header
-        className={`fixed top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full backdrop-blur-md md:flex border transition-all duration-300 max-w-6xl px-4 border-transparent shadow-none py-2`}
+        className={`fixed top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full backdrop-blur-md md:flex border transition-all duration-300 max-w-6xl px-4 border-transparent shadow-none py-2 ${className || ""}`}
         style={{
           willChange: "transform",
           transform: "translateZ(0) translateX(-50%)",

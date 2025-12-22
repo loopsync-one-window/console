@@ -1168,3 +1168,29 @@ export const submitContactSupport = async (
   });
   return handleResponse(response);
 };
+
+export interface AcquisitionInquiryData {
+  name: string;
+  email: string;
+  organization: string;
+  role: string;
+  buyerType: string;
+  acquisitionScope: string;
+  timeline: string;
+  message: string;
+  acknowledgement: boolean;
+}
+
+export const submitAcquisitionInquiry = async (
+  data: AcquisitionInquiryData
+): Promise<{ success: boolean; message: string }> => {
+  const response = await fetch(`${API_BASE_URL}/acquire/inquiry`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  return handleResponse(response);
+};

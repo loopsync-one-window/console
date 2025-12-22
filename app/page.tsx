@@ -1,16 +1,30 @@
+"use client"
+
 import GradientBlinds from "@/components/GradientBlinds"
+import MobileScreeningPage from "./screening/page"
+import StrategicUpdateBanner from "@/components/StrategicUpdateBanner"
+import { useState, useEffect } from "react"
 import Navbar from "@/components/NavBar"
 
-import MobileScreeningPage from "./screening/page"
-
 export default function Home() {
+  const [isBannerVisible, setIsBannerVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsBannerVisible(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <>
       <div className="block md:hidden">
         <MobileScreeningPage />
       </div>
       <main className="relative h-screen overflow-hidden hidden md:block">
-        <Navbar />
+        <StrategicUpdateBanner isVisible={isBannerVisible} onClose={() => setIsBannerVisible(false)} />
+        <Navbar
+          className={`transition-all duration-1000 ease-out ${isBannerVisible ? "translate-y-[3.5rem]" : ""
+            }`}
+        />
 
         {/* Animated Gradient Background */}
         <div className="fixed inset-0 w-full h-screen flex items-center justify-center">
