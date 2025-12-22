@@ -1397,7 +1397,7 @@ const OpenAccountContent = () => {
   return (
     <div className="h-screen bg-[#000000] text-white overflow-hidden relative">
       {/* Header */}
-      <header className="absolute top-0 left-0 backdrop-blur-sm right-0 flex items-center justify-between px-8 py-6 z-999">
+      <header className="absolute top-0 left-0 backdrop-blur-sm w-1/2 flex items-center justify-between px-8 py-6 z-[999]">
         <div className="text-3xl font-bold tracking-tight">
           <img
             src="/resources/logo.svg"
@@ -1405,10 +1405,7 @@ const OpenAccountContent = () => {
             className="h-9 w-auto brightness-150 contrast-125"
           />
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full">
-          <span className="text-sm font-semibold">You are signing into LoopSync Cloud Console</span>
-          <ChevronDown className="w-4 h-4 mt-1 text-white" />
-        </div>
+
       </header>
 
       {/* Main Content */}
@@ -1474,6 +1471,12 @@ const OpenAccountContent = () => {
             rotation={0}
             speed={1.1}
           />
+
+          {/* Top Right Header Text */}
+          <div className="absolute top-6 right-8 z-[1000] flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full backdrop-blur-md">
+            <span className="text-sm font-semibold text-white">You are signing into LoopSync Cloud Console</span>
+            <ChevronDown className="w-4 h-4 mt-1 text-white" />
+          </div>
           {/* Model Showcase */}
           <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/10 backdrop-blur-3xl">
             <div className="w-full max-w-2xl">
