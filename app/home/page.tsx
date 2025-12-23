@@ -7,8 +7,8 @@ import { HomeHeader } from "@/components/home/home-header"
 import { Sidebar } from "@/components/home/sidebar"
 import { useConfettiSound } from "@/hooks/use-confetti-sound"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
+import { useRouter, useSearchParams } from "next/navigation"
+import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, saveAuthTokens, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Timer, Trash2, X } from "lucide-react"
@@ -16,6 +16,7 @@ import { useSidebar } from "@/components/home/contexts/sidebar-contexts"
 
 export default function HomePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [allowed, setAllowed] = useState(false)
   const [mustShowCancelModal, setMustShowCancelModal] = useState(false)
   const [autopayStatus, setAutopayStatus] = useState<AutopayStatusResponse | null>(null)
@@ -25,6 +26,34 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
+      // Check for tokens in URL (from Google Auth redirect)
+      const accessTokenParam = searchParams.get('accessToken')
+      const refreshTokenParam = searchParams.get('refreshToken')
+      const expiresAtParam = searchParams.get('expiresAt')
+      const userDataParam = searchParams.get('userData')
+
+      if (accessTokenParam) {
+        saveAuthTokens({
+          accessToken: accessTokenParam,
+          refreshToken: refreshTokenParam || undefined,
+          expiresAt: expiresAtParam || undefined
+        })
+
+        if (userDataParam) {
+          try {
+            const decodedData = JSON.parse(decodeURIComponent(userDataParam))
+            localStorage.setItem("user", JSON.stringify(decodedData))
+          } catch (e) {
+            console.error("Failed to parse user data", e)
+          }
+        }
+
+        setAllowed(true)
+        // Clear query params
+        router.replace('/home')
+        return
+      }
+
       const { accessToken } = getStoredTokens()
       if (!accessToken) {
         // Redirect to login page smoothly
@@ -36,7 +65,7 @@ export default function HomePage() {
       // Redirect to login page smoothly if any error occurs
       router.push("/open-account?login=true")
     }
-  }, [router])
+  }, [router, searchParams])
 
   useEffect(() => {
     let cancelled = false
