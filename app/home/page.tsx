@@ -37,6 +37,7 @@ function HomeContent() {
   const [autopayStatus, setAutopayStatus] = useState<AutopayStatusResponse | null>(null)
   const [mustShowCancelModal, setMustShowCancelModal] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const [userEmail, setUserEmail] = useState("")
 
   /**
    * 🔐 AUTH GATE (runs ONCE, hydration-safe)
@@ -112,6 +113,7 @@ function HomeContent() {
 
         setSkipOnboarding(Boolean(onboard?.onboard))
         setAutopayStatus(autopay)
+        setUserEmail(profile.email)
 
         const restricted =
           autopay?.isAutopayCancelled ||
@@ -162,7 +164,7 @@ function HomeContent() {
       key={skipOnboarding ? "dash" : "onboard"}
       initialItem={skipOnboarding ? "dashboard" : "onboarding"}
     >
-      <AutopayCancelModal open={mustShowCancelModal} status={autopayStatus} />
+      <AutopayCancelModal open={mustShowCancelModal} status={autopayStatus} email={userEmail} />
       <div className="flex h-screen bg-[#07080a]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -184,7 +186,7 @@ export default function HomePage() {
 
 /* ---------- MODAL ---------- */
 
-function AutopayCancelModal({ open, status }: { open: boolean; status: AutopayStatusResponse | null }) {
+function AutopayCancelModal({ open, status, email }: { open: boolean; status: AutopayStatusResponse | null; email: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -197,7 +199,8 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
   }
 
   const handleReactivate = () => {
-    router.push("/secure/checkout?reactivate=true")
+    const plan = status?.local?.plan?.code || "PRO"
+    router.push(`/secure/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billingCycle=monthly&reactivate=true`)
   }
 
   return (
@@ -223,10 +226,25 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
           >
             Reactivate Subscription
           </Button>
+
+          <a
+            href="https://loopsync.cloud/one-window/support/resources"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full"
+          >
+            <Button
+              variant="outline"
+              className="w-full border-zinc-200 text-zinc-600 hover:text-black hover:border-black hover:bg-transparent font-semibold h-10 rounded-full transition-all text-xs"
+            >
+              Contact Support
+            </Button>
+          </a>
+
           <Button
             variant="ghost"
             onClick={logout}
-            className="w-full text-gray-400 hover:text-black hover:bg-transparent font-medium h-auto py-1 rounded-md transition-colors text-xs"
+            className="w-full text-gray-400 hover:text-red-500 hover:bg-transparent font-medium h-auto py-1 rounded-md transition-colors text-xs"
           >
             Log out
           </Button>
