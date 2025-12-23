@@ -48,8 +48,8 @@ function HomeContent() {
           }
         }
 
-        setAllowed(true)
-        // Clear query params
+        // setAllowed(true) - Don't allow yet, wait for clean URL redirect
+        // Clear query params and let the Effect run again to pick up tokens from storage
         router.replace('/home')
         return
       }
