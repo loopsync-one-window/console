@@ -489,7 +489,7 @@ export default function AcquirePage() {
                         <Dithering
                             style={{ height: "100%", width: "100%" }}
                             colorBack="#000000"
-                            colorFront="#ff7700ff"
+                            colorFront="#ccff00ff"
                             shape={"cat" as any}
                             type="4x4"
                             pxSize={3.5}
