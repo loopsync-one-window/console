@@ -96,6 +96,9 @@ export default function Navbar({ className }: NavbarProps) {
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/models">
             <span className="relative z-20">Models</span>
           </a>
+          <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/products">
+            <span className="relative z-20">Products</span>
+          </a>
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/use-cases">
             <span className="relative z-20">Use Cases</span>
           </a>
