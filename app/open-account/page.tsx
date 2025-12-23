@@ -1463,7 +1463,7 @@ const OpenAccountContent = () => {
           <Dithering
             style={{ height: "100%", width: "100%" }}
             colorBack="hsl(0, 0%, 0%)"
-            colorFront={isLogin ? "#3b31c9ff" : "#c7dc26ff"}
+            colorFront={isLogin ? "#3b31c9ff" : "#e1ff00ff"}
             shape={"cat" as any}
             type="4x4"
             pxSize={3}
