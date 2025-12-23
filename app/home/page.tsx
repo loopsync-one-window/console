@@ -20,9 +20,9 @@ import {
   type AutopayStatusResponse,
   getOnboardStatus
 } from "@/lib/api"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Timer, X } from "lucide-react"
+
 import { useSidebar } from "@/components/home/contexts/sidebar-contexts"
 
 function HomeContent() {
@@ -101,7 +101,7 @@ function HomeContent() {
         const [onboard, autopay, profile] = await Promise.all([
           getOnboardStatus(),
           getAutopayStatus(),
-          getProfileMe({ force: retryCount > 0 }) // Force refresh on retry
+          getProfileMe({ force: true }) // Always force refresh on load
         ])
 
         if (profile.fullName === "User") {
@@ -196,17 +196,41 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
     router.push("/")
   }
 
+  const handleReactivate = () => {
+    router.push("/secure/checkout?reactivate=true")
+  }
+
   return (
     <Dialog open={open}>
-      <DialogContent onInteractOutside={e => e.preventDefault()}>
-        <button onClick={logout} className="absolute right-4 top-4">
-          <X />
-        </button>
-        <DialogHeader>
-          <DialogTitle>Autopay Cancelled</DialogTitle>
-        </DialogHeader>
-        <p>Your subscription is inactive.</p>
-        <Button onClick={logout}>Logout</Button>
+      <DialogContent
+        showCloseButton={false}
+        onInteractOutside={e => e.preventDefault()}
+        className="max-w-sm p-10 flex flex-col items-center justify-center gap-6 border-none bg-white text-center rounded-3xl shadow-2xl"
+      >
+        <div className="space-y-3 pt-2">
+          <DialogTitle className="text-2xl font-bold text-black tracking-tighter">
+            Subscription Paused
+          </DialogTitle>
+          <p className="text-[15px] text-gray-500 font-medium leading-relaxed">
+            Your subscription is currently inactive. Please reactivate to continue using LoopSync.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 w-full pt-2">
+          <Button
+            onClick={handleReactivate}
+            className="w-full bg-black text-white hover:bg-zinc-800 font-bold h-12 rounded-full transition-all text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          >
+            Reactivate Subscription
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="w-full text-gray-400 hover:text-black hover:bg-transparent font-medium h-auto py-1 rounded-md transition-colors text-xs"
+          >
+            Log out
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )
