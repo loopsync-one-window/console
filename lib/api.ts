@@ -145,6 +145,17 @@ export const getStoredTokens = () => {
   return { accessToken, refreshToken, expiresAt };
 };
 
+export const clearAuthTokens = () => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(EXPIRES_AT_KEY);
+  localStorage.removeItem("user");
+  invalidateProfileCache();
+  invalidatePreferencesCache();
+  invalidateBillingDetailsCache();
+  invalidateBillingOverviewCache();
+};
+
 export const refreshAccessToken = async (): Promise<string> => {
   const { accessToken, refreshToken } = getStoredTokens();
   if (!accessToken || !refreshToken) return accessToken;

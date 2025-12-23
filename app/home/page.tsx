@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/home/sidebar"
 import { useConfettiSound } from "@/hooks/use-confetti-sound"
 import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, saveAuthTokens, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
+import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, saveAuthTokens, clearAuthTokens, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Timer, Trash2, X } from "lucide-react"
@@ -25,20 +25,18 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    try {
+    const run = async () => {
       // Check for tokens in URL (from Google Auth redirect)
       const accessTokenParam = searchParams.get('accessToken')
-      const refreshTokenParam = searchParams.get('refreshToken')
-      const expiresAtParam = searchParams.get('expiresAt')
-      const userDataParam = searchParams.get('userData')
 
       if (accessTokenParam) {
         saveAuthTokens({
           accessToken: accessTokenParam,
-          refreshToken: refreshTokenParam || undefined,
-          expiresAt: expiresAtParam || undefined
+          refreshToken: searchParams.get('refreshToken') || undefined,
+          expiresAt: searchParams.get('expiresAt') || undefined
         })
 
+        const userDataParam = searchParams.get('userData')
         if (userDataParam) {
           try {
             const decodedData = JSON.parse(decodeURIComponent(userDataParam))
@@ -48,23 +46,23 @@ function HomeContent() {
           }
         }
 
-        // setAllowed(true) - Don't allow yet, wait for clean URL redirect
-        // Clear query params and let the Effect run again to pick up tokens from storage
+        // Clean URL but DO NOT redirect yet - let the next render pick up the token
         router.replace('/home')
         return
       }
 
-      const { accessToken } = getStoredTokens()
-      if (!accessToken) {
-        // Redirect to login page smoothly
-        router.push("/open-account?login=true")
+      const { accessToken, refreshToken } = getStoredTokens()
+
+      if (!accessToken && !refreshToken) {
+        // Only redirect if BOTH are missing
+        router.replace("/open-account?login=true")
         return
       }
+
       setAllowed(true)
-    } catch (error) {
-      // Redirect to login page smoothly if any error occurs
-      router.push("/open-account?login=true")
     }
+
+    run()
   }, [router, searchParams])
 
   useEffect(() => {
@@ -108,10 +106,7 @@ function HomeContent() {
         ) {
           try {
             // Clear any invalid tokens
-            localStorage.removeItem("accessToken")
-            localStorage.removeItem("refreshToken")
-            localStorage.removeItem("expiresAt")
-            localStorage.removeItem("user")
+            clearAuthTokens()
           } catch (e) {
             console.error("Error clearing tokens:", e)
           }
@@ -257,10 +252,7 @@ function AutopayCancelModal({ open, status }: { open: boolean; status: AutopaySt
       await logoutAny()
     } catch { }
     try {
-      localStorage.removeItem("accessToken")
-      localStorage.removeItem("refreshToken")
-      localStorage.removeItem("expiresAt")
-      localStorage.removeItem("user")
+      clearAuthTokens()
     } catch { }
     router.push("/")
     setIsLoggingOut(false)
