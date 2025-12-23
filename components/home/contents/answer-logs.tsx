@@ -410,6 +410,7 @@ export function AnswerLogs() {
           className="
             bg-black/30 backdrop-blur-xl border-white/5 text-white
             rounded-3xl 
+            w-full
             sm:max-w-6xl
             h-[92vh]
             flex flex-col
