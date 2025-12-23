@@ -1,19 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { 
-  Building2, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Mail, 
-  Phone, 
-  Globe, 
-  User, 
+import {
+  Building2,
+  MapPin,
+  Calendar,
+  Users,
+  Mail,
+  Phone,
+  Globe,
+  User,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  ArrowUpRight
 } from "lucide-react"
 import Navbar from "@/components/NavBar"
+import Image from "next/image"
 
 export default function CompanyPage() {
   const companyInfo = {
@@ -21,283 +23,202 @@ export default function CompanyPage() {
     cin: "U62011AS2025PTC027817",
     incorporationDate: "18 March 2025",
     address: "Khaniram Boro Pathghy, Garchuk, Kamrup (Metro), Assam, India - 781035",
-    status: "Active (non-government, private company limited by shares)",
-    category: "Private limited company, company limited by shares, non-government company",
-    authorisedCapital: "₹ 10XXXXXX",
-    paidUpCapital: "₹ 10XXXXXX",
+    status: "Active",
     email: "business@intellaris.co",
     phone: "+91 70994 50202",
     website: "www.intellaris.co"
   };
 
   const directors = [
-    {
-      name: "Ripun Basumatary",
-      role: "Director",
-      appointmentDate: "18 March 2025"
-    },
-    {
-      name: "Veeshal D Bodosa",
-      role: "Director",
-      appointmentDate: "18 March 2025"
-    }
-  ];
-
-
-  const whyChooseUs = [
-    "Newly incorporated agile technology firm",
-    "Based in Assam with global aspirations",
-    "Focused on client-specific software solutions",
-    "Dedicated team of experienced professionals",
-    "Commitment to quality and innovation",
-    "State-of-the-art facilities and infrastructure",
+    { name: "Ripun Basumatary", role: "Director" },
+    { name: "Veeshal D Bodosa", role: "Director" }
   ];
 
   return (
-    <div className="min-h-screen bg-[#07080a] flex flex-col">
-      <style jsx>{`
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-        .glass-effect::before {
-          content: '';
-          position: absolute;
-          top: -10px;
-          left: -10px;
-          right: -10px;
-          bottom: -10px;
-          background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          z-index: -1;
-        }
-        .glass-effect:hover {
-          background: rgba(255, 255, 255, 0.15);
-          transform: scale(1.05);
-        }
-        .glass-effect:hover::before {
-          opacity: 1;
-        }
-        .logo-effect {
-          filter: brightness(0) invert(1) brightness(1.5) contrast(1.2);
-          animation: pulse 2s infinite;
-          transition: all 0.3s ease;
-        }
-        .logo-effect:hover {
-          filter: brightness(0) invert(1) brightness(1.7) contrast(1.3) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-        }
-        @keyframes pulse {
-          0% {
-            filter: brightness(0) invert(1) brightness(1.5) contrast(1.2);
-          }
-          50% {
-            filter: brightness(0) invert(1) brightness(1.7) contrast(1.3);
-          }
-          100% {
-            filter: brightness(0) invert(1) brightness(1.5) contrast(1.2);
-          }
-        }
-      `}</style>
-      {/* Added Navbar */}
+    <div className="min-h-screen bg-black text-white selection:bg-white/20 relative overflow-hidden">
+
+      {/* Ambient Background - Clean Red/Rose Glows */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-red-900/10 rounded-full blur-[120px] mix-blend-screen opacity-100" />
+        <div className="absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] bg-rose-900/5 rounded-full blur-[100px] mix-blend-screen opacity-100" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[60vw] h-[60vw] bg-red-950/20 rounded-full blur-[150px] mix-blend-screen opacity-100" />
+      </div>
+
       <Navbar />
-      
-      {/* Main content container with padding to account for fixed navbar */}
-      <div className="pt-20 flex flex-col items-center justify-center px-4 flex-grow">
-        {/* Background gradient effect */}
-        <div className="absolute inset-0 opacity-60 pointer-events-none overflow-hidden">
-          {/* Center blob — larger + lower */}
-          <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[450px] h-[450px] bg-purple-800 rounded-full blur-[140px]" />
 
-          {/* Left blob — bigger + more spread */}
-          <div className="absolute top-1/2 left-1/5 w-[380px] h-[380px] bg-purple-800/30 rounded-full blur-[150px]" />
-
-          {/* Right blob — bigger + spread */}
-          <div className="absolute bottom-20 right-1/5 w-[420px] h-[420px] bg-purple-800/30 rounded-full blur-[150px]" />
+      <main className="relative z-10 pt-32 pb-20 px-6 max-w-[1200px] mx-auto">
+        {/* Hero Section */}
+        <div className="flex flex-col items-center text-center mb-24 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/60 backdrop-blur-md">
+            <span>Incorporated 2025</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-tight bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent pb-4">
+            Intellaris
+            <span className="block text-3xl md:text-5xl font-medium text-white/40 mt-2">Intelligence meets Polaris.</span>
+          </h1>
+          <p className="max-w-2xl text-lg md:text-xl text-white leading-relaxed font-light">
+            We're a technology and fintech company committed to solving real-world problems through intelligent software and smart financial innovation.
+          </p>
         </div>
 
-        {/* Content container */}
-        <div className="relative z-10 w-full max-w-6xl flex flex-col mt-35 items-center justify-center">
-          {/* Page Title */}
-          <h1 className="text-6xl font-bold text-white mb-6 text-center">Intellaris Private Limited</h1>
-          <p className="text-center text-white/70 text-lg mb-12 max-w-4xl leading-relaxed">
-            We're a technology and fintech company committed to solving real-world problems through intelligent software and smart financial innovation - helping businesses operate with clarity, efficiency, and confidence.
-          </p>
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
 
-          {/* About Us Section */}
-          <div className="w-full mb-16">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">About Us</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-transparent border border-white/10 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Building2 className="w-6 h-6 text-white" />
-                  <h3 className="text-xl font-bold text-white">Company Overview</h3>
-                </div>
-                <p className="text-white/80 text-sm mb-4">
-                  Intellaris Private Limited is a private limited company incorporated on March 18, 2025, 
-                  in Assam, India. We are focused on delivering high-quality software development and 
-                  programming services tailored to meet specific client requirements.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-white/70" />
-                    <span className="text-[12px] text-white/70">Incorporated: {companyInfo.incorporationDate}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-white/70" />
-                    <span className="text-[12px] text-white/70">Based in Assam, India</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-transparent border border-white/10 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-4">
+          {/* Mission Card - Large */}
+          <div className="md:col-span-2 bg-[#000] border border-white/10 rounded-[32px] p-8 md:p-10 relative overflow-hidden group hover:border-white/20 transition-all duration-500 hover:shadow-2xl hover:shadow-white/5">
+
+            <div className="relative z-10 h-full flex flex-col justify-between space-y-8">
+              <div>
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/5 group-hover:scale-110 transition-transform duration-500">
                   <Globe className="w-6 h-6 text-white" />
-                  <h3 className="text-xl font-bold text-white">Our Mission</h3>
                 </div>
-                <p className="text-white/80 text-sm mb-4">
-                  To provide innovative and reliable software solutions that empower businesses to achieve 
-                  their digital transformation goals through custom programming and development services.
-                </p>
-                <p className="text-white/80 text-sm">
-                  As a newly incorporated agile technology firm, we bring fresh perspectives and 
-                  cutting-edge approaches to software development challenges.
+                <h2 className="text-2xl font-medium mb-3">Our Mission</h2>
+                <p className="text-white/60 leading-relaxed text-balance">
+                  To provide innovative and reliable software solutions that empower businesses to achieve their digital transformation goals. As a newly incorporated agile technology firm, we bring fresh perspectives and cutting-edge approaches.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Leadership Team */}
-          <div className="w-full mb-16">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Leadership Team</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {directors.map((director, index) => (
-                <div key={index} className="bg-transparent border border-white/10 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <User className="w-6 h-6 text-white" />
-                    <h3 className="text-xl font-bold text-white">{director.name}</h3>
+
+
+          {/* Leadership Card - Founder Profile */}
+          <div className="lg:row-span-2 bg-[#000] border border-white/10 rounded-[32px] p-8 overflow-hidden group hover:border-[#252527] transition-all duration-500 flex flex-col">
+            <div className="mb-6">
+              <h2 className="text-2xl font-medium mb-1">Leadership</h2>
+              <p className="text-white/40 text-sm">Vision & Direction</p>
+            </div>
+
+            <div className="flex-grow flex flex-col items-center justify-center text-center space-y-6">
+              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                <Image
+                  src="/founder/profile_me.png"
+                  alt="Ripun Basumatary"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold text-white">Ripun Basumatary</h3>
+                <p className="text-sm text-white font-medium mt-1">Founder & MD</p>
+              </div>
+
+              <div className="relative bg-white/5 rounded-2xl p-6 border border-white/5 mx-2">
+                <p className="text-sm text-white/70 italic leading-relaxed font-light">
+                  "At Intellaris, we are building the digital infrastructure for tomorrow. LoopSync is just the first step in our journey to simplify complex systems through elegant, intelligent design."
+                </p>
+                <div className="absolute top-0 left-0 w-4 h-4 text-white/20 -mt-2 -ml-2 text-4xl leading-none">"</div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-white/40">
+              <div className="flex items-center gap-2">
+                <User className="w-3 h-3" />
+                <span>Founder Profile</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-3 h-3" />
+                <span>Est. {companyInfo.incorporationDate}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Why Choose Us */}
+          <div className="md:col-span-2 bg-[#000] border border-white/10 rounded-[32px] p-8 md:p-10 group hover:border-white/20 transition-all duration-500">
+            <h2 className="text-2xl font-medium mb-8">Why Intellaris?</h2>
+            <div className="grid sm:grid-cols-2 gap-y-4 gap-x-8">
+              {[
+                "Agile technology firm",
+                "Client-specific solutions",
+                "Global aspirations",
+                "State-of-the-art facilities",
+                "Experienced professionals",
+                "Quality & innovation"
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                    <CheckCircle className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <p className="text-white/80 text-sm mb-2">{director.role}</p>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-white/70" />
-                    <span className="text-[12px] text-white/70">Appointed: {director.appointmentDate}</span>
-                  </div>
+                  <span className="text-white/70 text-sm">{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
-
-          {/* Why Choose Us */}
-          <div className="w-full mb-16">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Why Choose Us</h2>
-            <div className="bg-transparent border border-dashed border-white/10 rounded-lg p-6">
-              <div className="grid md:grid-cols-2 gap-4">
-                {whyChooseUs.map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-white/70 mt-0.5 flex-shrink-0" />
-                    <span className="text-[13px] text-white/80">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="w-full mb-16">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Contact Information</h2>
-            <div className="bg-transparent border border-dashed border-white/10 rounded-lg p-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-white" />
-                  <div>
-                    <p className="text-[12px] text-white/70">Email</p>
-                    <a href={`mailto:${companyInfo.email}`} className="text-sm text-white hover:underline">
-                      {companyInfo.email}
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-white" />
-                  <div>
-                    <p className="text-[12px] text-white/70">Phone</p>
-                    <a href={`tel:${companyInfo.phone}`} className="text-sm text-white hover:underline">
-                      {companyInfo.phone}
-                    </a>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-white" />
-                  <div>
-                    <p className="text-[12px] text-white/70">Website</p>
-                    <a href={`https://${companyInfo.website}`} className="text-sm text-white hover:underline" target="_blank" rel="noopener noreferrer">
-                      {companyInfo.website}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div className="w-full max-w-4xl mb-16">
-            <div className="bg-transparent border border-white/10 rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="text-center sm:text-left">
-                <h3 className="text-xl font-bold text-white mb-2">Learn More About Our Us</h3>
-                <p className="text-white/80 text-sm">
-                  Discover how LoopSync Atlas can transform your digital content capture and analysis.
+          {/* Product Info Card - Moved Here */}
+          <Link href="https://www.loopsync.cloud" target="_blank" className="md:col-span-3 bg-[#000] border border-white/10 rounded-[32px] p-8 flex flex-col justify-between group hover:border-white/20 transition-all duration-500 relative overflow-hidden block">
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-red-900/20 to-transparent pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col md:flex-row h-full justify-between gap-8 items-center">
+              <div>
+                <h3 className="text-white/40 font-medium mb-4 uppercase tracking-wider text-xs">Our Product</h3>
+                <h2 className="text-3xl font-medium text-white mb-2">LoopSync One Window™</h2>
+                <div className="h-1 w-12 bg-white rounded-full mb-4"></div>
+                <p className="text-white/60 text-sm leading-relaxed max-w-xl">
+                  LoopSync One Window is a flagship product designed and developed by <span className="text-white font-semibold">Intellaris Private Limited</span>.
                 </p>
               </div>
-              <Link 
-                href="https://intellaris.co" 
-                className="flex items-center gap-2 text-black font-semibold bg-white hover:bg-white px-6 py-3 rounded-full text-sm transition-all border border-white/10 whitespace-nowrap"
-              >
-                View Us
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] uppercase tracking-widest text-white/40">Powered By</span>
+                  <span className="text-sm font-semibold text-white/80">OnDust Engine</span>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-red-500/20 group-hover:border-red-500/50 transition-colors">
+                  <ArrowUpRight className="w-6 h-6 text-white/70 group-hover:text-white" />
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Contact Card */}
+          <div className="md:col-span-3 bg-gradient-to-br from-[#111] to-black border border-white/10 rounded-[32px] p-8 md:p-12 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-[120px] pointer-events-none -mr-20 -mt-20 group-hover:bg-red-500/40 transition-colors duration-700"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+              <div>
+                <h2 className="text-3xl font-medium mb-3">Get in touch</h2>
+                <p className="text-white/50 max-w-md mb-8">
+                  Based in Assam, India. Open to the world. Reach out to us for collaborations and inquiries.
+                </p>
+
+                <div className="flex flex-wrap gap-6">
+                  <a href={`mailto:${companyInfo.email}`} className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full border border-white/5 hover:bg-white/10">
+                    <Mail className="w-4 h-4" />
+                    {companyInfo.email}
+                  </a>
+                  <a href={`tel:${companyInfo.phone}`} className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full border border-white/5 hover:bg-white/10">
+                    <Phone className="w-4 h-4" />
+                    {companyInfo.phone}
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-4">
+                <a href="https://loopsync.cloud/one-window/support/resources" target="_blank" rel="noopener noreferrer"
+                  className="group flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+                  Connect
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </a>
+                <p className="text-white/30 text-xs text-right max-w-[250px] leading-relaxed">
+                  {companyInfo.address}
+                </p>
+              </div>
             </div>
           </div>
-          
-          {/* Footer */}
-          <div className="mt-16 w-full py-8 border-t border-white/10">
-            {/* Center Content */}
-            <div className="text-center text-white text-sm space-y-1">
-            <p>
-            © 2025{" "}
-            <a
-              href="https://www.intellaris.co"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold underline hover:font-bold cursor-pointer"
-            >
-              Intellaris Private Limited
-            </a>
-            . All rights reserved.
-          </p>
-              <p className="flex flex-wrap justify-center items-center gap-x-2 text-white/70">
-                <a href="/policies/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/software-license" className="hover:text-white transition-colors">Software License</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/terms-of-use" className="hover:text-white transition-colors">Terms of Use</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/fair-use-policy" className="hover:text-white transition-colors">Fair Use Policy</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/refund-policy" className="hover:text-white transition-colors">Refund Policy</a>
-              </p>
-            </div>
-          </div>
+
         </div>
-      </div>
+
+        {/* Footer */}
+        <footer className="mt-24 border-t border-white/10 pt-10 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-white/40">
+          <p>© 2025 Intellaris Private Limited. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/policies/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/policies/terms-of-use" className="hover:text-white transition-colors">Terms of Use</Link>
+            <Link href="/policies/software-license" className="hover:text-white transition-colors">Software License</Link>
+          </div>
+        </footer>
+      </main>
     </div>
   )
 }
