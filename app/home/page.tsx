@@ -5,7 +5,6 @@ import { SidebarProvider } from "@/components/home/contexts/sidebar-contexts"
 import { Loader } from "@/components/ui/loader"
 import { HomeHeader } from "@/components/home/home-header"
 import { Sidebar } from "@/components/home/sidebar"
-import { useConfettiSound } from "@/hooks/use-confetti-sound"
 import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -147,8 +146,6 @@ function HomeContent() {
     }
   }, [allowed, retryCount])
 
-  useConfettiSound(allowed && hasCheckedOnboard && !skipOnboarding)
-
   if (!hydrated || !allowed) return null
 
   if (isLoading) {
@@ -222,7 +219,7 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
         <div className="flex flex-col gap-3 w-full pt-2">
           <Button
             onClick={handleReactivate}
-            className="w-full bg-black text-white hover:bg-zinc-800 font-bold h-12 rounded-full transition-all text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            className="w-full cursor-pointer bg-black text-white hover:bg-zinc-800 font-bold h-12 rounded-full transition-all text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
           >
             Reactivate Subscription
           </Button>
@@ -235,7 +232,7 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
           >
             <Button
               variant="outline"
-              className="w-full border-zinc-200 text-zinc-600 hover:text-black hover:border-black hover:bg-transparent font-semibold h-10 rounded-full transition-all text-xs"
+              className="w-full cursor-pointer bg-transparent border-black text-black hover:text-black hover:border-black hover:bg-transparent font-semibold h-10 rounded-full transition-all text-xs"
             >
               Contact Support
             </Button>
@@ -244,7 +241,7 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
           <Button
             variant="ghost"
             onClick={logout}
-            className="w-full text-gray-400 hover:text-red-500 hover:bg-transparent font-medium h-auto py-1 rounded-md transition-colors text-xs"
+            className="w-full cursor-pointer text-gray-400 hover:text-red-500 hover:bg-transparent font-medium h-auto py-1 rounded-md transition-colors text-xs"
           >
             Log out
           </Button>
