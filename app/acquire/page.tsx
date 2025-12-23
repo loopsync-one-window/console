@@ -7,12 +7,15 @@ import {
     Loader2,
     Send,
     Building2,
-    Briefcase
+    Briefcase,
+    Search
 } from "lucide-react"
 import { Dithering } from "@paper-design/shaders-react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+
+import { countries, Country } from "@/lib/countries";
 
 // Reusable Dropdown Component
 interface FormDropdownProps {
@@ -22,6 +25,125 @@ interface FormDropdownProps {
     onChange: (value: string) => void;
     placeholder?: string;
 }
+
+const PRIORITY_COUNTRY_CODES = ["US", "GB", "AE", "SA", "SG", "CA", "DE", "CH", "AU", "IN"];
+
+const CountryDropdown = ({ value, onChange }: { value: Country, onChange: (c: Country) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Focus search when opened
+    useEffect(() => {
+        if (isOpen && searchInputRef.current) {
+            // Small delay to ensure render
+            setTimeout(() => searchInputRef.current?.focus(), 50);
+        } else {
+            setSearchQuery(""); // Reset search on close
+        }
+    }, [isOpen]);
+
+    const filteredCountries = useMemo(() => {
+        let result = countries;
+
+        if (searchQuery) {
+            const lower = searchQuery.toLowerCase();
+            return result.filter(c =>
+                c.name.toLowerCase().includes(lower) ||
+                c.dial_code.includes(lower) ||
+                c.code.toLowerCase().includes(lower)
+            );
+        }
+
+        // Return priority sorted list logic only for display if needed, 
+        // using the PRIORITY_COUNTRY_CODES to hoist them to the top
+        return [...result].sort((a, b) => {
+            const aPriority = PRIORITY_COUNTRY_CODES.indexOf(a.code);
+            const bPriority = PRIORITY_COUNTRY_CODES.indexOf(b.code);
+
+            // If both are priority, sort by their order in PRIORITY_LIST
+            if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority;
+
+            // If only a is priority, it comes first
+            if (aPriority !== -1) return -1;
+
+            // If only b is priority, it comes first
+            if (bPriority !== -1) return 1;
+
+            // Otherwise, keep original order (or sort alphabetically if not already)
+            return 0; // Assuming 'countries' list is already acceptable order
+        });
+    }, [searchQuery]);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full bg-transparent px-0 py-2.5 text-sm appearance-none focus:outline-none transition-all duration-300 font-medium tracking-wide text-left flex items-center justify-between group`}
+            >
+                <span className="truncate mr-2 text-white flex items-center gap-2">
+                    <span className="text-lg leading-none">{value.flag}</span>
+                    <span className="opacity-80">{value.dial_code}</span>
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 text-neutral-600 transition-transform duration-300 ${isOpen ? 'rotate-180 text-white' : 'group-hover:text-white'}`} />
+            </button>
+
+            <div className={`absolute left-0 w-[300px] top-full mt-2 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden shadow-2xl backdrop-blur-xl transition-all duration-200 z-50 origin-top ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'}`}>
+                {/* Search Bar */}
+                <div className="p-2 border-b border-white/10 sticky top-0 bg-[#0A0A0A] z-10">
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-2 py-1.5 focus-within:bg-white/10 transition-colors border border-white/5 focus-within:border-white/20">
+                        <Search className="w-3.5 h-3.5 text-white/40" />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search country..."
+                            className="bg-transparent border-none text-xs text-white placeholder-white/30 focus:outline-none w-full"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                </div>
+
+                <div className="p-1.5 space-y-0.5 max-h-60 overflow-y-auto custom-scrollbar">
+                    {filteredCountries.length > 0 ? (
+                        filteredCountries.map((country) => (
+                            <button
+                                key={country.code}
+                                type="button"
+                                onClick={() => {
+                                    onChange(country);
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium tracking-wide transition-all duration-200 flex items-center gap-3 group/option ${value.code === country.code ? 'bg-white text-black' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
+                            >
+                                <span className="text-lg leading-none flex-shrink-0">{country.flag}</span>
+                                <span className="truncate flex-1">{country.name}</span>
+                                <span className={`flex-shrink-0 opacity-60 ${value.code === country.code ? 'text-black/60' : ''}`}>{country.dial_code}</span>
+                            </button>
+                        ))
+                    ) : (
+                        <div className="p-4 text-center text-xs text-white/30">
+                            No countries found
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const FormDropdown = ({ label, value, options, onChange, placeholder = "Select" }: FormDropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -84,9 +206,11 @@ import { submitAcquisitionInquiry } from "@/lib/api"
 export default function AcquirePage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [selectedCountry, setSelectedCountry] = useState<Country>(countries.find(c => c.code === "US") || countries[0]);
     const [formData, setFormData] = useState({
         name: "",
         email: "",
+        phoneNumber: "",
         organization: "",
         role: "",
         buyerType: "",
@@ -101,13 +225,18 @@ export default function AcquirePage() {
         setIsSubmitting(true);
 
         try {
-            await submitAcquisitionInquiry(formData);
+            const payload = {
+                ...formData,
+                phoneNumber: `${selectedCountry.dial_code} ${formData.phoneNumber}`
+            };
+            await submitAcquisitionInquiry(payload);
             setShowSuccessModal(true);
             setFormData({
-                name: "", email: "", organization: "", role: "",
+                name: "", email: "", phoneNumber: "", organization: "", role: "",
                 buyerType: "", acquisitionScope: "", timeline: "",
                 message: "", acknowledgement: false
             });
+            setSelectedCountry(countries.find(c => c.code === "US") || countries[0]);
         } catch (error) {
             console.error("Failed to submit inquiry:", error);
             // Optionally add error handling UI
@@ -163,7 +292,7 @@ export default function AcquirePage() {
                         </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-center pl-12 pr-12 max-w-xl mx-auto w-full pt-100 overflow-y-auto scrollbar-hide scroll-smooth">
+                    <div className="flex-1 flex flex-col justify-center pl-12 pr-12 max-w-xl mx-auto w-full pt-120 overflow-y-auto scrollbar-hide scroll-smooth">
                         <div className="mb-8 space-y-2">
                             <h1 className="text-2xl font-semibold tracking-tight text-white mb-1">Strategic Acquisition</h1>
                             <p className="text-white/50 text-sm font-light leading-relaxed">
@@ -195,6 +324,28 @@ export default function AcquirePage() {
                                             className="w-full bg-transparent border-b border-white/20 px-0 py-2.5 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-white transition-all duration-300 font-medium tracking-wide"
                                             placeholder="EMAIL ADDRESS"
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-8">
+                                    <div className="space-y-2 group/input">
+                                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 group-focus-within/input:text-white transition-colors duration-300">Phone Number</label>
+                                        <div className="flex gap-2 border-b border-white/20 group-focus-within/input:border-white transition-colors duration-300">
+                                            <div className="flex-shrink-0 min-w-[80px]">
+                                                <CountryDropdown
+                                                    value={selectedCountry}
+                                                    onChange={setSelectedCountry}
+                                                />
+                                            </div>
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={formData.phoneNumber}
+                                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                                className="flex-1 w-full bg-transparent border-none px-0 py-2.5 text-sm text-white placeholder-neutral-700 focus:outline-none font-medium tracking-wide"
+                                                placeholder="PHONE NUMBER"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -338,7 +489,7 @@ export default function AcquirePage() {
                         <Dithering
                             style={{ height: "100%", width: "100%" }}
                             colorBack="#000000"
-                            colorFront="#b7ff00ff"
+                            colorFront="#0055ffff"
                             shape={"cat" as any}
                             type="4x4"
                             pxSize={3.5}
