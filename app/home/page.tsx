@@ -6,7 +6,7 @@ import { SidebarProvider } from "@/components/home/contexts/sidebar-contexts"
 import { HomeHeader } from "@/components/home/home-header"
 import { Sidebar } from "@/components/home/sidebar"
 import { useConfettiSound } from "@/hooks/use-confetti-sound"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, saveAuthTokens, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Timer, Trash2, X } from "lucide-react"
 import { useSidebar } from "@/components/home/contexts/sidebar-contexts"
 
-export default function HomePage() {
+function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [allowed, setAllowed] = useState(false)
@@ -178,6 +178,32 @@ export default function HomePage() {
         {/* <div className="screen-glow-bottom"></div> */}
       </div>
     </SidebarProvider>
+  )
+}
+
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="loader">
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="text"><span>Loading</span></div>
+            <div className="line"></div>
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   )
 }
 
