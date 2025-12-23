@@ -369,6 +369,28 @@ const SignUpForm = memo(({ onContinue }: { onContinue: (userData: { email: strin
           ))}
         </div> */}
       </div>
+
+      {/* Debug Error Container */}
+      {(() => {
+        // We need to use useSearchParams here inside the component logic
+        // This is safe because SignUpForm is rendered inside OpenAccountContent which is inside Suspense
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const params = useSearchParams();
+        const debugError = params.get('error');
+        const debugReason = params.get('reason');
+
+        if (debugError || debugReason) {
+          return (
+            <div className="mt-4 w-full p-3 border border-red-500/50 rounded-lg bg-red-500/10 text-center">
+              <p className="text-red-300 text-xs font-mono break-all">
+                Debug: {debugError || 'Redirect Error'}
+                {debugReason && <span className="block mt-1 text-white/70">{debugReason}</span>}
+              </p>
+            </div>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 });
