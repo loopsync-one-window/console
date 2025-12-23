@@ -33,6 +33,13 @@ interface ErrorResponse {
   message: string;
   timestamp: string;
 }
+// Extract initials from fullName for profile avatar
+const getUserInitials = (fullName: string) => {
+  if (!fullName) return 'U';
+  const names = fullName.trim().split(' ');
+  if (names.length === 1) return names[0].charAt(0).toUpperCase();
+  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+};
 
 // Memoized Pricing Card Component to prevent unnecessary re-renders
 const PricingCard = memo(({ plan, isAnnual, onStartClick }: { plan: any; isAnnual: boolean; onStartClick: (planCode: string) => void }) => {
@@ -69,7 +76,12 @@ const PricingCard = memo(({ plan, isAnnual, onStartClick }: { plan: any; isAnnua
 
           {/* Price */}
           <div className="mb-5">
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-2">
+              {(isAnnual ? plan.originalAnnualPrice : plan.originalMonthlyPrice) && (
+                <span className="text-lg text-white/50 line-through decoration-white/50">
+                  ₹{(isAnnual ? plan.originalAnnualPrice : plan.originalMonthlyPrice).toLocaleString()}
+                </span>
+              )}
               <span className="text-3xl font-bold text-white">
                 ₹{isAnnual ? plan.annualPrice.toLocaleString() : plan.monthlyPrice.toLocaleString()}
               </span>
@@ -438,9 +450,11 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       code: "PRO",
       icon: <Package className="w-5 h-5 text-white" />,
       // Updated pricing values
-      monthlyPrice: 759,
-      annualPrice: 7399,
-      annualSavings: 2000,
+      monthlyPrice: 0,
+      annualPrice: 0,
+      originalMonthlyPrice: 759,
+      originalAnnualPrice: 7399,
+      annualSavings: null,
       description: "Ideal for individuals and small teams evaluating PRO features.",
       features: ["One Window Intelligence", "Workflow Automations", "Stealth Mode (limited)", "High-accuracy Responses"],
       moreFeatures: 7,
@@ -483,14 +497,6 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
     },
   ];
 
-  // Extract initials from fullName for profile avatar
-  const getUserInitials = (fullName: string) => {
-    if (!fullName) return 'U';
-    const names = fullName.split(' ');
-    if (names.length === 1) return names[0].charAt(0).toUpperCase();
-    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
-  };
-
   return (
     <div className="w-full max-w-xl text-center py-8 pt-24">
       <style jsx>{`
@@ -509,29 +515,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
         }
       `}</style>
 
-      {userData && (
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center rounded-full gap-4 px-5 py-1 bg-white/5 border-t-1 border-b-1 border-white/20 backdrop-blur-md shadow-lg">
 
-            {/* Avatar */}
-            <div className="relative w-10 mt-1 mb-1 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-md">
-              <div className="w-full h-full rounded-full uppercase bg-white flex items-center justify-center text-black font-bold text-lg shadow-md">
-                {getUserInitials(userData.fullName)}
-              </div>
-            </div>
-
-            {/* User Info */}
-            <div className="flex flex-col">
-              <span className="text-white uppercase font-bold text-sm leading-tight">
-                {userData.fullName}
-              </span>
-              <span className="text-white/60 text-xs">
-                {userData.email}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
 
       {/* <div className="inline-flex items-center justify-center mb-4 w-full">
@@ -540,7 +524,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
         </div>
       </div> */}
 
-      <h1 className="text-3xl md:text-4xl font-bold mb-3">
+      <h1 className="text-3xl md:text-4xl font-semibold mb-3 mt-5">
         Start Free, Upgrade Anytime
       </h1>
 
@@ -569,7 +553,7 @@ const PricingContent = memo(({ userData }: { userData?: { email: string; fullNam
       </div>
 
       {/* Cards */}
-      <div className="mt-6">
+      <div className="mt-16">
         <div className="grid md:grid-cols-2 gap-4">
           {plans.map((plan, index) => (
             <PricingCard key={index} plan={plan} isAnnual={isAnnual} onStartClick={handleStartClick} />
@@ -1430,6 +1414,21 @@ const OpenAccountContent = () => {
           />
         </div>
 
+        {userData && (
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end mr-1">
+              <span className="text-white uppercase font-bold text-[12px] leading-tight tracking-wide">
+                {userData.fullName?.replace(/undefined/gi, "").trim()}
+              </span>
+              <span className="text-white/50 text-[11px] font-medium">
+                {userData.email}
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#cae500] flex items-center justify-center text-black font-bold text-[13px] shadow-[0_0_10px_rgba(202,229,0,0.3)]">
+              {getUserInitials(userData.fullName?.replace(/undefined/gi, "").trim())}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}

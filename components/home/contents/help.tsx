@@ -94,14 +94,14 @@ export function Help() {
       </div>
 
       {showFeedbackBanner && (
-        <div className="mx-8 xl:mx-12 mb-6 mt-4 relative bg-indigo-900 rounded-none p-4">
-          <button 
+        <div className="mx-8 xl:mx-12 mb-6 mt-4 relative bg-cyan-800 rounded-none p-4">
+          <button
             onClick={() => setShowFeedbackBanner(false)}
             className="absolute top-2 right-2 text-white hover:text-gray-300"
           >
             <X className="h-5 w-5" />
           </button>
-          <p className="text-white/80 mr-25">
+          <p className="text-white mr-25">
             <InfoIcon className="h-4 w-4 mr-2 text-white inline relative font-medium bottom-0.5" />We're always happy to receive your feedback and are here to support you with any questions or concerns you may have. Your thoughts truly matter to us and help us continually improve and serve you better.
           </p>
         </div>
@@ -135,7 +135,7 @@ export function Help() {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-4">
                     <Label htmlFor="category" className="text-white">Category</Label>
                     <Select value={category} onValueChange={setCategory} required>
@@ -152,7 +152,7 @@ export function Help() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <Label htmlFor="description" className="text-white">Description</Label>
                     <Textarea
@@ -166,9 +166,9 @@ export function Help() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button 
-                    type="submit" 
-                    className="w-full mt-10 h-12 rounded-full bg-white text-black font-semibold hover:bg-white/90" 
+                  <Button
+                    type="submit"
+                    className="w-full mt-10 h-12 rounded-full bg-white text-black font-semibold hover:bg-white/90"
                     disabled={isSubmitting || !isFormValid}
                   >
                     <Send className="h-4 w-4 mr-2" />

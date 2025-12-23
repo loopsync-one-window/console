@@ -74,120 +74,125 @@ export function Dashboard() {
   useEffect(() => {
     (async () => {
       try {
-        // Check if we have valid cached data
+        const CACHE_KEY = "LOOPSYNC_DASHBOARD_CACHE"
         const now = Date.now()
+
+        // 1. Try to load from localStorage first (persistence across reloads)
+        try {
+          const stored = localStorage.getItem(CACHE_KEY)
+          if (stored) {
+            const parsed = JSON.parse(stored)
+            if (parsed.expiry > now && parsed.data) {
+              // Update state from cache
+              setOverview(parsed.data.overview)
+              setFirstName(parsed.data.firstName)
+
+              // Verify trial status quietly if cached as free trial
+              if (parsed.data.isFreeTrial) {
+                // Background verify without blocking UI
+                getSubscriptionMe().then(sub => {
+                  if (sub?.success && sub?.subscription) {
+                    const freshIsFreeTrial = Boolean(sub.subscription.isFreeTrial)
+                    setIsFreeTrial(freshIsFreeTrial)
+                    // Update cache if changed
+                    if (freshIsFreeTrial !== parsed.data.isFreeTrial) {
+                      parsed.data.isFreeTrial = freshIsFreeTrial
+                      localStorage.setItem(CACHE_KEY, JSON.stringify(parsed))
+                    }
+                  }
+                }).catch(() => { })
+                setIsFreeTrial(true) // Show as trial initially from cache
+              } else {
+                setIsFreeTrial(false)
+              }
+
+              setUserDataLoaded(true)
+              setIsLoading(false)
+
+              // Update in-memory cache too for consistency
+              cachedDashboardData = parsed.data
+              dashboardCacheTimestamp = parsed.expiry
+
+              return
+            }
+          }
+        } catch (e) {
+          console.error("Cache parse error", e)
+        }
+
+        // 2. Fallback to in-memory cache
         if (cachedDashboardData && dashboardCacheTimestamp > now) {
-          // Use cached data
           setOverview(cachedDashboardData.overview)
           setFirstName(cachedDashboardData.firstName)
-
-          if (cachedDashboardData.isFreeTrial) {
-            // If cache thinks it's a free trial, Verify it! User might have paid recently.
-            try {
-              const sub = await getSubscriptionMe()
-              if (sub?.success && sub?.subscription) {
-                const freshIsFreeTrial = Boolean(sub.subscription.isFreeTrial)
-                setIsFreeTrial(freshIsFreeTrial)
-                cachedDashboardData.isFreeTrial = freshIsFreeTrial // Update cache
-              } else {
-                setIsFreeTrial(true) // Fallback to cache if request fails
-              }
-            } catch {
-              setIsFreeTrial(true)
-            }
-          } else {
-            setIsFreeTrial(false)
-          }
-
+          setIsFreeTrial(cachedDashboardData.isFreeTrial)
           setUserDataLoaded(true)
           setIsLoading(false)
           return
         }
 
-        // Load fresh data
+        // 3. Fetch fresh data
         setIsLoading(true)
 
         // Get billing overview
         const res = await getBillingOverview()
+        let currentOverview = null
         if (res?.success && res?.data) {
           setOverview(res.data)
-          // Cache the overview data
-          if (cachedDashboardData) {
-            cachedDashboardData.overview = res.data
-          }
+          currentOverview = res.data
         }
 
         // Get user profile
+        let firstNameValue = 'User'
         const cached = getCachedProfile?.()
         let full = cached?.fullName as string | undefined
+
         if (!full) {
-          const data = await getProfileMe()
-          full = data?.fullName
+          try {
+            const data = await getProfileMe()
+            full = data?.fullName
+          } catch { }
         }
 
-        // Check if we have valid user data
         if (full) {
           const name = (full || '').trim()
-          const firstNameValue = name ? name.split(/\s+/)[0] : 'User'
-          setFirstName(firstNameValue)
-          setUserDataLoaded(true)
-
-          // Cache the user data
-          if (cachedDashboardData) {
-            cachedDashboardData.firstName = firstNameValue
-          } else {
-            cachedDashboardData = {
-              overview: res?.success && res?.data ? res.data : null,
-              firstName: firstNameValue,
-              isFreeTrial: false
-            }
-          }
-        } else {
-          // Set default values if no user data
-          setFirstName('User')
-          setUserDataLoaded(true)
-
-          // Create cache with default values
-          if (!cachedDashboardData) {
-            cachedDashboardData = {
-              overview: res?.success && res?.data ? res.data : null,
-              firstName: 'User',
-              isFreeTrial: false
-            }
-          }
+          firstNameValue = name ? name.split(/\s+/)[0] : 'User'
         }
+        setFirstName(firstNameValue)
+        setUserDataLoaded(true)
 
         // Get subscription info
-        const sub = await getSubscriptionMe()
-        if (sub?.success && sub?.subscription) {
-          const isFreeTrialValue = Boolean(sub.subscription.isFreeTrial)
-          setIsFreeTrial(isFreeTrialValue)
+        let isFreeTrialValue = false
+        try {
+          const sub = await getSubscriptionMe()
+          if (sub?.success && sub?.subscription) {
+            isFreeTrialValue = Boolean(sub.subscription.isFreeTrial)
+            setIsFreeTrial(isFreeTrialValue)
+          }
+        } catch { }
 
-          // Cache the subscription data
-          if (cachedDashboardData) {
-            cachedDashboardData.isFreeTrial = isFreeTrialValue
-          }
-        } else {
-          // Set default for isFreeTrial if no subscription data
-          if (cachedDashboardData) {
-            cachedDashboardData.isFreeTrial = false
-          }
+        // 4. Save to Caches (Memory + LocalStorage)
+        const expiration = Date.now() + CACHE_TTL
+        const dataToCache = {
+          overview: currentOverview,
+          firstName: firstNameValue,
+          isFreeTrial: isFreeTrialValue
         }
 
-        // Update cache timestamp
-        dashboardCacheTimestamp = Date.now() + CACHE_TTL
+        // Update in-memory
+        cachedDashboardData = dataToCache
+        dashboardCacheTimestamp = expiration
+
+        // Update localStorage
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            data: dataToCache,
+            expiry: expiration
+          }))
+        } catch { }
+
       } catch (error) {
         console.error("Error loading dashboard data:", error)
-        // Even if there's an error, we should still show the dashboard
         setUserDataLoaded(true)
-        // Set default cache on error
-        if (!cachedDashboardData) {
-          cachedDashboardData = {
-            overview: null,
-            firstName: 'User',
-            isFreeTrial: false
-          }
-        }
       } finally {
         setIsLoading(false)
       }
@@ -450,14 +455,10 @@ export function Dashboard() {
             {(userDataLoaded && isFreeTrial) ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
-                {!isCheckingClaimStatus && (
-                  trialCreditsClaimed ? (
-                    <span className="text-sm px-3 py-2 bg-black border border-white/10 rounded-full text-white font-semibold">Already Claimed</span>
-                  ) : (
-                    <Button onClick={handleClaimCredits} disabled={isClaimingCredits} size="sm" className="h-9 rounded-full bg-white text-black hover:bg-neutral-200 font-semibold px-4 transition-all">
-                      {isClaimingCredits ? "Claiming..." : "Claim ₹400 free credits"}
-                    </Button>
-                  )
+                {!isCheckingClaimStatus && !trialCreditsClaimed && (
+                  <Button onClick={handleClaimCredits} disabled={isClaimingCredits} size="sm" className="h-9 rounded-full bg-white text-black hover:bg-neutral-200 font-semibold px-4 transition-all">
+                    {isClaimingCredits ? "Claiming..." : "Claim ₹400 free credits"}
+                  </Button>
                 )}
               </div>
             ) : (

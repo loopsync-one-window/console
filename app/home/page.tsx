@@ -1,310 +1,212 @@
 "use client"
 
 import { ContentArea } from "@/components/home/content-area"
-import { Dashboard } from "@/components/home/contents/dashboard"
 import { SidebarProvider } from "@/components/home/contexts/sidebar-contexts"
+import { Loader } from "@/components/ui/loader"
 import { HomeHeader } from "@/components/home/home-header"
 import { Sidebar } from "@/components/home/sidebar"
 import { useConfettiSound } from "@/hooks/use-confetti-sound"
 import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { getStoredTokens, getAutopayStatus, getProfileMe, getPlanByCode, getSubscriptionMe, logoutAny, saveAuthTokens, clearAuthTokens, type AutopayStatusResponse, getOnboardStatus } from "@/lib/api"
+import {
+  getStoredTokens,
+  getAutopayStatus,
+  getProfileMe,
+  getPlanByCode,
+  getSubscriptionMe,
+  logoutAny,
+  saveAuthTokens,
+  clearAuthTokens,
+  type AutopayStatusResponse,
+  getOnboardStatus
+} from "@/lib/api"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Timer, Trash2, X } from "lucide-react"
+import { Timer, X } from "lucide-react"
 import { useSidebar } from "@/components/home/contexts/sidebar-contexts"
 
 function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const [hydrated, setHydrated] = useState(false)
   const [allowed, setAllowed] = useState(false)
-  const [mustShowCancelModal, setMustShowCancelModal] = useState(false)
-  const [autopayStatus, setAutopayStatus] = useState<AutopayStatusResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [skipOnboarding, setSkipOnboarding] = useState(false)
   const [hasCheckedOnboard, setHasCheckedOnboard] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [autopayStatus, setAutopayStatus] = useState<AutopayStatusResponse | null>(null)
+  const [mustShowCancelModal, setMustShowCancelModal] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
+  /**
+   * 🔐 AUTH GATE (runs ONCE, hydration-safe)
+   */
   useEffect(() => {
-    const run = async () => {
-      // Check for tokens in URL (from Google Auth redirect)
-      const accessTokenParam = searchParams.get('accessToken')
+    const accessTokenParam = searchParams.get("accessToken")
 
-      if (accessTokenParam) {
-        saveAuthTokens({
-          accessToken: accessTokenParam,
-          refreshToken: searchParams.get('refreshToken') || undefined,
-          expiresAt: searchParams.get('expiresAt') || undefined
-        })
+    // ✅ OAuth callback handling
+    if (accessTokenParam) {
+      saveAuthTokens({
+        accessToken: accessTokenParam,
+        refreshToken: searchParams.get("refreshToken") || undefined,
+        expiresAt: searchParams.get("expiresAt") || undefined
+      })
 
-        const userDataParam = searchParams.get('userData')
-        if (userDataParam) {
-          try {
-            const decodedData = JSON.parse(decodeURIComponent(userDataParam))
-            localStorage.setItem("user", JSON.stringify(decodedData))
-          } catch (e) {
-            console.error("Failed to parse user data", e)
-          }
-        }
-
-        // Clean URL but DO NOT redirect yet - let the next render pick up the token
-        router.replace('/home')
-        return
+      const userDataParam = searchParams.get("userData")
+      if (userDataParam) {
+        try {
+          localStorage.setItem(
+            "user",
+            JSON.stringify(JSON.parse(decodeURIComponent(userDataParam)))
+          )
+        } catch { }
       }
 
-      const { accessToken, refreshToken } = getStoredTokens()
-
-      if (!accessToken && !refreshToken) {
-        // Only redirect if BOTH are missing
-        router.replace("/open-account?login=true")
-        return
-      }
+      // ✅ Clean URL WITHOUT navigation
+      window.history.replaceState({}, "", "/home")
 
       setAllowed(true)
+      setHydrated(true)
+      return
+    }
+
+    // ✅ Normal load
+    const { accessToken, refreshToken } = getStoredTokens()
+
+    if (!accessToken && !refreshToken) {
+      setHydrated(true)
+      router.replace("/open-account?login=true")
+      return
+    }
+
+    setAllowed(true)
+    setHydrated(true)
+  }, [])
+
+  /**
+   * 📦 LOAD USER DATA (only after auth)
+   */
+  useEffect(() => {
+    if (!allowed) return
+
+    let cancelled = false
+
+    const run = async () => {
+      try {
+        // Add a small initial delay to ensure storage consistency across tabs/processes if needed
+        if (retryCount > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+
+        const [onboard, autopay, profile] = await Promise.all([
+          getOnboardStatus(),
+          getAutopayStatus(),
+          getProfileMe({ force: retryCount > 0 }) // Force refresh on retry
+        ])
+
+        if (profile.fullName === "User") {
+          throw new Error("unauthorized_user_profile")
+        }
+
+        if (cancelled) return
+
+        setSkipOnboarding(Boolean(onboard?.onboard))
+        setAutopayStatus(autopay)
+
+        const restricted =
+          autopay?.isAutopayCancelled ||
+          autopay?.shouldRestrict ||
+          autopay?.local?.autoRenew === false ||
+          autopay?.local?.status?.toUpperCase() !== "ACTIVE"
+
+        setMustShowCancelModal(Boolean(restricted))
+        setHasCheckedOnboard(true)
+        setIsLoading(false)
+      } catch (err) {
+        if (cancelled) return
+        console.error("Home load error:", err);
+
+        // Retry logic: Try once more before giving up
+        if (retryCount < 1) {
+          console.log("Retrying home load...");
+          setRetryCount(prev => prev + 1);
+          return;
+        }
+
+        // If validation fails after retry, clear and redirect
+        clearAuthTokens()
+        router.replace("/open-account?login=true")
+      }
     }
 
     run()
-  }, [router, searchParams])
-
-  useEffect(() => {
-    let cancelled = false
-    const run = async () => {
-      if (!allowed) return
-
-      try {
-        // Wait for all necessary data to load before hiding the loader
-        const [onboardResult, statusResult, profile] = await Promise.all([
-          getOnboardStatus(),
-          getAutopayStatus(),
-          getProfileMe()
-        ])
-
-        if (!cancelled) {
-          if (profile.fullName === "User") {
-            throw new Error("Unauthorized")
-          }
-          setSkipOnboarding(Boolean(onboardResult?.onboard))
-          setAutopayStatus(statusResult)
-
-          const shouldOpen =
-            statusResult?.isAutopayCancelled === true ||
-            statusResult?.shouldRestrict === true ||
-            statusResult?.local?.autoRenew === false ||
-            (typeof statusResult?.local?.status === "string" && statusResult?.local?.status.toUpperCase() !== "ACTIVE")
-
-          setMustShowCancelModal(Boolean(shouldOpen))
-          setHasCheckedOnboard(true)
-
-          // Only hide loader when all data is loaded
-          setIsLoading(false)
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error)
-        // If there's an unauthorized or invalid token error, redirect to login
-        if (
-          error instanceof Error &&
-          (error.message.includes("Unauthorized") || error.message.includes("Invalid token"))
-        ) {
-          try {
-            // Clear any invalid tokens
-            clearAuthTokens()
-          } catch (e) {
-            console.error("Error clearing tokens:", e)
-          }
-          // Redirect to login page
-          router.push("/open-account?login=true")
-        } else {
-          // For other errors, still hide the loader but show the page
-          if (!cancelled) {
-            setHasCheckedOnboard(true)
-            setIsLoading(false)
-          }
-        }
-      }
-    }
-
-    if (allowed) {
-      run()
-    }
-
     return () => {
       cancelled = true
     }
-  }, [allowed, router])
+  }, [allowed, retryCount])
 
   useConfettiSound(allowed && hasCheckedOnboard && !skipOnboarding)
 
-  if (!allowed) return null
+  if (!hydrated || !allowed) return null
 
-  // Show loader while data is loading
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="loader">
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="text"><span>Loading</span></div>
-          <div className="line"></div>
-        </div>
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
+        <Loader />
       </div>
     )
   }
 
   return (
     <SidebarProvider
-      key={hasCheckedOnboard ? (skipOnboarding ? "dash" : "onboard") : "pending"}
-      initialItem={hasCheckedOnboard ? (skipOnboarding ? "dashboard" : "onboarding") : "dashboard"}
+      key={skipOnboarding ? "dash" : "onboard"}
+      initialItem={skipOnboarding ? "dashboard" : "onboarding"}
     >
       <AutopayCancelModal open={mustShowCancelModal} status={autopayStatus} />
-      <div className="flex h-screen bg-[#07080a] text-foreground">
-        {/* <div className="screen-glow-top"></div> */}
-        {/* <div className="screen-glow-left"></div> */}
+      <div className="flex h-screen bg-[#07080a]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <HomeHeader />
-          {hasCheckedOnboard ? <ContentArea skipOnboarding={skipOnboarding} /> : null}
+          <ContentArea skipOnboarding={skipOnboarding} />
         </div>
-        {/* <div className="screen-glow-right"></div> */}
-        {/* <div className="screen-glow-bottom"></div> */}
       </div>
     </SidebarProvider>
   )
 }
 
-
 export default function HomePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="loader">
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="text"><span>Loading</span></div>
-            <div className="line"></div>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={null}>
       <HomeContent />
     </Suspense>
   )
 }
 
-function AutopayCancelModal({ open, status }: { open: boolean; status: AutopayStatusResponse | null }) {
-  const { setActiveItem } = useSidebar()
-  const router = useRouter()
-  const [reactivating, setReactivating] = useState(false)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const handleReactivate = async () => {
-    if (reactivating) return
-    setReactivating(true)
-    let planCode = (status?.local?.plan?.code as string) || "PRO_PRIME-X"
-    let email = ""
-    let billingCycle = "monthly"
-    const rawNotes = status?.provider?.provider?.notes
-    if (rawNotes && typeof rawNotes === "object") {
-      const n = rawNotes as Record<string, unknown>
-      const em = n["email"]
-      const bc = n["billingCycle"]
-      const pc = n["planCode"]
-      if (typeof pc === "string" && pc) planCode = pc
-      if (typeof em === "string" && em) email = em
-      if (typeof bc === "string" && bc) billingCycle = bc.toLowerCase()
-    }
-    try {
-      if (!email) {
-        const prof = await getProfileMe().catch(() => null)
-        if (prof && typeof prof.email === "string") email = prof.email
-      }
-      if (!planCode || planCode === "") {
-        const sub = await getSubscriptionMe().catch(() => null)
-        const sc = sub?.subscription?.planCode
-        if (typeof sc === "string" && sc) planCode = sc
-      }
-      if (planCode && (!billingCycle || billingCycle === "")) {
-        const plan = await getPlanByCode(planCode).catch(() => null)
-        if (plan && typeof plan.billingCycle === "string") billingCycle = plan.billingCycle.toLowerCase()
-      }
-    } finally {
-      setTimeout(() => {
-        const qs = new URLSearchParams({ plan: planCode, email, billingCycle })
-        qs.set("reactivate", "true")
-        router.push(`/secure/checkout?${qs.toString()}`)
-      }, 2000)
-    }
-  }
-  const handleLogout = async () => {
-    if (isLoggingOut) return
-    setIsLoggingOut(true)
-    try {
-      await logoutAny()
-    } catch { }
-    try {
-      clearAuthTokens()
-    } catch { }
-    router.push("/")
-    setIsLoggingOut(false)
-  }
-  return (
-    <Dialog open={open} onOpenChange={() => { }}>
-      <DialogContent
-        className="bg-red-900 text-white rounded-3xl border border-white/10 max-w-md"
-        showCloseButton={false}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <button
-          aria-label="Logout"
-          className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 disabled:opacity-60"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? (
-            <span className="w-4 h-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <X className="size-5 cursor-pointer text-white" />
-          )}
-        </button>
+/* ---------- MODAL ---------- */
 
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="rounded-full bg-red-800 p-4">
-            <Timer className="size-8 text-white" />
-          </div>
-          <DialogHeader>
-            <DialogTitle className="text-white text-center">Autopay Cancelled</DialogTitle>
-          </DialogHeader>
-          <p className="text-[14px] leading-relaxed ml-5 mr-5">
-            You have canceled or paused your recurring autopay. Your trial is no longer active, and your account is now scheduled for deletion. You can reactivate anytime to continue on your regular subscription.
-          </p>
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="rounded-full cursor-pointer px-6 bg-white text-black font-semibold disabled:opacity-60"
-              onClick={handleReactivate}
-              disabled={reactivating}
-            >
-              {reactivating ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-black/20 border-t-transparent rounded-full animate-spin" />
-                  Processing
-                </span>
-              ) : (
-                "Reactivate Account"
-              )}
-            </Button>
-          </div>
-        </div>
+function AutopayCancelModal({ open, status }: { open: boolean; status: AutopayStatusResponse | null }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  const logout = async () => {
+    if (loading) return
+    setLoading(true)
+    await logoutAny().catch(() => { })
+    clearAuthTokens()
+    router.push("/")
+  }
+
+  return (
+    <Dialog open={open}>
+      <DialogContent onInteractOutside={e => e.preventDefault()}>
+        <button onClick={logout} className="absolute right-4 top-4">
+          <X />
+        </button>
+        <DialogHeader>
+          <DialogTitle>Autopay Cancelled</DialogTitle>
+        </DialogHeader>
+        <p>Your subscription is inactive.</p>
+        <Button onClick={logout}>Logout</Button>
       </DialogContent>
     </Dialog>
   )
