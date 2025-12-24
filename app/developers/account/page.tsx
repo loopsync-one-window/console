@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Dithering } from "@paper-design/shaders-react";
@@ -15,6 +15,7 @@ type RegistrationResponse = {
         baseFee: number;
         tax: number;
         verifiedBadgeFee: number;
+        currency: string;
     };
     license: {
         type: string;
@@ -35,6 +36,7 @@ function AccountContent() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(true);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -49,6 +51,57 @@ function AccountContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isPaymentMode = searchParams.get('payments') === 'one-time';
+
+    useEffect(() => {
+        const refreshSession = async () => {
+            try {
+                // Attempt to refresh token using HttpOnly cookie
+                const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Case 1: Payment Pending
+                    if (data.paymentRequired && data.developerId) {
+                        setRegistrationData({
+                            success: true,
+                            registrationId: data.developerId,
+                            pricing: data.pricing || {
+                                baseFee: 1.00,
+                                tax: 1.00,
+                                verifiedBadgeFee: 1.00,
+                                currency: 'INR',
+                            },
+                            license: {
+                                type: 'Developer License',
+                                version: 'Perpetual License - vPA4'
+                            }
+                        } as RegistrationResponse);
+
+                        // Ensure we are in payment mode
+                        if (!isPaymentMode) {
+                            router.push('/developers/account?payments=one-time');
+                        }
+                    }
+                    // Case 2: Already Logged In (Active)
+                    else if (data.accessToken) {
+                        // If we are just visiting login page, redirect to console
+                        router.push("/developers/console");
+                    }
+                }
+            } catch (error) {
+                // Session invalid or expired, stay on login/signup
+                console.log("Session refresh failed", error);
+            } finally {
+                setIsRefreshing(false);
+            }
+        };
+
+        refreshSession();
+    }, [isPaymentMode, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.type === 'text' && e.target.placeholder === '' ? 'fullName' : e.target.type]: e.target.value });
