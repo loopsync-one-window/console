@@ -5,6 +5,8 @@ import MobileScreeningPage from "./screening/page"
 import StrategicUpdateBanner from "@/components/StrategicUpdateBanner"
 import { useState, useEffect } from "react"
 import Navbar from "@/components/NavBar"
+import Link from "next/link"
+import { Upload, ArrowUpRight } from "lucide-react"
 
 export default function Home() {
   const [isBannerVisible, setIsBannerVisible] = useState(false)
@@ -57,8 +59,9 @@ export default function Home() {
                   ONE WINDOW<sup className="text-sm ml-2 text-white top-[-25] align-super">TM</sup>
                 </h1>
 
-                <p className="text-xl text-white/90 max-w-3xl font-semibold drop-shadow-lg">
-                  A cloud based single, intelligent framework that sees, understands, and reasons across anything you face - from complex calculations to intricate code and more.
+                <p className="text-[20px] text-white/90 max-w-3xl font-semibold drop-shadow-lg">
+                  One intelligent platform for productivity and creative work.
+                  <br />Reduce tool sprawl. Accelerate output.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mt-4">
@@ -153,6 +156,38 @@ export default function Home() {
               <span className="text-white text-xs font-medium text-center leading-tight max-w-[8rem]">
                 Scan or Click for<br /><span className="font-semibold text-white">One Window Support</span>
               </span>
+            </div>
+
+            {/* Developer Popup (Left) */}
+            <div className="absolute left-0 pl-4 mb-20 hidden lg:flex flex-col items-start animate-[slideUpFade_1s_ease-out_forwards]">
+              <Link href="/developers" className="group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 overflow-hidden hover:border-white/20 transition-all hover:scale-105 active:scale-95 w-64 shadow-2xl">
+                <style dangerouslySetInnerHTML={{
+                  __html: `
+                    @keyframes borderRotate {
+                      0% { transform: rotate(0deg); }
+                      100% { transform: rotate(360deg); }
+                    }
+                  `
+                }} />
+
+
+                <div className="relative z-10 flex items-center gap-4">
+                  {/* Mini Isometric Stack Icon */}
+                  <div className="w-12 h-12 relative flex-shrink-0">
+                    <div className="absolute inset-0 bg-red-500/20 rounded-lg blur-md group-hover:bg-red-500/30 transition-colors"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-red-400 group-hover:text-red-300 transition-colors" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-white font-bold text-sm leading-tight group-hover:text-white transition-colors">Publish to Store</h3>
+                    <p className="text-white text-[10px] leading-tight mt-0.5">Build & ship your apps.</p>
+                  </div>
+
+                  <ArrowUpRight className="w-4 h-4 text-zinc-600 absolute top-2 right-2 group-hover:text-white transition-colors" />
+                </div>
+              </Link>
             </div>
 
           </div>

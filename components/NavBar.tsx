@@ -99,9 +99,9 @@ export default function Navbar({ className }: NavbarProps) {
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/products">
             <span className="relative z-20">Products</span>
           </a>
-          <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/use-cases">
+          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/use-cases">
             <span className="relative z-20">Use Cases</span>
-          </a>
+          </a> */}
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/pricing">
             <span className="relative z-20">Pricing</span>
           </a>
@@ -113,8 +113,8 @@ export default function Navbar({ className }: NavbarProps) {
             <span className="relative z-20">Company</span>
           </a>
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="https://loopsync.cloud/policies" target="_blank" rel="noopener noreferrer">
-            <span className="relative z-20 mb-1">Policies</span>
-            <ExternalLink className="w-4 h-4 ml-1 mb-1 inline text-white font-bold" />
+            <span className="relative z-20">Policies</span>
+            <ExternalLink className="w-4 h-4 ml-1 relative bottom-0.5 inline text-white font-bold" />
           </a>
           {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/contact">
             <span className="relative z-20">Contact Us</span>

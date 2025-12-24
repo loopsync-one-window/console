@@ -28,7 +28,14 @@ export default function ProductsPage() {
             {/* Navbar */}
             <Navbar />
 
-
+            {/* Background Watermark */}
+            <div className="absolute top-24 -left-24 md:-left-40 w-[500px] md:w-[700px] h-[500px] md:h-[700px] pointer-events-none select-none z-0">
+                <img
+                    src="/products-logo.svg"
+                    alt="Product Logo"
+                    className="w-full h-full object-contain brightness-150"
+                />
+            </div>
 
             {/* ----------------- PRO & TRANSLATION SECTION ----------------- */}
             <section className="pt-24 pb-48 mt-40 px-6 text-center max-w-5xl mx-auto">
@@ -147,7 +154,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     {/* Atlas Card */}
-                    <div className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
+                    <Link href="/products/atlas" className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
                         <style dangerouslySetInnerHTML={{
                             __html: `
                           @keyframes scanVertical {
@@ -222,10 +229,10 @@ export default function ProductsPage() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Ceres Assist Card */}
-                    <div className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
+                    <Link href="/products/ceres-assist" className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
                         <style dangerouslySetInnerHTML={{
                             __html: `
                           @keyframes browserType {
@@ -299,11 +306,11 @@ export default function ProductsPage() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
 
                     {/* Lumiflage Card */}
-                    <div className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
+                    <Link href="/products/lumiflage" className="group relative bg-[#000] border border-white/5 rounded-[2rem] p-8 overflow-hidden hover:border-white/10 transition-colors h-[400px] flex flex-col">
                         <style dangerouslySetInnerHTML={{
                             __html: `
                           @keyframes softGlow {
@@ -334,7 +341,7 @@ export default function ProductsPage() {
                             <div className="absolute inset-0 bg-black/50 z-0"></div>
 
                             {/* The Screen / Light Source */}
-                            <div className="relative z-10 w-48 h-32 bg-transparent border-6 border-white rounded-3xl animate-[softGlow_4s_ease-in-out_infinite] flex items-center justify-center">
+                            <div className="relative z-10 w-48 h-32 bg-black border-6 border-white rounded-3xl animate-[softGlow_4s_ease-in-out_infinite] flex items-center justify-center">
                                 {/* Abstract "Face" getting lit */}
                                 <div className="w-16 h-16 rounded-full bg-white border border-white/10 animate-[faceReveal_4s_ease-in-out_infinite] flex items-center justify-center relative overflow-hidden">
                                     <div className="absolute top-[20%] w-[60%] h-[60%] bg-zinc-600 rounded-full opacity-50"></div>
@@ -348,14 +355,14 @@ export default function ProductsPage() {
                             {/* Ambient Light Spill on "Desk" */}
                             <div className="absolute bottom-0 w-3/4 h-12 bg-white/5 blur-2xl rounded-full mb-2 animate-[softGlow_4s_ease-in-out_infinite]"></div>
                         </div>
-                    </div>
+                    </Link>
                 </div>
-            </section>
+            </section >
 
 
 
             {/* ----------------- FEATURES BENTO GRID ----------------- */}
-            <section className="py-24 px-6 max-w-7xl mx-auto">
+            < section className="py-24 px-6 max-w-7xl mx-auto" >
                 <div className="text-center mb-16">
                     <h2 className="text-2xl md:text-3xl font-medium mb-3">And this is just the beginning.</h2>
                     <p className="text-zinc-400">We're actively preparing <span className="text-white font-bold">Studio 6.0</span> for release on Windows & Mac.</p>
@@ -552,12 +559,12 @@ export default function ProductsPage() {
 
                     </div>
                 </div>
-            </section>
+            </section >
 
 
 
             {/* ----------------- GAME LAUNCHER SECTION ----------------- */}
-            <section className="py-24 bg-black relative overflow-hidden">
+            < section className="py-24 bg-black relative overflow-hidden" >
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
                     {/* Left Content */}
@@ -605,9 +612,9 @@ export default function ProductsPage() {
                                     </p>
 
                                     <div className="flex items-center gap-4">
-                                        <button className="flex-1 bg-white text-black font-semibold py-3 rounded-xl hover:bg-zinc-200 transition-colors">
+                                        <Link href="/home" className="flex-1 bg-white text-black font-semibold py-3 rounded-xl hover:bg-zinc-200 transition-colors text-center">
                                             Install Game
-                                        </button>
+                                        </Link>
                                         <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-colors">
                                             <img src="/resources/windows.svg" className="w-5 h-5 invert opacity-70" alt="Windows" />
                                         </div>
@@ -617,7 +624,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
 
 
@@ -629,7 +636,7 @@ export default function ProductsPage() {
 
 
             {/* ----------------- RAYCAST NOTES SECTION ----------------- */}
-            <section className="py-32 px-6 text-center bg-black relative">
+            < section className="py-32 px-6 text-center bg-black relative" >
                 <div className="max-w-4xl mx-auto flex flex-col items-center">
 
                     {/* Label */}
@@ -641,32 +648,32 @@ export default function ProductsPage() {
 
                     {/* Headline */}
                     <h2 className="text-5xl md:text-4xl font-bold tracking-tight text-white mb-6 leading-tight">
-                        It's time to go all-in<br className="hidden md:block" />
-                        on LoopSync Notes.
+                        A space for<br className="hidden md:block" />
+                        uninterrupted thinking.
                     </h2>
 
                     {/* Subheadline */}
                     <p className="text-[14px] text-zinc-400 max-w-2xl mb-12 leading-relaxed">
-                        Catch-up on past meeting notes while commuting or<br className="hidden md:block" />
-                        collect ideas while out touching grass.
+                        A place where thoughts don't get left behind, no matter where you are.<br className="hidden md:block" />
+                        Collect ideas while out touching grass.
                     </p>
 
                     {/* Link/Button */}
-                    <a href="#" className="group inline-flex items-center gap-2 text-zinc-300 hover:text-white font-medium transition-colors text-lg">
+                    <Link href="/notes" className="group inline-flex items-center gap-2 text-zinc-300 hover:text-white font-medium transition-colors text-lg">
                         <span>Explore LoopSync Notes</span>
                         <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                             <ArrowRight className="w-3 h-3 -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
                         </div>
-                    </a>
+                    </Link>
 
                 </div>
-            </section>
+            </section >
 
             {/* Divider */}
-            <div className="border-t border-white/5 mb-20"></div>
+            < div className="border-t border-white/5 mb-20" ></div >
 
             {/* Center Content */}
-            <div className="text-center text-white text-sm space-y-1 mb-20">
+            < div className="text-center text-white text-sm space-y-1 mb-20" >
                 <p>
                     © 2025{" "}
                     <a
@@ -691,10 +698,10 @@ export default function ProductsPage() {
                     <span className="text-white/40">|</span>
                     <a href="/policies/refund-policy" className="hover:text-white transition-colors">Refund Policy</a>
                 </p>
-            </div>
+            </div >
 
             {/* Copyright */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 pb-6 px-6">
+            < div className="fixed bottom-0 left-0 right-0 z-20 pb-6 px-6" >
                 <div className="flex items-center justify-center relative">
 
                     {/* QR Code */}
@@ -712,7 +719,7 @@ export default function ProductsPage() {
                     </div>
 
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
