@@ -7,7 +7,7 @@ import { ArrowUpRight, Code2, Globe, Zap, Box, Upload, Rocket, Terminal, DollarS
 
 export default function DevelopersPage() {
     return (
-        <div className="h-screen bg-black text-white font-sans selection:bg-red-500/30 overflow-hidden relative flex flex-col">
+        <div className="h-screen bg-black text-white font-sans selection:bg-[#09ee70]/30 overflow-hidden relative flex flex-col">
             {/* Navbar */}
             <div className="z-50">
                 <Navbar />
@@ -16,13 +16,13 @@ export default function DevelopersPage() {
             {/* Background Glows */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 {/* Top Green Curtain/Aurora */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60%] bg-red-900/30 blur-[100px] rounded-[100%] opacity-60"></div>
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60%] bg-[#09ee70]/30 blur-[100px] rounded-[100%] opacity-60"></div>
 
                 {/* Subtle curve separator line */}
-                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-red-500/50 border-dashed rounded-[100%] opacity-30"></div>
+                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#09ee70]/50 border-dashed rounded-[100%] opacity-30"></div>
 
                 {/* Bottom faint glow */}
-                <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] bg-red-500/5 blur-[80px]"></div>
+                <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] bg-[#09ee70]/5 blur-[80px]"></div>
             </div>
 
             {/* Main Content Container - Centered Vertically */}
@@ -30,7 +30,7 @@ export default function DevelopersPage() {
 
                 {/* Header Section */}
                 <div className="text-center mb-10 flex flex-col items-center animate-[fadeIn_1s_ease-out]">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-white text-xs font-medium tracking-wide mb-6 uppercase">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#09ee70]/10 border border-[#09ee70]/20 text-white text-xs font-medium tracking-wide mb-6 uppercase">
                         <Terminal className="w-3 h-3" />
                         FOR DEVELOPERS
                     </div>
@@ -43,7 +43,7 @@ export default function DevelopersPage() {
                         Bring your projects to LoopSync and offer them to the world.
                     </p>
 
-                    <Link href="/developers/account" className="group relative inline-flex items-center gap-3 pl-8 pr-2 py-2 rounded-full bg-white text-black font-semibold hover:bg-[#c09888] transition-all">
+                    <Link href="/developers/account" className="group relative inline-flex items-center gap-3 pl-8 pr-2 py-2 rounded-full bg-white text-black font-semibold hover:bg-[#09ee70] transition-all">
                         <span className="text-sm">Open Console</span>
                         <div className="w-8 h-8 rounded-full bg-black/10 group-hover:bg-black/20 flex items-center justify-center">
                             <ArrowUpRight className="w-4 h-4" />

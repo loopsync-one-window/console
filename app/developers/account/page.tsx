@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Dithering } from "@paper-design/shaders-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
@@ -33,6 +33,7 @@ const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
 
 function AccountContent() {
     const [isLogin, setIsLogin] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
@@ -54,11 +55,45 @@ function AccountContent() {
 
     useEffect(() => {
         const refreshSession = async () => {
+            // 1. Try to restore from LocalStorage first (Instant Recovery)
+            const storedId = localStorage.getItem("developer.registrationId");
+            const storedEmail = localStorage.getItem("developer.email");
+            const storedPricing = localStorage.getItem("developer.pricing");
+
+            if (storedId && storedPricing) {
+                try {
+                    const parsedPricing = JSON.parse(storedPricing);
+                    setRegistrationData({
+                        success: true,
+                        registrationId: storedId,
+                        pricing: parsedPricing,
+                        license: {
+                            type: 'Developer License',
+                            version: 'Perpetual License - vPA4'
+                        }
+                    } as RegistrationResponse);
+
+                    if (storedEmail) {
+                        setFormData(prev => ({ ...prev, email: storedEmail }));
+                    }
+
+                    // If we have data and supposed to be in payment mode, ensure we are there
+                    if (isPaymentMode || searchParams.get('payments') !== 'one-time') {
+                        // Optional: could force redirect here or just let the API check confirm
+                    }
+                } catch (e) {
+                    console.error("Failed to parse stored session", e);
+                }
+            }
+
             try {
-                // Attempt to refresh token using HttpOnly cookie
+                // Attempt to refresh token using HttpOnly cookie or localStorage
+                const localRefreshToken = localStorage.getItem("developer.refreshToken");
+
                 const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ refreshToken: localRefreshToken })
                 });
 
                 if (res.ok) {
@@ -66,20 +101,32 @@ function AccountContent() {
 
                     // Case 1: Payment Pending
                     if (data.paymentRequired && data.developerId) {
+                        const pricingData = data.pricing || {
+                            baseFee: 0,
+                            tax: 0,
+                            verifiedBadgeFee: 0,
+                            currency: 'INR',
+                        };
+
                         setRegistrationData({
                             success: true,
                             registrationId: data.developerId,
-                            pricing: data.pricing || {
-                                baseFee: 1.00,
-                                tax: 1.00,
-                                verifiedBadgeFee: 1.00,
-                                currency: 'INR',
-                            },
+                            pricing: pricingData,
                             license: {
                                 type: 'Developer License',
                                 version: 'Perpetual License - vPA4'
                             }
                         } as RegistrationResponse);
+
+                        // Persist fresh data
+                        localStorage.setItem("developer.registrationId", data.developerId);
+                        localStorage.setItem("developer.pricing", JSON.stringify(pricingData));
+
+                        // Restore email from backend response if available (added in auth.service/controller fix)
+                        if (data.developer?.email) {
+                            setFormData(prev => ({ ...prev, email: data.developer.email }));
+                            localStorage.setItem("developer.email", data.developer.email);
+                        }
 
                         // Ensure we are in payment mode
                         if (!isPaymentMode) {
@@ -89,8 +136,18 @@ function AccountContent() {
                     // Case 2: Already Logged In (Active)
                     else if (data.accessToken) {
                         // If we are just visiting login page, redirect to console
-                        router.push("/developers/console");
+                        // But check if we are already verified?
+                        // If the user refreshed the payment page but is actually ACTIVE now?
+                        // Then we should send them to console.
+                        if (data.developer?.accountStatus === 'ACTIVE' || data.user?.status === 'VERIFIED') { // Check developer structure
+                            router.push("/developers/console");
+                        }
                     }
+                } else {
+                    // Only if API explicitly fails AND we don't have local storage recovery should we worry?
+                    // Actually, if API fails (401), token invalid.
+                    // But if we have stored ID, we might still be able to pay (create-order doesn't strict check auth token controller side, just ID)
+                    // So we stay quiet if we restored from LS.
                 }
             } catch (error) {
                 // Session invalid or expired, stay on login/signup
@@ -101,7 +158,7 @@ function AccountContent() {
         };
 
         refreshSession();
-    }, [isPaymentMode, router]);
+    }, [isPaymentMode, router, searchParams]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.type === 'text' && e.target.placeholder === '' ? 'fullName' : e.target.type]: e.target.value });
@@ -126,6 +183,17 @@ function AccountContent() {
 
             if (res.ok && data.success) {
                 setRegistrationData(data);
+
+                // Store tokens in localStorage for persistence
+                if (data.accessToken) localStorage.setItem("developer.accessToken", data.accessToken);
+                if (data.refreshToken) localStorage.setItem("developer.refreshToken", data.refreshToken);
+                if (data.expiresAt) localStorage.setItem("developer.expiresAt", data.expiresAt.toString());
+
+                // Persist session data for payment recovery
+                if (data.registrationId) localStorage.setItem("developer.registrationId", data.registrationId);
+                if (data.pricing) localStorage.setItem("developer.pricing", JSON.stringify(data.pricing));
+                if (formData.email) localStorage.setItem("developer.email", formData.email);
+
                 // We don't push param here directly, we rely on the view logic or push it now
                 router.push('/developers/account?payments=one-time');
             } else {
@@ -158,9 +226,9 @@ function AccountContent() {
                     success: true,
                     registrationId: data.developerId,
                     pricing: data.pricing || {
-                        baseFee: 388.04,
-                        tax: 69.85,
-                        verifiedBadgeFee: 399.89,
+                        baseFee: 0,
+                        tax: 0,
+                        verifiedBadgeFee: 0,
                         // Defaults if server doesn't return pricing in this specific error response
                     },
                     license: {
@@ -175,6 +243,12 @@ function AccountContent() {
 
             // Should set cookies automatically via HttpOnly
             if (res.ok) {
+                // Store tokens in localStorage for persistence
+                if (data.accessToken) localStorage.setItem("developer.accessToken", data.accessToken);
+                if (data.refreshToken) localStorage.setItem("developer.refreshToken", data.refreshToken);
+                if (data.expiresAt) localStorage.setItem("developer.expiresAt", data.expiresAt.toString());
+                if (formData.email) localStorage.setItem("developer.email", formData.email); // Save email for session
+
                 router.push("/developers/console");
             } else {
                 alert(data.message || "Login failed");
@@ -198,15 +272,28 @@ function AccountContent() {
 
     const handlePayment = async () => {
         if (!registrationData?.registrationId) {
-            // Ideally should check if we have ID, if not, maybe redirect back or error
-            // utilizing a fallback ID for demo if strictly needed, but better to error.
-            if (!formData.email) {
-                // User refreshed page on payment step?
-                alert("Session lost. Please register again.");
-                router.push('/developers/account');
-                return;
+            // Check if we can recover from localStorage
+            const storedId = localStorage.getItem("developer.registrationId");
+            if (!storedId) {
+                if (!formData.email) {
+                    alert("Session lost. Please register again.");
+                    router.push('/developers/account');
+                    return;
+                }
             }
-            // Recover logic could go here (e.g., look up pending user by email), but keeping simple
+        }
+
+        // Recover email if missing
+        const paymentEmail = formData.email || localStorage.getItem("developer.email");
+        if (!paymentEmail) {
+            alert("Email missing. Please sign in again.");
+            return;
+        }
+
+        const paymentRegistrationId = registrationData?.registrationId || localStorage.getItem("developer.registrationId");
+        if (!paymentRegistrationId) {
+            alert("Registration ID missing. please sign in again.");
+            return;
         }
 
         setIsPaymentProcessing(true);
@@ -216,7 +303,7 @@ function AccountContent() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    registrationId: registrationData?.registrationId,
+                    registrationId: paymentRegistrationId, // Use the resolved ID
                     verifiedBadge: isVerified
                 }),
             });
@@ -243,8 +330,8 @@ function AccountContent() {
                     await verifyPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
                 },
                 prefill: {
-                    name: formData.fullName,
-                    email: formData.email,
+                    name: formData.fullName || "Developer",
+                    email: paymentEmail,
                 },
                 theme: {
                     color: "#000000",
@@ -297,6 +384,18 @@ function AccountContent() {
                 });
 
                 if (loginRes.ok) {
+                    const loginData = await loginRes.json();
+                    // Store tokens in localStorage for persistence (match handleRegister behavior)
+                    if (loginData.accessToken) localStorage.setItem("developer.accessToken", loginData.accessToken);
+                    if (loginData.refreshToken) localStorage.setItem("developer.refreshToken", loginData.refreshToken);
+                    if (loginData.expiresAt) localStorage.setItem("developer.expiresAt", loginData.expiresAt.toString());
+
+                    // Clean up registration session data
+                    localStorage.removeItem("developer.registrationId");
+                    localStorage.removeItem("developer.pricing");
+                    // Keep email potentially, or clear it. Clearing safe.
+                    // localStorage.removeItem("developer.email"); 
+
                     router.push('/developers/console');
                 } else {
                     router.push('/developers/account'); // Fallback to login screen
@@ -366,11 +465,11 @@ function AccountContent() {
 
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm text-zinc-300">Registration Fee</span>
-                                        <span className="text-sm font-semibold text-zinc-400">₹{registrationData?.pricing?.baseFee.toFixed(2) || "388.04"}</span>
+                                        <span className="text-sm font-semibold text-zinc-400">₹{registrationData?.pricing?.baseFee.toFixed(2) || "0.00"}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm text-zinc-300">Taxes (18%)</span>
-                                        <span className="text-sm font-semibold text-zinc-400">₹{registrationData?.pricing?.tax.toFixed(2) || "69.85"}</span>
+                                        <span className="text-sm font-semibold text-zinc-400">₹{registrationData?.pricing?.tax.toFixed(2) || "0.00"}</span>
                                     </div>
 
                                     {/* Verified Badge Option */}
@@ -405,7 +504,7 @@ function AccountContent() {
                                             </div>
 
                                             <div className="ml-auto text-sm font-semibold text-zinc-400">
-                                                +₹{registrationData?.pricing?.verifiedBadgeFee.toFixed(2) || "399.89"}
+                                                +₹{registrationData?.pricing?.verifiedBadgeFee.toFixed(2) || "0.00"}
                                             </div>
                                         </div>
                                     </div>
@@ -414,8 +513,8 @@ function AccountContent() {
                                         <span className="text-base font-semibold text-white">Total</span>
                                         <span className="text-xl font-bold text-[#fff]">
                                             {(() => {
-                                                const base = (registrationData?.pricing?.baseFee || 388.04) + (registrationData?.pricing?.tax || 69.85);
-                                                const verified = isVerified ? (registrationData?.pricing?.verifiedBadgeFee || 399.89) : 0;
+                                                const base = (registrationData?.pricing?.baseFee || 0) + (registrationData?.pricing?.tax || 0);
+                                                const verified = isVerified ? (registrationData?.pricing?.verifiedBadgeFee || 0) : 0;
                                                 return `₹${(base + verified).toFixed(2)}`;
                                             })()}
                                         </span>
@@ -455,13 +554,13 @@ function AccountContent() {
                             // Standard Login/Signup UI
                             <>
                                 <div className="mb-8 space-y-2">
-                                    <h1 className="text-2xl font-semibold tracking-tight text-white mb-1">
+                                    <h1 className="text-3xl font-semibold text-white mb-1">
                                         {isLogin ? "Welcome back" : "Join the ecosystem"}
                                     </h1>
                                     <p className="text-white text-sm font-medium leading-relaxed">
                                         {isLogin
                                             ? "Enter your credentials to access the console."
-                                            : "Create your dev account to start shipping apps."}
+                                            : "Create your loopsync developer account to start shipping apps."}
                                     </p>
                                 </div>
                             </>
@@ -499,14 +598,23 @@ function AccountContent() {
 
                                     <div className="space-y-2 group/input">
                                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 group-focus-within/input:text-[#fff] transition-colors duration-300">Password</label>
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handlePasswordChange}
-                                            className="w-full bg-transparent border-b border-white/20 px-0 py-2.5 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-[#fff] transition-all duration-300 font-medium tracking-wide"
-                                            placeholder=""
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handlePasswordChange}
+                                                className="w-full bg-transparent border-b border-white/20 px-0 py-2.5 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-[#fff] transition-all duration-300 font-medium tracking-wide pr-8"
+                                                placeholder=""
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors cursor-pointer p-1"
+                                            >
+                                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -514,7 +622,7 @@ function AccountContent() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-[#fff] px-8 font-medium text-black transition-all duration-300 hover:bg-[#d4afa0] disabled:opacity-70 disabled:hover:bg-[#fff] w-full sm:w-auto"
+                                        className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-[#fff] px-8 font-medium text-black transition-all duration-300 hover:bg-[#09ee70] disabled:opacity-70 disabled:hover:bg-[#fff] w-full sm:w-auto"
                                     >
                                         <div className="flex items-center gap-2.5">
                                             {isSubmitting ? (
@@ -524,7 +632,7 @@ function AccountContent() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{isLogin ? "Sign In" : "Create Account"}</span>
+                                                    <span className="text-[12px] font-bold uppercase">{isLogin ? "Sign In" : "Create Account"}</span>
                                                     <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                                                 </>
                                             )}
@@ -538,7 +646,7 @@ function AccountContent() {
                             <div className="mt-8 border-t border-white/5 pt-6 flex items-center justify-between text-[10px] text-white/20 uppercase tracking-wider">
                                 <button
                                     onClick={() => setIsLogin(!isLogin)}
-                                    className="text-[#fff] hover:text-[#d4afa0] text-[14px] transition-colors font-semibold"
+                                    className="text-[#fff] hover:text-[#09ee70] text-[14px] transition-colors font-semibold"
                                 >
                                     {isLogin ? "Create an account" : "Back to login"}
                                 </button>
@@ -559,7 +667,7 @@ function AccountContent() {
                         <Dithering
                             style={{ height: "100%", width: "100%" }}
                             colorBack="#000000"
-                            colorFront="#d1aea0ff"
+                            colorFront="#09ee70ff"
                             shape={"circle" as any}
                             type="4x4"
                             pxSize={3.5}
