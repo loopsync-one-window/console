@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Dithering } from "@paper-design/shaders-react";
@@ -30,7 +30,7 @@ declare global {
 
 const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
 
-export default function DeveloperAccountPage() {
+function AccountContent() {
     const [isLogin, setIsLogin] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
@@ -559,5 +559,17 @@ export default function DeveloperAccountPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function DeveloperAccountPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen w-full bg-black flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+            </div>
+        }>
+            <AccountContent />
+        </Suspense>
     );
 }
