@@ -173,7 +173,7 @@ function AccountContent() {
 
             // 2. Open Razorpay
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YourKeyHere", // Ensure env var is set or use placeholder
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_RhvHwqmzLiw3HA', // Ensure env var is set
                 amount: orderData.amount, // Amount is already in paise from API
                 // However, my server implementation: `amount: Math.round(totalAmount * 100)` -> Server sends paise?
                 // Checking server code: `amount: Math.round(totalAmount * 100)` passed to razorpay.orders.create
