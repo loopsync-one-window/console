@@ -156,6 +156,19 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
     return handleResponse(response);
 };
 
+export const deleteUsersBulk = async (ids: string[]): Promise<{ success: boolean; results: any[] }> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/users/bulk-delete`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ids }),
+    });
+    return handleResponse(response);
+};
+
 export const getAdminUserDetails = async (email: string): Promise<any> => {
     const token = await getAccessToken();
     const response = await fetch(`${API_BASE_URL}/billing/admin/user-details`, {
@@ -165,6 +178,60 @@ export const getAdminUserDetails = async (email: string): Promise<any> => {
             Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+};
+
+// Developer Types
+export interface Developer {
+    id: string;
+    fullName: string;
+    email: string;
+    status: string;
+    verifiedBadge: boolean;
+    license: string | null;
+    createdAt: string;
+    paymentOrders: {
+        id: string;
+        amount: number;
+        currency: string;
+        status: string;
+        createdAt: string;
+    }[];
+}
+
+export const getAllDevelopers = async (): Promise<Developer[]> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/developers`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getDeveloperById = async (id: string): Promise<Developer> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const deleteDeveloperAdmin = async (id: string): Promise<{ success: boolean }> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
     });
     return handleResponse(response);
 };

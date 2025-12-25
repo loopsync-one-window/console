@@ -5,11 +5,15 @@ import Image from "next/image";
 import {
     getAllUsers,
     getActiveSubscribersDetailed,
+    getAllDevelopers,
+    deleteDeveloperAdmin,
     notifyAllUsers,
     notifyUser,
     deleteUser,
+    deleteUsersBulk,
     getAdminUserDetails,
     AdminUser,
+    Developer,
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -50,10 +54,12 @@ export default function AdminZeroTrustPage() {
 
     const [loading, setLoading] = useState(false); // Changed to false initially to avoid flash before auth check
     const [users, setUsers] = useState<AdminUser[]>([]);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [activeSubscribers, setActiveSubscribers] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshing, setRefreshing] = useState(false);
     const [hideTrialUsers, setHideTrialUsers] = useState(false);
+    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
     // Notification State
     const [notifyOpen, setNotifyOpen] = useState(false);
@@ -66,6 +72,13 @@ export default function AdminZeroTrustPage() {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+    // Delete Developer State
+    const [deleteDevOpen, setDeleteDevOpen] = useState(false);
+    const [devToDelete, setDevToDelete] = useState<Developer | null>(null);
+    const [isDeletingDev, setIsDeletingDev] = useState(false);
 
     // User Details State
     const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
@@ -73,15 +86,21 @@ export default function AdminZeroTrustPage() {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [detailedUser, setDetailedUser] = useState<AdminUser | null>(null);
 
+    // Developer Details State
+    const [viewDevDetailsOpen, setViewDevDetailsOpen] = useState(false);
+    const [detailedDev, setDetailedDev] = useState<Developer | null>(null);
+
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersData, subscribersData] = await Promise.all([
+            const [usersData, subscribersData, developersData] = await Promise.all([
                 getAllUsers(),
                 getActiveSubscribersDetailed(),
+                getAllDevelopers(),
             ]);
             setUsers(usersData);
             setActiveSubscribers(subscribersData);
+            setDevelopers(developersData);
         } catch (error) {
             console.error("Failed to fetch admin data", error);
             toast.error("Failed to fetch admin data. Ensure you have admin privileges.");
@@ -90,6 +109,41 @@ export default function AdminZeroTrustPage() {
             setRefreshing(false);
         }
     };
+
+    const confirmDeleteDev = (dev: Developer) => {
+        setDevToDelete(dev);
+        setDeleteDevOpen(true);
+    };
+
+    const handleDeleteDev = async () => {
+        if (!devToDelete) return;
+        setIsDeletingDev(true);
+        try {
+            await deleteDeveloperAdmin(devToDelete.id);
+            toast.success("Developer deleted successfully");
+            setDevelopers(developers.filter(d => d.id !== devToDelete.id));
+            setDeleteDevOpen(false);
+        } catch (error) {
+            console.error("Failed to delete developer", error);
+            toast.error("Failed to delete developer");
+        } finally {
+            setIsDeletingDev(false);
+            setDevToDelete(null);
+        }
+    };
+
+    const handleViewDevDetails = (dev: Developer) => {
+        setDetailedDev(dev);
+        setViewDevDetailsOpen(true);
+    };
+
+    const filteredDevelopers = developers
+        .filter((d) =>
+            d.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.id.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const startSession = () => {
         const expiry = Date.now() + SESSION_DURATION;
@@ -233,6 +287,42 @@ export default function AdminZeroTrustPage() {
         }
     };
 
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedUsers(filteredUsers.map(u => u.id));
+        } else {
+            setSelectedUsers([]);
+        }
+    };
+
+    const handleSelectUser = (userId: string, checked: boolean) => {
+        if (checked) {
+            setSelectedUsers(prev => [...prev, userId]);
+        } else {
+            setSelectedUsers(prev => prev.filter(id => id !== userId));
+        }
+    };
+
+    const confirmBulkDelete = () => {
+        setBulkDeleteOpen(true);
+    };
+
+    const handleBulkDelete = async () => {
+        setIsBulkDeleting(true);
+        try {
+            await deleteUsersBulk(selectedUsers);
+            toast.success(`${selectedUsers.length} users deleted successfully`);
+            setUsers(users.filter(u => !selectedUsers.includes(u.id)));
+            setSelectedUsers([]);
+            setBulkDeleteOpen(false);
+        } catch (error) {
+            console.error("Failed to delete users", error);
+            toast.error("Failed to delete users");
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
+
     const handleViewDetails = async (user: AdminUser) => {
         setDetailedUser(user);
         setViewDetailsOpen(true);
@@ -314,6 +404,8 @@ export default function AdminZeroTrustPage() {
 
     const totalUsers = users.length;
     const totalActiveSubs = Array.isArray(activeSubscribers) ? activeSubscribers.length : 0;
+    const totalDevelopers = developers.length;
+    const totalActiveDevs = developers.filter(d => d.status === 'ACTIVE').length;
 
     return (
         <div className="h-screen bg-black text-white font-sans selection:bg-teal-500/30 selection:text-teal-200 flex flex-col lg:flex-row overflow-hidden">
@@ -347,6 +439,26 @@ export default function AdminZeroTrustPage() {
                                 <Activity className="h-3.5 w-3.5 text-emerald-600/70 group-hover:text-emerald-500 transition-colors" />
                             </div>
                             <div className="text-2xl font-bold text-emerald-400 tracking-tight">{totalActiveSubs}</div>
+                        </div>
+
+                        {/* Developers Stats */}
+                        <div className="rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group overflow-hidden">
+                            <div className="flex items-stretch divide-x divide-white/10">
+                                <div className="flex-1 p-4">
+                                    <div className="flex items-center justify-between mb-2 gap-2">
+                                        <span className="text-xs text-neutral-400 font-medium group-hover:text-neutral-300 transition-colors">Devs</span>
+                                        <Code2 className="h-3.5 w-3.5 text-neutral-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-white tracking-tight">{totalDevelopers}</div>
+                                </div>
+                                <div className="flex-1 p-4 bg-white/[0.02]">
+                                    <div className="flex items-center justify-between mb-2 gap-2">
+                                        <span className="text-xs text-neutral-400 font-medium group-hover:text-emerald-400 transition-colors">Active</span>
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-neutral-600 group-hover:text-emerald-500 transition-colors" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-white tracking-tight">{totalActiveDevs}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -397,21 +509,42 @@ export default function AdminZeroTrustPage() {
                                     >
                                         Subscribers
                                     </TabsTrigger>
+                                    <TabsTrigger
+                                        value="developers"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Developers
+                                    </TabsTrigger>
                                 </TabsList>
                             </div>
                         </div>
 
-                        {/* Search Bar (Floating) */}
-                        <div className="relative group max-w-md">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-neutral-500 group-focus-within:text-white transition-colors" />
+                        {/* Search Bar (Floating) & Bulk Actions */}
+                        <div className="flex items-center justify-between">
+                            <div className="relative group max-w-md">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-neutral-500 group-focus-within:text-white transition-colors" />
+                                </div>
+                                <Input
+                                    placeholder="Search by name, email, or ID..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10 h-11 bg-neutral-900/30 border-white/10 text-sm text-white placeholder:text-neutral-600 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:bg-neutral-900/50 transition-all rounded-xl"
+                                />
                             </div>
-                            <Input
-                                placeholder="Search by name, email, or ID..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 h-11 bg-neutral-900/30 border-white/10 text-sm text-white placeholder:text-neutral-600 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:bg-neutral-900/50 transition-all rounded-xl"
-                            />
+
+                            {selectedUsers.length > 0 && (
+                                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <Button
+                                        onClick={confirmBulkDelete}
+                                        variant="destructive"
+                                        className="rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete {selectedUsers.length} Selected
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         <TabsContent value="users" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -419,7 +552,14 @@ export default function AdminZeroTrustPage() {
                                 <Table>
                                     <TableHeader className="bg-neutral-900/80 border-b border-white/5">
                                         <TableRow className="border-none hover:bg-transparent">
-                                            <TableHead className="text-neutral-400 font-medium pl-6 py-4">User Details</TableHead>
+                                            <TableHead className="w-12 pl-6 py-4">
+                                                <Checkbox
+                                                    checked={filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length}
+                                                    onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                                                    className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                                                />
+                                            </TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">User Details</TableHead>
                                             <TableHead className="text-neutral-400 font-medium">Status</TableHead>
                                             <TableHead className="text-neutral-400 font-medium">Account</TableHead>
                                             <TableHead className="text-neutral-400 font-medium">Joined</TableHead>
@@ -429,7 +569,7 @@ export default function AdminZeroTrustPage() {
                                     <TableBody>
                                         {filteredUsers.length === 0 ? (
                                             <TableRow className="border-none hover:bg-transparent">
-                                                <TableCell colSpan={5} className="h-48 text-center text-neutral-600">
+                                                <TableCell colSpan={6} className="h-48 text-center text-neutral-600">
                                                     No users found matching your search.
                                                 </TableCell>
                                             </TableRow>
@@ -437,6 +577,13 @@ export default function AdminZeroTrustPage() {
                                             filteredUsers.map((user) => (
                                                 <TableRow key={user.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group">
                                                     <TableCell className="pl-6 py-4">
+                                                        <Checkbox
+                                                            checked={selectedUsers.includes(user.id)}
+                                                            onCheckedChange={(checked) => handleSelectUser(user.id, !!checked)}
+                                                            className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
                                                         <div className="flex flex-col">
                                                             <span className="font-medium text-white group-hover:text-teal-200 transition-colors">{user.fullName}</span>
                                                             <span className="text-xs text-neutral-500">{user.email}</span>
@@ -623,6 +770,89 @@ export default function AdminZeroTrustPage() {
                                 </Table>
                             </div>
                         </TabsContent>
+
+                        <TabsContent value="developers" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="text-neutral-400 font-medium pl-6 py-4">Developer</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Status</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Verified</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Joined</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium pr-6">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredDevelopers.length === 0 ? (
+                                            <TableRow className="border-none hover:bg-transparent">
+                                                <TableCell colSpan={5} className="h-48 text-center text-neutral-600">
+                                                    No developers found matching your search.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredDevelopers.map((dev) => (
+                                                <TableRow key={dev.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group">
+                                                    <TableCell className="pl-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-white group-hover:text-teal-200 transition-colors">{dev.fullName}</span>
+                                                            <span className="text-xs text-neutral-500">{dev.email}</span>
+                                                            <span className="text-[9px] text-neutral-700 font-mono mt-1 uppercase tracking-wider">{dev.id}</span>
+                                                            {dev.license && <span className="text-[9px] text-teal-500/70 font-mono mt-0.5">{dev.license}</span>}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${dev.status === "ACTIVE"
+                                                            ? "bg-emerald-500/5 text-emerald-400 border-emerald-500/10"
+                                                            : "bg-neutral-800/50 text-neutral-400 border-neutral-700/30"
+                                                            }`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${dev.status === "ACTIVE" ? "bg-emerald-400" : "bg-neutral-500"}`}></span>
+                                                            {dev.status}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {dev.verifiedBadge ? (
+                                                            <div className="flex items-center gap-1 text-blue-400">
+                                                                <CheckCircle2 className="w-4 h-4" />
+                                                                <span className="text-sm font-medium">Verified</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-sm text-neutral-500">Unverified</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-500 text-sm">
+                                                        {new Date(dev.createdAt).toLocaleDateString(undefined, {
+                                                            month: 'short', day: 'numeric', year: 'numeric'
+                                                        })}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleViewDevDetails(dev)}
+                                                                className="text-neutral-500 hover:text-white hover:bg-white/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Code2 className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => confirmDeleteDev(dev)}
+                                                                className="text-neutral-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 rounded-full"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
                     </Tabs>
                 </div>
 
@@ -773,7 +1003,7 @@ export default function AdminZeroTrustPage() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Delete Confirmation Dialog */}
+                {/* Delete User Confirmation Dialog */}
                 <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                     <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
                         <DialogHeader>
@@ -801,6 +1031,150 @@ export default function AdminZeroTrustPage() {
                                 {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Delete"}
                             </Button>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Bulk Delete User Confirmation Dialog */}
+                <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+                    <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
+                        <DialogHeader>
+                            <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                                <AlertTriangle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <DialogTitle className="text-center text-xl font-semibold text-white">Delete {selectedUsers.length} Users?</DialogTitle>
+                            <DialogDescription className="text-center text-neutral-400 text-sm">
+                                Are you sure you want to delete <span className="text-white font-bold">{selectedUsers.length} selected users</span>. This action cannot be undone and will remove all associated data for these users.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="grid grid-cols-2 gap-3 mt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setBulkDeleteOpen(false)}
+                                className="bg-transparent border-white/10 text-neutral-400 hover:bg-white/5 hover:text-white rounded-full w-full"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                                className="bg-red-800 hover:bg-red-900 text-white rounded-full w-full"
+                            >
+                                {isBulkDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Delete All"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Delete Developer Confirmation Dialog */}
+                <Dialog open={deleteDevOpen} onOpenChange={setDeleteDevOpen}>
+                    <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
+                        <DialogHeader>
+                            <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                                <AlertTriangle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <DialogTitle className="text-center text-xl font-semibold text-white">Delete Developer?</DialogTitle>
+                            <DialogDescription className="text-center text-neutral-400 text-sm">
+                                Are you sure you want to delete <span className="text-white font-bold">{devToDelete?.fullName}</span>. This action cannot be undone and will remove all associated developer data.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="grid grid-cols-2 gap-3 mt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteDevOpen(false)}
+                                className="bg-transparent border-white/10 text-neutral-400 hover:bg-white/5 hover:text-white rounded-full w-full"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleDeleteDev}
+                                disabled={isDeletingDev}
+                                className="bg-red-800 hover:bg-red-900 text-white rounded-full w-full"
+                            >
+                                {isDeletingDev ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Delete"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Developer Details Modal */}
+                <Dialog open={viewDevDetailsOpen} onOpenChange={setViewDevDetailsOpen}>
+                    <DialogContent className="sm:max-w-[700px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6 outline-none">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-3 text-lg font-semibold text-white">
+                                <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white font-bold">
+                                    {detailedDev?.fullName?.charAt(0) || 'D'}
+                                </div>
+                                <div>
+                                    <div>{detailedDev?.fullName}</div>
+                                    <div className="text-xs text-neutral-500 font-normal">{detailedDev?.email}</div>
+                                </div>
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        {detailedDev && (
+                            <div className="space-y-6">
+                                {/* Developer specific details */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Status</div>
+                                        <div className="text-lg font-bold text-white flex items-center gap-2">
+                                            {detailedDev.status}
+                                            {detailedDev.verifiedBadge && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">License</div>
+                                        <div className="text-lg font-bold text-white font-mono">{detailedDev.license || "N/A"}</div>
+                                    </div>
+                                </div>
+
+                                {/* Last Payment Status */}
+                                <div>
+                                    <h3 className="text-sm font-medium text-neutral-300 mb-3 flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-neutral-500" />
+                                        Payment History
+                                    </h3>
+                                    <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                        {!detailedDev.paymentOrders || detailedDev.paymentOrders.length === 0 ? (
+                                            <div className="p-8 text-center text-sm text-neutral-500">
+                                                No payment history found.
+                                            </div>
+                                        ) : (
+                                            <table className="w-full text-left text-sm">
+                                                <thead className="bg-white/5 text-neutral-400 font-medium text-xs uppercase tracking-wider sticky top-0 backdrop-blur-md">
+                                                    <tr>
+                                                        <th className="px-4 py-3 font-medium">Date</th>
+                                                        <th className="px-4 py-3 font-medium">Amount</th>
+                                                        <th className="px-4 py-3 font-medium">Status</th>
+                                                        <th className="px-4 py-3 font-medium text-right">Order ID</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-white/5">
+                                                    {detailedDev.paymentOrders.map((order, i) => (
+                                                        <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                                            <td className="px-4 py-3 text-neutral-400 whitespace-nowrap text-xs">
+                                                                {new Date(order.createdAt).toLocaleString()}
+                                                            </td>
+                                                            <td className="px-4 py-3 font-medium whitespace-nowrap text-white">
+                                                                {(order.amount).toLocaleString('en-IN', { style: 'currency', currency: order.currency })}
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${order.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right text-neutral-500 text-xs font-mono">
+                                                                {order.id}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
             </main>

@@ -444,14 +444,14 @@ export function Dashboard() {
 
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Welcome {firstName}</h1>
+          <h1 className="text-4xl font-semibold text-foreground mb-2">Welcome {firstName}</h1>
           {/* <p className="text-muted-foreground text-lg">Overview of your usage and billing</p> */}
         </div>
 
         {/* Usage Snapshot Section */}
         <div className="mb-8 rounded-3xl border border-white/5 bg-black p-8">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">Usage Snapshot for {monthLabel}</h2>
+            <h2 className="text-[16px] font-medium text-foreground">Usage Snapshot for {monthLabel}</h2>
             {(userDataLoaded && isFreeTrial) ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm px-4 py-2 bg-transparent border border-white/10 rounded-full font-semibold text-white">7-day free trial · Free credits apply</span>
