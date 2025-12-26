@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/NavBar";
 import Link from "next/link";
-import { ArrowUpRight, Code2, Globe, Zap, Box, Upload, Rocket, Terminal, DollarSign } from "lucide-react";
+import { ArrowUpRight, Code2, Globe, Zap, Box, Upload, Rocket, Terminal, IndianRupee } from "lucide-react";
 
 export default function DevelopersPage() {
     return (
@@ -16,7 +16,7 @@ export default function DevelopersPage() {
             {/* Background Glows */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 {/* Top Green Curtain/Aurora */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60%] bg-[#09ee70]/30 blur-[100px] rounded-[100%] opacity-60"></div>
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60%] bg-[#09ee70]/10 blur-[100px] rounded-[100%] opacity-60"></div>
 
                 {/* Subtle curve separator line */}
                 <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#09ee70]/50 border-dashed rounded-[100%] opacity-30"></div>
@@ -35,16 +35,17 @@ export default function DevelopersPage() {
                         FOR DEVELOPERS
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-white">
-                        Publish your <span className="text-white">Apps</span>
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-white min-h-[1.2em]">
+                        Publish your <Typewriter words={["Apps", "Extensions", "Software", "Games", "Tools"]} />
                     </h1>
+
 
                     <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed mb-8">
                         Bring your projects to LoopSync and offer them to the world.
                     </p>
 
                     <Link href="/developers/account" className="group relative inline-flex items-center gap-3 pl-8 pr-2 py-2 rounded-full bg-white text-black font-semibold hover:bg-[#09ee70] transition-all">
-                        <span className="text-sm">Open Console</span>
+                        <span className="text-sm">Open Dev Console</span>
                         <div className="w-8 h-8 rounded-full bg-black/10 group-hover:bg-black/20 flex items-center justify-center">
                             <ArrowUpRight className="w-4 h-4" />
                         </div>
@@ -58,7 +59,7 @@ export default function DevelopersPage() {
                     <div className="flex gap-4 md:gap-6 animate-[slideUpFade_1s_ease-out_0.2s_forwards] opacity-0">
                         <FeatureCard icon={<Code2 />} title="Publish your project" subtitle="Publish your work to LoopSync." />
                         <FeatureCard icon={<Globe />} title="Decide how it's shared" subtitle="Choose who can access your project." />
-                        <FeatureCard icon={<DollarSign />} title="Reach people globally" subtitle="Get 95% of the revenue." />
+                        <FeatureCard icon={<IndianRupee />} title="Reach people globally" subtitle="Get 95% of the revenue." />
                     </div>
 
                     {/* Flow Visualization (Compact) */}
@@ -111,4 +112,46 @@ function FlowStep({ icon, label }: { icon: React.ReactNode, label: string }) {
             <span className="text-xs text-white font-medium tracking-wide">{label}</span>
         </div>
     )
+}
+
+function Typewriter({ words }: { words: string[] }) {
+    const [index, setIndex] = useState(0);
+    const [subIndex, setSubIndex] = useState(0);
+    const [reverse, setReverse] = useState(false);
+    const [blink, setBlink] = useState(true);
+
+    // Blinking cursor
+    useEffect(() => {
+        const timeout2 = setTimeout(() => {
+            setBlink((prev) => !prev);
+        }, 500);
+        return () => clearTimeout(timeout2);
+    }, [blink]);
+
+    // Typing logic
+    useEffect(() => {
+        if (subIndex === words[index].length + 1 && !reverse) {
+            setTimeout(() => setReverse(true), 1500);
+            return;
+        }
+
+        if (subIndex === 0 && reverse) {
+            setReverse(false);
+            setIndex((prev) => (prev + 1) % words.length);
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            setSubIndex((prev) => prev + (reverse ? -1 : 1));
+        }, Math.max(reverse ? 75 : subIndex === words[index].length ? 1000 : 150, Math.random() * 30));
+
+        return () => clearTimeout(timeout);
+    }, [subIndex, index, reverse, words]);
+
+    return (
+        <span className="text-[#fff] inline-block">
+            {words[index].substring(0, subIndex)}
+            <span className={`ml-1 inline-block w-[3px] h-[0.8em] bg-[#09ee70] align-middle ${blink ? "opacity-100" : "opacity-0"}`} />
+        </span>
+    );
 }

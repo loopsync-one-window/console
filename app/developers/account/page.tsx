@@ -29,7 +29,8 @@ declare global {
     }
 }
 
-const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
+// const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
+const API_BASE_URL = "http://localhost:8000/api/v1";
 
 function AccountContent() {
     const [isLogin, setIsLogin] = useState(false);
@@ -689,7 +690,7 @@ function AccountContent() {
                         <div className="w-full max-w-xl text-center">
                             <div className="text-white py-20 px-6 flex flex-col items-center relative z-20">
                                 <img src="/products-logo.svg" alt="Logo" className="w-16 h-16 mb-8 object-contain brightness-0 invert" />
-                                <h1 className="text-5xl font-bold mb-2">Publish your Apps</h1>
+                                <h1 className="text-5xl font-bold mb-2">Publish to Store</h1>
                                 <p className="text-[#fff] font-semibold text-xl tracking-wide">
                                     A place to share your work.
                                 </p>

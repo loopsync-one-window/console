@@ -1,5 +1,6 @@
 // API Configuration
-export const API_BASE_URL = "https://srv01.loopsync.cloud";
+export const API_BASE_URL = "http://localhost:8000";
+// export const API_BASE_URL = "https://srv01.loopsync.cloud";
 
 // Types for our API responses
 interface User {
@@ -1205,3 +1206,574 @@ export const submitAcquisitionInquiry = async (
 
   return handleResponse(response);
 };
+
+// Developer Token Utilities
+const DEV_ACCESS_TOKEN_KEY = "developer.accessToken";
+const DEV_REFRESH_TOKEN_KEY = "developer.refreshToken";
+const DEV_EXPIRES_AT_KEY = "developer.expiresAt";
+
+export const getDeveloperStoredTokens = () => {
+  const accessToken = localStorage.getItem(DEV_ACCESS_TOKEN_KEY) || "";
+  const refreshToken = localStorage.getItem(DEV_REFRESH_TOKEN_KEY) || "";
+  const expiresAt = Number(localStorage.getItem(DEV_EXPIRES_AT_KEY) || 0);
+  return { accessToken, refreshToken, expiresAt };
+};
+
+export const refreshDeveloperAccessToken = async (): Promise<string> => {
+  const { refreshToken } = getDeveloperStoredTokens();
+  if (!refreshToken) throw new Error("No refresh token available");
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const data = await handleResponse(response);
+
+    // Save new tokens
+    if (data.accessToken) localStorage.setItem(DEV_ACCESS_TOKEN_KEY, data.accessToken);
+    if (data.refreshToken) localStorage.setItem(DEV_REFRESH_TOKEN_KEY, data.refreshToken);
+    // Parse exp from token or use returned expiresAt
+    if (data.accessToken) {
+      const [, payload] = data.accessToken.split(".");
+      const json = JSON.parse(atob(payload));
+      if (json && json.exp) {
+        localStorage.setItem(DEV_EXPIRES_AT_KEY, (json.exp * 1000).toString());
+      }
+    }
+
+    return data.accessToken;
+  } catch (error) {
+    // If refresh fails, clear tokens to force re-login
+    localStorage.removeItem(DEV_ACCESS_TOKEN_KEY);
+    localStorage.removeItem(DEV_REFRESH_TOKEN_KEY);
+    localStorage.removeItem(DEV_EXPIRES_AT_KEY);
+    throw error;
+  }
+};
+
+export const getDeveloperAccessToken = async (): Promise<string> => {
+  const { accessToken, expiresAt } = getDeveloperStoredTokens();
+  if (!accessToken) return "";
+
+  const now = Date.now();
+  const FIVE_MIN = 5 * 60 * 1000;
+
+  if (expiresAt && expiresAt - now <= FIVE_MIN) {
+    try {
+      return await refreshDeveloperAccessToken();
+    } catch (e) {
+      console.error("Failed to refresh developer token", e);
+      return "";
+    }
+  }
+  return accessToken;
+};
+
+// ------------------- Developer Settings APIs -------------------
+
+export interface DeveloperProfile {
+  displayName: string;
+  email: string;
+  bio?: string;
+  avatarUrl?: string;
+  visibility?: string;
+  license?: string;
+  verifiedBadge?: boolean;
+  status?: string;
+  financials?: {
+    totalPaid: number;
+    currency: string;
+  };
+}
+
+export interface ApiKey {
+  id: string;
+  type: string;
+  prefix: string;
+  createdAt: string;
+  status: string;
+}
+
+export interface DeveloperNotifications {
+  deploymentStatus: boolean;
+  payoutUpdates: boolean;
+  marketingEmails: boolean;
+}
+
+export const getDeveloperProfile = async (): Promise<DeveloperProfile> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/profile`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateDeveloperProfile = async (data: Partial<DeveloperProfile>): Promise<DeveloperProfile> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const updateDeveloperAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
+  const token = await getDeveloperAccessToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/profile/avatar`, {
+    method: "PATCH",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+    body: formData,
+  });
+  return handleResponse(response);
+};
+
+export const getDeveloperApiKeys = async (): Promise<{ keys: ApiKey[] }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/api-keys`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const rollDeveloperApiKey = async (keyId: string): Promise<{ newKey: string }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/api-keys/${keyId}/roll`, {
+    method: "PATCH",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const createDeveloperApiKey = async (type: string = 'production'): Promise<{ id: string, key: string, type: string, prefix: string, status: string, createdAt: string }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/api-keys`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+    body: JSON.stringify({ type }),
+  });
+  return handleResponse(response);
+};
+
+export const deleteDeveloperApiKey = async (keyId: string): Promise<void> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/api-keys/${keyId}`, {
+    method: "DELETE",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getDeveloperNotifications = async (): Promise<DeveloperNotifications> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/notifications`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateDeveloperNotifications = async (data: Partial<DeveloperNotifications>): Promise<DeveloperNotifications> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/notifications`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const deleteDeveloperAccount = async (confirm: boolean): Promise<{ success: boolean }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/settings/account/delete`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+    body: JSON.stringify({ confirm }),
+  });
+  return handleResponse(response);
+};
+
+// ------------------- Banking & Payouts APIs -------------------
+
+export interface PayoutAccount {
+  id: string;
+  bankName?: string;
+  accountHolder?: string;
+  accountLast4?: string;
+  isPrimary: boolean;
+  verified: boolean;
+}
+
+export interface TaxInfo {
+  gstin?: string;
+  pan?: string;
+  panCardUrl?: string; // URL of the uploaded PAN image
+  status: string;
+  billingAddress?: string;
+}
+
+export interface PayoutSchedule {
+  type: string;
+  cycle: string;
+  day: number;
+  nextPayout: string;
+}
+
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  status: string;
+  amount: number;
+  currency: string;
+}
+
+export const getBankingPayoutAccount = async (): Promise<PayoutAccount> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/payout-account`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateBankingPayoutAccount = async (data: any): Promise<any> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/payout-account`, {
+    method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const getBankingTaxInfo = async (): Promise<TaxInfo> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/tax`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateBankingTaxInfo = async (data: any): Promise<any> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/tax`, {
+    method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const getBankingPayoutSchedule = async (): Promise<PayoutSchedule> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/payout-schedule`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateBankingPayoutSchedule = async (data: any): Promise<any> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/payout-schedule`, {
+    method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const getBankingTransactions = async (): Promise<{ items: Transaction[] }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/transactions`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const uploadBankingPanCard = async (file: File): Promise<{ panCardUrl: string }> => {
+  const token = await getDeveloperAccessToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/banking/tax/pan-card`, {
+    method: "PATCH",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+    body: formData,
+  });
+  return handleResponse(response);
+};
+
+
+// --- Revenue API ---
+
+export interface RevenueSummary {
+  totalEarnings: number;
+  currency: string;
+  monthlyGrowthPercent: number;
+  nextPayout: {
+    amount: number;
+    currency: string;
+    status: string;
+    scheduledFor: string;
+  };
+}
+
+export interface RevenueTransaction {
+  id: string;
+  date: string;
+  description: string;
+  status: string;
+  amount: number;
+  currency: string;
+}
+
+export const getRevenueSummary = async (): Promise<RevenueSummary> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/revenue/summary`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getRevenueTransactions = async (limit: number = 20): Promise<{ items: RevenueTransaction[] }> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/revenue/transactions?limit=${limit}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const exportRevenueReport = async (format: string = 'csv', period: string = 'monthly') => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/revenue/export?format=${format}&period=${period}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+
+  if (!response.ok) throw new Error("Failed to export report");
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `revenue-report-${period}.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+// --- Analytics API ---
+
+export interface AnalyticsOverview {
+  totalUsers: number;
+  totalUsersChangePercent: number;
+  activeSessions: number;
+  activeSessionsChangePercent: number;
+  avgSessionDurationSec: number;
+  avgSessionDurationChangePercent: number;
+}
+
+export interface AnalyticsTraffic {
+  points: { label: string; users: number }[];
+}
+
+export interface AnalyticsDevices {
+  devices: { type: string; percentage: number }[];
+}
+
+export interface AnalyticsRealtime {
+  activeUsers: number;
+  activeSessions: number;
+  requestsPerMinute: number;
+}
+
+export const getAnalyticsOverview = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsOverview> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/overview?range=${range}&region=${region}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getAnalyticsTraffic = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsTraffic> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/traffic?range=${range}&region=${region}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getAnalyticsDevices = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsDevices> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/devices?range=${range}&region=${region}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getAnalyticsRealtime = async (): Promise<AnalyticsRealtime> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/realtime`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+// --- Overview API ---
+
+export interface OverviewApp {
+  id: string;
+  name: string;
+  status: string;
+  users: number | null;
+  color: string;
+  logoUrl?: string | null;
+  rejectionReason?: string | null;
+}
+
+export interface OverviewActivityItem {
+  id: string;
+  type: string;
+  message: string;
+  appName: string;
+  timestamp: string;
+}
+
+export interface OverviewSnapshot {
+  context: {
+    displayName: string;
+    timeOfDay: string;
+  };
+  apps: OverviewApp[];
+  activity: OverviewActivityItem[];
+}
+
+export const getOverviewSnapshot = async (search: string = ""): Promise<OverviewSnapshot> => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/overview?search=${search}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const publishApp = async (data: { name: string; status?: string; color?: string }) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const deleteApp = async (appId: string) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}`, {
+    method: "DELETE",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const getApp = async (appId: string) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}`, {
+    method: "GET",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+export const updateApp = async (appId: string, data: any) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const getAssetUploadUrl = async (appId: string, type: 'icon' | 'banner' | 'screenshot' | 'video', mime: string) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/assets/upload-url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify({ type, mime }),
+  });
+  return handleResponse(response);
+};
+
+export const updateAppAssets = async (appId: string, assets: any) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/assets`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify(assets),
+  });
+  return handleResponse(response);
+};
+
+export const getBuildUploadUrl = async (appId: string, fileName: string, size: number) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/build/upload-url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify({ fileName, size }),
+  });
+  return handleResponse(response);
+};
+
+export const verifyApp = async (appId: string, verifyKey: string) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : ""
+    },
+    body: JSON.stringify({ verifyKey }),
+  });
+  return handleResponse(response);
+};
+
+
+export const deployApp = async (appId: string) => {
+  const token = await getDeveloperAccessToken();
+  const response = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/publish`, {
+    method: "POST",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  return handleResponse(response);
+};
+
+

@@ -198,6 +198,9 @@ export interface Developer {
         status: string;
         createdAt: string;
     }[];
+    _count?: {
+        apps: number;
+    };
 }
 
 export const getAllDevelopers = async (): Promise<Developer[]> => {
@@ -232,6 +235,82 @@ export const deleteDeveloperAdmin = async (id: string): Promise<{ success: boole
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
+    });
+    return handleResponse(response);
+};
+
+// App Review APIs
+export interface ReviewedApp {
+    id: string;
+    name: string;
+    status: string;
+    version: string;
+    updatedAt: string;
+    developer: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
+    buildUrl?: string;
+    reviewerInfo?: any;
+    // Add other fields as needed
+}
+
+export const getAdminAppsForReview = async (): Promise<ReviewedApp[]> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/review`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getAdminAppDetails = async (appId: string): Promise<any> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const adminApproveApp = async (appId: string): Promise<any> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/approve`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const adminRejectApp = async (appId: string, reason: string): Promise<any> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/reject`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason }),
+    });
+    return handleResponse(response);
+};
+
+export const adminTerminateApp = async (appId: string): Promise<any> => {
+    const token = await getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/terminate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        }
     });
     return handleResponse(response);
 };

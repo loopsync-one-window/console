@@ -12,8 +12,14 @@ import {
     deleteUser,
     deleteUsersBulk,
     getAdminUserDetails,
+    getAdminAppsForReview,
+    getAdminAppDetails,
+    adminApproveApp,
+    adminRejectApp,
+    adminTerminateApp,
     AdminUser,
     Developer,
+    ReviewedApp,
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2 } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -56,6 +62,7 @@ export default function AdminZeroTrustPage() {
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [developers, setDevelopers] = useState<Developer[]>([]);
     const [activeSubscribers, setActiveSubscribers] = useState<any[]>([]);
+    const [reviewApps, setReviewApps] = useState<ReviewedApp[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshing, setRefreshing] = useState(false);
     const [hideTrialUsers, setHideTrialUsers] = useState(false);
@@ -93,14 +100,16 @@ export default function AdminZeroTrustPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersData, subscribersData, developersData] = await Promise.all([
+            const [usersData, subscribersData, developersData, appsData] = await Promise.all([
                 getAllUsers(),
                 getActiveSubscribersDetailed(),
                 getAllDevelopers(),
+                getAdminAppsForReview(),
             ]);
             setUsers(usersData);
             setActiveSubscribers(subscribersData);
             setDevelopers(developersData);
+            setReviewApps(appsData);
         } catch (error) {
             console.error("Failed to fetch admin data", error);
             toast.error("Failed to fetch admin data. Ensure you have admin privileges.");
@@ -135,6 +144,87 @@ export default function AdminZeroTrustPage() {
     const handleViewDevDetails = (dev: Developer) => {
         setDetailedDev(dev);
         setViewDevDetailsOpen(true);
+    };
+
+    // Review App State
+    const [reviewAppOpen, setReviewAppOpen] = useState(false);
+    const [selectedReviewApp, setSelectedReviewApp] = useState<any>(null); // Full details
+    const [rejectReason, setRejectReason] = useState("");
+    const [showRejectInput, setShowRejectInput] = useState(false);
+    const [processingReview, setProcessingReview] = useState(false);
+
+    const handleOpenReview = async (app: ReviewedApp) => {
+        setProcessingReview(true);
+        try {
+            const details = await getAdminAppDetails(app.id);
+            setSelectedReviewApp(details);
+            setReviewAppOpen(true);
+            setShowRejectInput(false);
+            setRejectReason("");
+        } catch (e) {
+            toast.error("Failed to load app details");
+        } finally {
+            setProcessingReview(false);
+        }
+    };
+
+    const handleApproveApp = async () => {
+        if (!selectedReviewApp) return;
+        setProcessingReview(true);
+        try {
+            await adminApproveApp(selectedReviewApp.id);
+            toast.success("App approved successfully");
+            setReviewApps(prev => prev.filter(a => a.id !== selectedReviewApp.id));
+            setReviewAppOpen(false);
+        } catch (e) {
+            toast.error("Failed to approve app");
+        } finally {
+            setProcessingReview(false);
+        }
+    };
+
+    const handleRejectApp = async () => {
+        if (!selectedReviewApp) return;
+        if (!showRejectInput) {
+            setShowRejectInput(true);
+            return;
+        }
+        if (!rejectReason.trim()) {
+            toast.error("Please provide a rejection reason");
+            return;
+        }
+
+        setProcessingReview(true);
+        try {
+            await adminRejectApp(selectedReviewApp.id, rejectReason);
+            toast.success("App rejected");
+            setReviewApps(prev => prev.filter(a => a.id !== selectedReviewApp.id));
+            setReviewAppOpen(false);
+        } catch (e) {
+            toast.error("Failed to reject app");
+        } finally {
+            setProcessingReview(false);
+        }
+    };
+
+    const handleTerminateApp = async () => {
+        if (!selectedReviewApp) return;
+        setProcessingReview(true);
+        try {
+            await adminTerminateApp(selectedReviewApp.id);
+            toast.success("App Terminated", {
+                description: "The application has been terminated successfully.",
+            });
+            setReviewApps(prev => prev.filter(a => a.id !== selectedReviewApp.id));
+            setReviewAppOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error("Error", {
+                description: "Failed to terminate app.",
+            });
+        } finally {
+            setProcessingReview(false);
+        }
     };
 
     const filteredDevelopers = developers
@@ -425,7 +515,7 @@ export default function AdminZeroTrustPage() {
                 <div className="space-y-5">
                     <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Overview</h2>
                     <div className="space-y-3">
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
+                        <div className="p-4 rounded-xl bg-transparent border border-white/5 hover:border-white/10 transition-colors group">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-neutral-400 font-medium group-hover:text-neutral-300 transition-colors">Total Users</span>
                                 <Users className="h-3.5 w-3.5 text-neutral-600 group-hover:text-white transition-colors" />
@@ -433,7 +523,7 @@ export default function AdminZeroTrustPage() {
                             <div className="text-2xl font-bold text-white tracking-tight">{totalUsers}</div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:border-emerald-500/20 transition-colors group">
+                        <div className="p-4 rounded-xl bg-transparent border border-white/5 hover:border-white/10 transition-colors group">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-emerald-500/70 font-medium group-hover:text-emerald-400 transition-colors">Active Subscribers</span>
                                 <Activity className="h-3.5 w-3.5 text-emerald-600/70 group-hover:text-emerald-500 transition-colors" />
@@ -442,7 +532,7 @@ export default function AdminZeroTrustPage() {
                         </div>
 
                         {/* Developers Stats */}
-                        <div className="rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group overflow-hidden">
+                        <div className="rounded-xl bg-transparent border border-white/5 hover:border-white/10 transition-colors group overflow-hidden">
                             <div className="flex items-stretch divide-x divide-white/10">
                                 <div className="flex-1 p-4">
                                     <div className="flex items-center justify-between mb-2 gap-2">
@@ -457,6 +547,26 @@ export default function AdminZeroTrustPage() {
                                         <CheckCircle2 className="h-3.5 w-3.5 text-neutral-600 group-hover:text-emerald-500 transition-colors" />
                                     </div>
                                     <div className="text-2xl font-bold text-white tracking-tight">{totalActiveDevs}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Apps Stats */}
+                        <div className="rounded-xl bg-whitetransparent border border-white/5 hover:border-white/10 transition-colors group overflow-hidden">
+                            <div className="flex items-stretch divide-x divide-white/10">
+                                <div className="flex-1 p-4">
+                                    <div className="flex items-center justify-between mb-2 gap-2">
+                                        <span className="text-xs text-neutral-400 font-medium group-hover:text-neutral-300 transition-colors">Apps</span>
+                                        <AppWindow className="h-3.5 w-3.5 text-neutral-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-white tracking-tight">{developers.reduce((acc, dev) => acc + (dev._count?.apps || 0), 0)}</div>
+                                </div>
+                                <div className="flex-1 p-4 bg-white/[0.02]">
+                                    <div className="flex items-center justify-between mb-2 gap-2">
+                                        <span className="text-xs text-neutral-400 font-medium group-hover:text-yellow-400 transition-colors">Review</span>
+                                        <AlertCircle className="h-3.5 w-3.5 text-neutral-600 group-hover:text-yellow-500 transition-colors" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-white tracking-tight">{reviewApps.length}</div>
                                 </div>
                             </div>
                         </div>
@@ -514,6 +624,12 @@ export default function AdminZeroTrustPage() {
                                         className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
                                     >
                                         Developers
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="review"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Review Apps
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
@@ -853,8 +969,257 @@ export default function AdminZeroTrustPage() {
                                 </Table>
                             </div>
                         </TabsContent>
+
+                        <TabsContent value="review" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="text-neutral-400 font-medium pl-6 py-4">Application</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Developer</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Version</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Status</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium pr-6">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reviewApps.length === 0 ? (
+                                            <TableRow className="border-none hover:bg-transparent">
+                                                <TableCell colSpan={5} className="h-48 text-center text-neutral-600">
+                                                    No apps pending review.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            reviewApps.map((app) => (
+                                                <TableRow key={app.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group">
+                                                    <TableCell className="pl-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-white group-hover:text-teal-200 transition-colors">{app.name}</span>
+                                                            <span className="text-[9px] text-neutral-700 font-mono mt-1 uppercase tracking-wider">{app.id}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm text-neutral-300">{app.developer.fullName}</span>
+                                                            <span className="text-xs text-neutral-600">{app.developer.email}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm text-neutral-400 font-mono">{app.version || '1.0.0'}</span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border bg-yellow-500/5 text-yellow-500 border-yellow-500/10">
+                                                            <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-yellow-500 animate-pulse"></span>
+                                                            Review
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleOpenReview(app)}
+                                                            className="bg-white text-black hover:bg-neutral-200 text-xs font-bold rounded-full h-8"
+                                                        >
+                                                            Review
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
                     </Tabs>
                 </div>
+
+                {/* Review App Dialog */}
+                <Dialog open={reviewAppOpen} onOpenChange={setReviewAppOpen}>
+                    <DialogContent className="sm:max-w-4xl bg-[#000] rounded-3xl border-white/10 text-white shadow-2xl p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
+                        <DialogHeader className="p-6 border-b border-white/10 bg-neutral-900/20 backdrop-blur-sm sticky top-0 z-10">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                                        {selectedReviewApp?.icons ? (
+                                            <img src={Object.values(selectedReviewApp.icons)[0] as string || ""} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-black" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-xl font-bold text-white mb-1">{selectedReviewApp?.name}</DialogTitle>
+                                        <div className="text-sm text-neutral-400 flex items-center gap-2">
+                                            {selectedReviewApp?.version && <span className="bg-white/10 px-2 py-0.5 rounded textxs font-mono text-white">{selectedReviewApp.version}</span>}
+                                            <span>by {selectedReviewApp?.developer?.fullName}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        onClick={handleTerminateApp}
+                                        disabled={processingReview}
+                                        variant="outline"
+                                        className="border-white/5 text-white hover:bg-white/10 hover:text-white font-semibold cursor-pointer rounded-full mr-2"
+                                    >
+                                        Terminate
+                                    </Button>
+                                    <Button
+                                        onClick={handleRejectApp}
+                                        disabled={processingReview}
+                                        variant="outline"
+                                        className="border-white/5 text-white bg-red-800 hover:bg-red-900 hover:text-white font-semibold cursor-pointer rounded-full"
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        onClick={handleApproveApp}
+                                        disabled={processingReview}
+                                        className="bg-blue-800 hover:bg-blue-700 cursor-pointer text-white rounded-full font-semibold"
+                                    >
+                                        {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve & Publish"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {showRejectInput && (
+                                <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                                    <Label className="text-white text-xs uppercase font-semibold mb-2 block">Reason for Rejection</Label>
+                                    <Textarea
+                                        value={rejectReason}
+                                        onChange={e => setRejectReason(e.target.value)}
+                                        placeholder="Explain why the app is being rejected..."
+                                        className="bg-white/5 border-white/5 text-white resize-none h-24 mt-5"
+                                    />
+                                    <div className="flex justify-end mt-2">
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            className="rounded-full bg-red-800 hover:bg-red-900 font-semibold cursor-pointer text-white"
+                                            onClick={handleRejectApp}
+                                        >
+                                            Confirm Rejection
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </DialogHeader>
+
+                        <div className="p-6 overflow-y-auto space-y-8 flex-1">
+                            <div className="grid grid-cols-3 gap-8">
+                                <div className="col-span-2 space-y-8">
+                                    <div className="space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Description</Label>
+                                        <div className="prose prose-invert max-w-none text-sm text-neutral-300">
+                                            {selectedReviewApp?.fullDescription}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Screenshots</Label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {selectedReviewApp?.screenshots?.map((url: string, i: number) => (
+                                                <div key={i} className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5">
+                                                    <img src={url} className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                            {(!selectedReviewApp?.screenshots || selectedReviewApp.screenshots.length === 0) && (
+                                                <div className="text-neutral-500 text-sm italic">No screenshots provided.</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Reviewer Info Section */}
+                                    {selectedReviewApp?.reviewerInfo && (
+                                        <div className="space-y-4 pt-6 border-t border-white/5">
+                                            <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Reviewer Information</Label>
+
+                                            <div className="grid gap-4 bg-white/5 p-4 rounded-xl border border-white/5 review-info-block">
+                                                {selectedReviewApp.reviewerInfo.testCredentials && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Test Credentials</div>
+                                                        <pre className="text-xs bg-black/30 p-2 rounded text-neutral-300 font-mono whitespace-pre-wrap border border-white/5">
+                                                            {selectedReviewApp.reviewerInfo.testCredentials}
+                                                        </pre>
+                                                    </div>
+                                                )}
+
+                                                {selectedReviewApp.reviewerInfo.functionality && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Functionality</div>
+                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                            {selectedReviewApp.reviewerInfo.functionality}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {selectedReviewApp.reviewerInfo.limitations && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Known Limitations</div>
+                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                            {selectedReviewApp.reviewerInfo.limitations}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {selectedReviewApp.reviewerInfo.guidance && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Review Guidance</div>
+                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                            {selectedReviewApp.reviewerInfo.guidance}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="col-span-1 space-y-6">
+                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Distribution</Label>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-neutral-400">Pricing</span>
+                                            <span className="text-white capitalize">{selectedReviewApp?.pricingModel}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-neutral-400">Price</span>
+                                            <span className="text-white">₹{selectedReviewApp?.price}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-neutral-400">Region</span>
+                                            <span className="text-white capitalize">{selectedReviewApp?.distributionMode}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Build Artifacts</Label>
+                                        {selectedReviewApp?.buildUrl ? (
+                                            <Button className="w-full bg-white font-semibold text-black hover:bg-neutral-200 rounded-xl" asChild>
+                                                <a href={selectedReviewApp.buildUrl} download>
+                                                    <Code2 className="w-4 h-4 mr-2" />
+                                                    Download Build
+                                                </a>
+                                            </Button>
+                                        ) : (
+                                            <div className="text-sm text-neutral-500">No build uploaded.</div>
+                                        )}
+                                        <div className="text-xs text-neutral-500 font-mono break-all border-t border-white/5 pt-3 mt-3">
+                                            SHA: {selectedReviewApp?.verifyKey}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Metadata</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedReviewApp?.tags?.map((tag: string) => (
+                                                <span key={tag} className="px-2 py-1 rounded-md bg-white/10 text-xs text-white border border-white/5">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Notification Dialog */}
                 <Dialog open={notifyOpen} onOpenChange={setNotifyOpen}>

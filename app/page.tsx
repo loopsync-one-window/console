@@ -174,15 +174,15 @@ export default function Home() {
                 <div className="relative z-10 flex items-center gap-4">
                   {/* Mini Isometric Stack Icon */}
                   <div className="w-12 h-12 relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-[#09ee70]/20 rounded-lg blur-md group-hover:bg-[#09ee70]/30 transition-colors"></div>
+                    <div className="absolute inset-0 bg-red-600/20 rounded-3xl blur-md group-hover:bg-red-600/30 transition-colors"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Upload className="w-6 h-6 text-[#09ee70] group-hover:text-[#09ee70] transition-colors" />
+                      <Upload className="w-6 h-6 text-red-600 group-hover:text-red-600 transition-colors" />
                     </div>
                   </div>
 
                   <div>
                     <h3 className="text-white font-bold text-sm leading-tight group-hover:text-white transition-colors">Publish to Store</h3>
-                    <p className="text-white text-[10px] leading-tight mt-0.5">Build & ship your apps.</p>
+                    <p className="text-white text-[12px] leading-tight mt-0.5">Build & ship your apps.</p>
                   </div>
 
                   <ArrowUpRight className="w-4 h-4 text-zinc-600 absolute top-2 right-2 group-hover:text-white transition-colors" />
