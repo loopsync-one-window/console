@@ -19,8 +19,8 @@ type AdminAuthResponse = {
     };
 };
 
-// const API_BASE_URL = "http://localhost:8000"; // Dev default
-const API_BASE_URL = "https://srv01.loopsync.cloud"; // Prod default
+// const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://srv01.loopsync.cloud";
 
 function AdminAuthContent() {
     const [isLogin, setIsLogin] = useState(true);
