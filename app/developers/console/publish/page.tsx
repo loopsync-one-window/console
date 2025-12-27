@@ -1410,7 +1410,7 @@ function PublishAppContent() {
 
                                         {/* Final Declaration */}
                                         <div className="pt-6 border-t border-white/5">
-                                            <div className="flex items-start gap-3 p-4 bg-transparent rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => setRevDeclaration(!revDeclaration)}>
+                                            <div className="flex items-start gap-3 p-4 bg-transparent rounded-xl hover:bg-white/0 transition-colors cursor-pointer" onClick={() => setRevDeclaration(!revDeclaration)}>
                                                 <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${revDeclaration ? 'bg-white border-white text-black' : 'border-zinc-500 bg-transparent'}`}>
                                                     {revDeclaration && <Check className="w-3.5 h-3.5 font-bold" />}
                                                 </div>

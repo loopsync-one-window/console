@@ -16,10 +16,10 @@ export default function DevelopersPage() {
             {/* Background Glows */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 {/* Top Green Curtain/Aurora */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[60%] bg-[#09ee70]/10 blur-[100px] rounded-[100%] opacity-60"></div>
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[50%] bg-[#09ee70]/20 blur-[100px] rounded-[100%] opacity-60"></div>
 
                 {/* Subtle curve separator line */}
-                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#09ee70]/50 border-dashed rounded-[100%] opacity-30"></div>
+                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#09ee70]/50 border-dashed rounded-[100%] opacity-20"></div>
 
                 {/* Bottom faint glow */}
                 <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] bg-[#09ee70]/5 blur-[80px]"></div>
@@ -57,9 +57,9 @@ export default function DevelopersPage() {
 
                     {/* Feature Cards Row */}
                     <div className="flex gap-4 md:gap-6 animate-[slideUpFade_1s_ease-out_0.2s_forwards] opacity-0">
-                        <FeatureCard icon={<Code2 />} title="Publish your project" subtitle="Publish your work to LoopSync." />
-                        <FeatureCard icon={<Globe />} title="Decide how it's shared" subtitle="Choose who can access your project." />
-                        <FeatureCard icon={<IndianRupee />} title="Reach people globally" subtitle="Get 95% of the revenue." />
+                        <FeatureCard icon={<Code2 />} title="Publish Project" subtitle="Share your work instantly" />
+                        <FeatureCard icon={<Globe />} title="Global Reach" subtitle="Decide who can view your project" />
+                        <FeatureCard icon={<IndianRupee />} title="High Revenue" subtitle="Get 95% of the revenue." />
                     </div>
 
                     {/* Flow Visualization (Compact) */}
