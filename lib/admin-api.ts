@@ -1,4 +1,14 @@
-import { API_BASE_URL, getAccessToken } from "./api";
+import { API_BASE_URL } from "./api";
+
+const ADMIN_ACCESS_TOKEN_KEY = "admin.accessToken";
+
+const getAdminAccessToken = () => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
+    }
+    return null;
+};
+
 
 // Types
 export interface AdminUser {
@@ -70,7 +80,7 @@ const handleResponse = async (response: Response) => {
 };
 
 export const getAllUsers = async (): Promise<AdminUser[]> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/users`, {
         method: "GET",
         headers: {
@@ -82,7 +92,7 @@ export const getAllUsers = async (): Promise<AdminUser[]> => {
 };
 
 export const getUserById = async (id: string): Promise<AdminUser> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
         method: "GET",
         headers: {
@@ -94,7 +104,7 @@ export const getUserById = async (id: string): Promise<AdminUser> => {
 };
 
 export const getAllSubscribedUsers = async (): Promise<SubscribedUser[]> => { // Type might need adjustment based on real data
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/subscribed-users`, {
         method: "GET",
         headers: {
@@ -106,7 +116,7 @@ export const getAllSubscribedUsers = async (): Promise<SubscribedUser[]> => { //
 };
 
 export const getActiveSubscribersDetailed = async (): Promise<SubscribedUser[]> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/active-subscribers`, {
         method: "GET",
         headers: {
@@ -119,7 +129,7 @@ export const getActiveSubscribersDetailed = async (): Promise<SubscribedUser[]> 
 };
 
 export const notifyAllUsers = async (title: string, description: string): Promise<{ success: boolean; sent: number; total: number }> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/notify-all`, {
         method: "POST",
         headers: {
@@ -132,7 +142,7 @@ export const notifyAllUsers = async (title: string, description: string): Promis
 };
 
 export const notifyUser = async (userId: string, title: string, description: string): Promise<{ success: boolean }> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/notify-user`, {
         method: "POST",
         headers: {
@@ -145,7 +155,7 @@ export const notifyUser = async (userId: string, title: string, description: str
 };
 
 export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
         method: "DELETE",
         headers: {
@@ -157,7 +167,7 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
 };
 
 export const deleteUsersBulk = async (ids: string[]): Promise<{ success: boolean; results: any[] }> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/users/bulk-delete`, {
         method: "POST",
         headers: {
@@ -170,7 +180,7 @@ export const deleteUsersBulk = async (ids: string[]): Promise<{ success: boolean
 };
 
 export const getAdminUserDetails = async (email: string): Promise<any> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/billing/admin/user-details`, {
         method: "POST",
         headers: {
@@ -204,7 +214,7 @@ export interface Developer {
 }
 
 export const getAllDevelopers = async (): Promise<Developer[]> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/developers`, {
         method: "GET",
         headers: {
@@ -216,7 +226,7 @@ export const getAllDevelopers = async (): Promise<Developer[]> => {
 };
 
 export const getDeveloperById = async (id: string): Promise<Developer> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
         method: "GET",
         headers: {
@@ -228,7 +238,7 @@ export const getDeveloperById = async (id: string): Promise<Developer> => {
 };
 
 export const deleteDeveloperAdmin = async (id: string): Promise<{ success: boolean }> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
         method: "DELETE",
         headers: {
@@ -257,7 +267,7 @@ export interface ReviewedApp {
 }
 
 export const getAdminAppsForReview = async (): Promise<ReviewedApp[]> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/review`, {
         headers: {
             "Content-Type": "application/json",
@@ -268,7 +278,7 @@ export const getAdminAppsForReview = async (): Promise<ReviewedApp[]> => {
 };
 
 export const getAdminAppDetails = async (appId: string): Promise<any> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}`, {
         headers: {
             "Content-Type": "application/json",
@@ -279,7 +289,7 @@ export const getAdminAppDetails = async (appId: string): Promise<any> => {
 };
 
 export const adminApproveApp = async (appId: string): Promise<any> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/approve`, {
         method: "POST",
         headers: {
@@ -291,7 +301,7 @@ export const adminApproveApp = async (appId: string): Promise<any> => {
 };
 
 export const adminRejectApp = async (appId: string, reason: string): Promise<any> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/reject`, {
         method: "POST",
         headers: {
@@ -304,7 +314,7 @@ export const adminRejectApp = async (appId: string, reason: string): Promise<any
 };
 
 export const adminTerminateApp = async (appId: string): Promise<any> => {
-    const token = await getAccessToken();
+    const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/terminate`, {
         method: "POST",
         headers: {

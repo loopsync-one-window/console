@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -48,15 +48,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { useRouter } from "next/navigation";
+
 export default function AdminZeroTrustPage() {
+    const router = useRouter();
     const [isLocked, setIsLocked] = useState(true);
     const [pinInput, setPinInput] = useState("");
     const [showPin, setShowPin] = useState(false);
     const [pinError, setPinError] = useState(false);
 
+    const [currentAdmin, setCurrentAdmin] = useState<{ fullName: string; email: string; role: string } | null>(null);
+
     // Session Constants
     const SESSION_KEY = "admin_session_expiry";
     const SESSION_DURATION = 20 * 60 * 1000; // 20 minutes
+
+    useEffect(() => {
+        const token = localStorage.getItem("admin.accessToken");
+        if (!token) {
+            router.push("/admin/auth");
+        }
+    }, [router]);
 
     const [loading, setLoading] = useState(false); // Changed to false initially to avoid flash before auth check
     const [users, setUsers] = useState<AdminUser[]>([]);
@@ -99,20 +111,48 @@ export default function AdminZeroTrustPage() {
 
     const fetchData = async () => {
         setLoading(true);
+        console.log("Fetching admin data...");
         try {
-            const [usersData, subscribersData, developersData, appsData] = await Promise.all([
-                getAllUsers(),
-                getActiveSubscribersDetailed(),
-                getAllDevelopers(),
-                getAdminAppsForReview(),
-            ]);
-            setUsers(usersData);
-            setActiveSubscribers(subscribersData);
-            setDevelopers(developersData);
-            setReviewApps(appsData);
+            // Fetch users
+            try {
+                const usersData = await getAllUsers();
+                console.log("Users fetched:", usersData);
+                setUsers(usersData || []);
+            } catch (e) {
+                console.error("Failed to fetch users", e);
+                toast.error("Failed to fetch users");
+            }
+
+            // Fetch subscribers
+            try {
+                const subscribersData = await getActiveSubscribersDetailed();
+                console.log("Subscribers fetched:", subscribersData);
+                setActiveSubscribers(subscribersData || []);
+            } catch (e) {
+                console.error("Failed to fetch subscribers", e);
+            }
+
+            // Fetch developers
+            try {
+                const developersData = await getAllDevelopers();
+                console.log("Developers fetched:", developersData);
+                setDevelopers(developersData || []);
+            } catch (e) {
+                console.error("Failed to fetch developers", e);
+            }
+
+            // Fetch apps
+            try {
+                const appsData = await getAdminAppsForReview();
+                console.log("Apps fetched:", appsData);
+                setReviewApps(appsData || []);
+            } catch (e) {
+                console.error("Failed to fetch apps", e);
+            }
+
         } catch (error) {
-            console.error("Failed to fetch admin data", error);
-            toast.error("Failed to fetch admin data. Ensure you have admin privileges.");
+            console.error("Critical failure in fetching data", error);
+            toast.error("Failed to fetch admin data.");
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -267,6 +307,7 @@ export default function AdminZeroTrustPage() {
     };
 
     // Check session on mount
+    // Check session on mount
     useEffect(() => {
         const checkSession = () => {
             const expiryStr = localStorage.getItem(SESSION_KEY);
@@ -274,7 +315,17 @@ export default function AdminZeroTrustPage() {
                 const expiry = parseInt(expiryStr, 10);
                 if (Date.now() < expiry) {
                     setIsLocked(false);
-                    fetchData();
+                    fetchData(); // Fetch data if session is valid
+
+                    // Restore Admin User Info
+                    const storedAdmin = localStorage.getItem("admin.user");
+                    if (storedAdmin) {
+                        try {
+                            setCurrentAdmin(JSON.parse(storedAdmin));
+                        } catch (e) {
+                            console.error("Failed to parse admin user");
+                        }
+                    }
 
                     // Set timeout to auto-lock when session expires
                     const remaining = expiry - Date.now();
@@ -290,7 +341,7 @@ export default function AdminZeroTrustPage() {
             }
         };
 
-        return checkSession();
+        checkSession();
     }, []);
 
     // Auto-submit on 6 digits if desired, or just use form
@@ -429,6 +480,16 @@ export default function AdminZeroTrustPage() {
         } finally {
             setLoadingDetails(false);
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("admin.accessToken");
+        localStorage.removeItem("admin.user");
+        localStorage.removeItem(SESSION_KEY);
+        setCurrentAdmin(null);
+        setIsLocked(true);
+        router.push("/admin/auth");
+        toast.success("Logged out successfully");
     };
 
     if (isLocked) {
@@ -591,6 +652,41 @@ export default function AdminZeroTrustPage() {
                         <RefreshCcw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
                         Refresh Data
                     </Button>
+
+                    {/* Admin User Profile */}
+                    {currentAdmin && (
+                        <div className="pt-4 mt-2 border-t border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02]">
+                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-neutral-800 to-black flex items-center justify-center shrink-0">
+                                    <span className="text-xs font-bold text-white">
+                                        {currentAdmin.fullName.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-white truncate">
+                                        {currentAdmin.fullName}
+                                    </p>
+                                    <p className="text-[10px] text-neutral-500 truncate">
+                                        {currentAdmin.email}
+                                    </p>
+                                </div>
+                                {/* <div className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
+                                    <span className="text-[9px] font-semibold relative bottom-0.5 text-neutral-400 uppercase">
+                                        {currentAdmin.role}
+                                    </span>
+                                </div> */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleLogout}
+                                    className="h-7 w-7 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-neutral-800 transition-colors ml-1"
+                                    title="Logout"
+                                >
+                                    <LogOut className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </aside>
 
