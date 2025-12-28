@@ -17,7 +17,7 @@ export function proxy(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || '';
   const isMobile = isMobileDevice(userAgent);
   const isTabletDevice = isTablet(userAgent);
-  
+
   // If it's a mobile device (but not a tablet), redirect to screening page
   if (isMobile && !isTabletDevice) {
     // Check if we're already on the screening page to avoid infinite redirect
@@ -26,7 +26,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(screeningUrl);
     }
   }
-  
+
   // For desktop or tablet devices, continue normally
   return NextResponse.next();
 }

@@ -16,13 +16,13 @@ export default function DevelopersPage() {
             {/* Background Glows */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 {/* Top Green Curtain/Aurora */}
-                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[50%] bg-[#09ee70]/20 blur-[100px] rounded-[100%] opacity-60"></div>
+                <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[50%] bg-[#0033ffff] blur-[100px] rounded-[100%] opacity-60"></div>
 
                 {/* Subtle curve separator line */}
-                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#09ee70]/50 border-dashed rounded-[100%] opacity-20"></div>
+                <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[110%] h-[40%] border-t border-[#0033ffff] border-dashed rounded-[100%] opacity-20"></div>
 
                 {/* Bottom faint glow */}
-                <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] bg-[#09ee70]/5 blur-[80px]"></div>
+                <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] bg-[#0033ffff]/20 blur-[80px]"></div>
             </div>
 
             {/* Main Content Container - Centered Vertically */}
@@ -30,7 +30,7 @@ export default function DevelopersPage() {
 
                 {/* Header Section */}
                 <div className="text-center mb-10 flex flex-col items-center animate-[fadeIn_1s_ease-out]">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#09ee70]/10 border border-[#09ee70]/20 text-white text-xs font-medium tracking-wide mb-6 uppercase">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0033ffff]/10 border border-[#fff]/20 text-white text-xs font-medium tracking-wide mb-6 uppercase">
                         <Terminal className="w-3 h-3" />
                         FOR DEVELOPERS
                     </div>
@@ -40,7 +40,7 @@ export default function DevelopersPage() {
                     </h1>
 
 
-                    <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed mb-8">
+                    <p className="text-white text-lg max-w-xl mx-auto leading-relaxed mb-8">
                         Bring your projects to LoopSync and offer them to the world.
                     </p>
 

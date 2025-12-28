@@ -1,199 +1,230 @@
-"use client"
+"use client";
 
+import { Dithering } from "@paper-design/shaders-react"
 import GradientBlinds from "@/components/GradientBlinds"
-import MobileScreeningPage from "./screening/page"
 import StrategicUpdateBanner from "@/components/StrategicUpdateBanner"
 import { useState, useEffect } from "react"
 import Navbar from "@/components/NavBar"
-import Link from "next/link"
 import { Upload, ArrowUpRight } from "lucide-react"
+import Link from "next/link"
+
+import ProductivityKeyboardSection from "@/components/home/sections/ProductivityKeyboardSection"
+import ProTranslationSection from "@/components/home/sections/ProTranslationSection"
+import ExtensibilitySection from "@/components/home/sections/ExtensibilitySection"
+import FeaturesBentoGrid from "@/components/home/sections/FeaturesBentoGrid"
+import Footer from "@/components/Footer"
 
 export default function Home() {
   const [isBannerVisible, setIsBannerVisible] = useState(false)
+  const [isWebGLSupported, setIsWebGLSupported] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsBannerVisible(true), 100)
+    const timer = setTimeout(() => setIsBannerVisible(false), 100)
+
+    // Check for WebGL support
+    try {
+      const canvas = document.createElement("canvas")
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl")
+      if (!gl) {
+        setIsWebGLSupported(false)
+      }
+    } catch (e) {
+      setIsWebGLSupported(false)
+    }
+
     return () => clearTimeout(timer)
   }, [])
 
   return (
-    <>
-      <div className="block md:hidden">
-        <MobileScreeningPage />
-      </div>
-      <main className="relative h-screen overflow-hidden hidden md:block">
-        <StrategicUpdateBanner isVisible={isBannerVisible} onClose={() => setIsBannerVisible(false)} />
-        <Navbar
-          className={`transition-all duration-1000 ease-out ${isBannerVisible ? "translate-y-[3.5rem]" : ""
-            }`}
-        />
+    <main className="relative min-h-screen w-full overflow-x-hidden text-white bg-black">
+      {/* Background Layer */}
+      <div className="absolute top-0 left-0 w-full h-screen z-0 flex items-center justify-center bg-transparent pointer-events-none">
 
-        {/* Animated Gradient Background */}
-        <div className="fixed inset-0 w-full h-screen flex items-center justify-center">
-          <GradientBlinds
-            gradientColors={["#000000ff", "#d40000ff", "#d70000ff", "#f80000ff"]}
-            angle={60}
-            noise={0.0}
-            blindCount={12}
-            blindMinWidth={40}
-            spotlightRadius={0.40}
-            spotlightSoftness={1.6}
-            spotlightOpacity={0.42}
-            mouseDampening={0.15}
-            distortAmount={3.8}
-            shineDirection="right"
-            mixBlendMode="overlay"
-            animateColors={true}
-            transitionDuration={2000}
-          />
-        </div>
+        {isWebGLSupported ? (
+          <>
+            {/* Desktop: Gradient Blinds */}
+            <div className="hidden sm:block w-full h-full">
+              <GradientBlinds
+                gradientColors={["#000000ff", "#0033ffff", "#0033ffff", "#000000ff"]}
+                angle={60}
+                noise={0.0}
+                blindCount={7}
+                blindMinWidth={40}
+                spotlightRadius={0.4}
+                spotlightSoftness={2.6}
+                spotlightOpacity={0.42}
+                mouseDampening={0.15}
+                distortAmount={3.8}
+                shineDirection="right"
+                mixBlendMode="normal"
+                animateColors={true}
+                transitionDuration={2000}
+              />
+            </div>
 
-        <div className="relative z-10 flex h-screen flex-col">
-          {/* Hero Section */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex items-center justify-center h-screen w-full px-5 sm:px-20">
-              <div className="relative z-10 flex max-w-4xl flex-col items-center gap-8 text-center">
-                <h1 className="text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl drop-shadow-2xl">
-                  LOOPSYNC
-                  <br />
-                  ONE WINDOW<sup className="text-sm ml-2 text-white top-[-25] align-super">TM</sup>
-                </h1>
-
-                <p className="text-[20px] text-white/90 max-w-3xl font-semibold drop-shadow-lg">
-                  One intelligent platform for productivity and creative work.
-                  <br />Reduce tool sprawl. Accelerate output.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                  <a
-                    href="https://loopsync.cloud/open-account?login=false"
-                    className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur-xl shadow-lg transition-all duration-200 hover:bg-white/20 hover:border-white/40 hover:shadow-xl active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0"
-                  >
-                    Try for Free
-                    <svg
-                      className="ml-2 h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </a>
-
-
-                  <a
-                    href="https://loopsync.cloud/models"
-                    className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur-xl shadow-lg transition-all duration-200 hover:bg-white/20 hover:border-white/40 hover:shadow-xl active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0"
-                  >
-                    Explore Models
-                    <svg
-                      className="ml-2 h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </a>
-
-                </div>
+            {/* Mobile: Dithering + Blur */}
+            <div className="sm:hidden absolute inset-0 w-full h-full">
+              <div className="absolute inset-0 z-0">
+                <Dithering
+                  style={{ height: "100%", width: "100%" }}
+                  colorBack="#000000"
+                  colorFront="#00ffc3ff"
+                  shape={"circle" as any}
+                  type="4x4"
+                  pxSize={3.5}
+                  offsetX={0}
+                  offsetY={0}
+                  scale={0.8}
+                  rotation={0}
+                  speed={2.5}
+                />
               </div>
+              {/* Layered Blur */}
+              <div className="absolute inset-0 z-10 backdrop-blur-3xl bg-black/10"></div>
+            </div>
+          </>
+        ) : (
+          /* Fallback for no WebGL support */
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-[#fff]/15 to-black w-full h-full" />
+        )}
+
+        <div className="absolute inset-0 bg-transparent z-10" />
+      </div>
+
+      <StrategicUpdateBanner isVisible={isBannerVisible} onClose={() => setIsBannerVisible(false)} />
+
+      <Navbar
+        className={`transition-transform duration-1000 ease-out ${isBannerVisible ? "translate-y-14" : "translate-y-0"
+          }`}
+      />
+
+      <div className="relative z-10 text-white">
+        {/* Full Screen Hero Section */}
+        <div className="flex min-h-screen w-full flex-col items-center justify-center px-4 sm:px-6 relative">
+          <div className="flex w-full max-w-7xl flex-col items-center gap-6 text-center sm:gap-8 -mt-20">
+            {/* Animation Styles */}
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                @keyframes fadeUp {
+                  from { opacity: 0; transform: translateY(20px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+              `
+            }} />
+
+            <h1 className="drop-shadow-2xl text-3xl sm:text-4xl lg:text-7xl font-bold text-white font-geom mt-25 opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+              <span className="block sm:hidden text-4xl font-medium">One window. Everything.</span>
+              <span className="hidden sm:block">All your productivity <br />tools in one place.</span>
+            </h1>
+
+            <p className="max-w-xl lg:max-w-3xl text-sm sm:text-base lg:text-lg font-semibold text-white drop-shadow-lg opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards]">
+              Find apps, extensions, and software in one simple platform. <br className="hidden sm:block" />Discover useful tools without the clutter.
+            </p>
+
+            <div className="mt-4 flex w-full flex-col gap-4 sm:w-auto sm:flex-row opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards]">
+              <a
+                href="https://loopsync.cloud/open-account?login=false"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-lg backdrop-blur-xl transition-all duration-200 hover:border-white/40 hover:bg-white/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0 active:scale-[0.97] sm:w-auto"
+              >
+                Try for Free
+                <svg
+                  className="ml-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </a>
+
+              <a
+                href="https://loopsync.cloud/models"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-lg backdrop-blur-xl transition-all duration-200 hover:border-white/40 hover:bg-white/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0 active:scale-[0.97] sm:w-auto"
+              >
+                Explore Models
+                <svg
+                  className="ml-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
+
+
+          {/* <ScrollIndicator /> */}
         </div>
 
-        {/* Copyright */}
-        <div className="fixed bottom-0 left-0 right-0 z-20 pb-6 px-6">
-          <div className="flex items-center justify-center relative">
+        {/* Content Sections */}
+        <ProductivityKeyboardSection />
+        <ProTranslationSection />
+        <ExtensibilitySection />
+        <FeaturesBentoGrid />
 
-            {/* Center Content */}
-            <div className="text-center text-white text-sm space-y-1">
-              <p>
-                © 2025{" "}
-                <a
-                  href="https://www.intellaris.co"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold underline hover:font-bold cursor-pointer"
-                >
-                  Intellaris Private Limited
-                </a>
-                . All rights reserved.
-              </p>
 
-              <p className="flex flex-wrap justify-center items-center gap-x-2 text-white/70">
-                <a href="/policies/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/software-license" className="hover:text-white transition-colors">Software License</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/terms-of-use" className="hover:text-white transition-colors">Terms of Use</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/fair-use-policy" className="hover:text-white transition-colors">Fair Use Policy</a>
-                <span className="text-white/40">|</span>
-                <a href="/policies/refund-policy" className="hover:text-white transition-colors">Refund Policy</a>
-              </p>
-            </div>
+        <Footer />
+      </div>
 
-            {/* QR Code */}
-            <div className="absolute right-0 pr-4 flex flex-col items-center space-y-1 mb-10">
-              <a href="https://loopsync.cloud/one-window/support/resources" target="_blank" rel="noopener noreferrer">
-                <img
-                  src="/resources/qr-support.svg"
-                  alt="QR Code"
-                  className="w-20 h-20 opacity-90 hover:opacity-100 transition duration-200"
-                />
-              </a>
-              <span className="text-white text-xs font-medium text-center leading-tight max-w-[8rem]">
-                Scan or Click for<br /><span className="font-semibold text-white">One Window Support</span>
-              </span>
-            </div>
+      {/* FIXED ELEMENTS - Stay on screen while scrolling */}
 
-            {/* Developer Popup (Left) */}
-            <div className="absolute left-0 pl-4 mb-20 hidden lg:flex flex-col items-start animate-[slideUpFade_1s_ease-out_forwards]">
-              <Link href="/developers" className="group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 overflow-hidden hover:border-white/20 transition-all hover:scale-105 active:scale-95 w-64 shadow-2xl">
-                <style dangerouslySetInnerHTML={{
-                  __html: `
+      {/* QR Code - Hidden on Mobile */}
+      <div className="fixed bottom-6 right-6 hidden flex-col items-center space-y-1 lg:flex z-50">
+        <a href="https://loopsync.cloud/one-window/support/resources" target="_blank" rel="noopener noreferrer">
+          <img
+            src="/resources/qr-support.svg"
+            alt="QR Code"
+            className="h-20 w-20 opacity-90 transition duration-200 hover:opacity-100"
+          />
+        </a>
+        <span className="max-w-[8rem] text-center text-xs font-medium leading-tight text-white">
+          Scan or Click for<br /><span className="font-semibold text-white">One Window Support</span>
+        </span>
+      </div>
+
+      {/* Developer Popup - Hidden on Mobile */}
+      <div className="fixed bottom-6 left-6 hidden animate-[slideUpFade_1s_ease-out_forwards] flex-col items-start lg:flex z-50">
+        <Link href="/developers" className="group relative w-64 overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-4 shadow-2xl backdrop-blur-md transition-all hover:scale-105 hover:border-white/20 active:scale-95">
+          <style dangerouslySetInnerHTML={{
+            __html: `
                     @keyframes borderRotate {
                       0% { transform: rotate(0deg); }
                       100% { transform: rotate(360deg); }
                     }
                   `
-                }} />
+          }} />
 
-
-                <div className="relative z-10 flex items-center gap-4">
-                  {/* Mini Isometric Stack Icon */}
-                  <div className="w-12 h-12 relative flex-shrink-0">
-                    <div className="absolute inset-0 bg-red-600/20 rounded-3xl blur-md group-hover:bg-red-600/30 transition-colors"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Upload className="w-6 h-6 text-red-600 group-hover:text-red-600 transition-colors" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-white font-bold text-sm leading-tight group-hover:text-white transition-colors">Publish to Store</h3>
-                    <p className="text-white text-[12px] leading-tight mt-0.5">Build & ship your apps.</p>
-                  </div>
-
-                  <ArrowUpRight className="w-4 h-4 text-zinc-600 absolute top-2 right-2 group-hover:text-white transition-colors" />
-                </div>
-              </Link>
+          <div className="relative z-10 flex items-center gap-4">
+            {/* Mini Isometric Stack Icon */}
+            <div className="relative h-12 w-12 flex-shrink-0">
+              <div className="absolute inset-0 rounded-3xl bg-[#0033ffff] blur-md transition-colors group-hover:bg-[#0033ffff]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Upload className="h-6 w-6 text-[#fff] transition-colors group-hover:text-[#fff]" />
+              </div>
             </div>
 
-          </div>
-        </div>
+            <div>
+              <h3 className="text-left text-sm font-bold leading-tight text-white transition-colors group-hover:text-white">Publish to Store</h3>
+              <p className="mt-0.5 text-left text-[12px] leading-tight text-white">Build & ship your apps.</p>
+            </div>
 
-      </main>
-    </>
+            <ArrowUpRight className="absolute right-2 top-2 h-4 w-4 text-zinc-600 transition-colors group-hover:text-white" />
+          </div>
+        </Link>
+      </div>
+
+    </main>
   )
 }

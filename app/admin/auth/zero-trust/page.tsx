@@ -7,6 +7,7 @@ import {
     getActiveSubscribersDetailed,
     getAllDevelopers,
     deleteDeveloperAdmin,
+    getAllAdminApps,
     notifyAllUsers,
     notifyUser,
     deleteUser,
@@ -17,9 +18,11 @@ import {
     adminApproveApp,
     adminRejectApp,
     adminTerminateApp,
+    adminReopenApp,
     AdminUser,
     Developer,
     ReviewedApp,
+    getAppRejectionHistory,
 } from "@/lib/admin-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut, History } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -75,6 +78,7 @@ export default function AdminZeroTrustPage() {
     const [developers, setDevelopers] = useState<Developer[]>([]);
     const [activeSubscribers, setActiveSubscribers] = useState<any[]>([]);
     const [reviewApps, setReviewApps] = useState<ReviewedApp[]>([]);
+    const [allApps, setAllApps] = useState<ReviewedApp[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshing, setRefreshing] = useState(false);
     const [hideTrialUsers, setHideTrialUsers] = useState(false);
@@ -150,6 +154,15 @@ export default function AdminZeroTrustPage() {
                 console.error("Failed to fetch apps", e);
             }
 
+            // Fetch all apps
+            try {
+                const allAppsData = await getAllAdminApps();
+                console.log("All Apps fetched:", allAppsData);
+                setAllApps(allAppsData || []);
+            } catch (e) {
+                console.error("Failed to fetch all apps", e);
+            }
+
         } catch (error) {
             console.error("Critical failure in fetching data", error);
             toast.error("Failed to fetch admin data.");
@@ -198,6 +211,8 @@ export default function AdminZeroTrustPage() {
         try {
             const details = await getAdminAppDetails(app.id);
             setSelectedReviewApp(details);
+            // Fetch history when opening review details
+            await fetchAppHistoryForReview(app.id);
             setReviewAppOpen(true);
             setShowRejectInput(false);
             setRejectReason("");
@@ -205,6 +220,16 @@ export default function AdminZeroTrustPage() {
             toast.error("Failed to load app details");
         } finally {
             setProcessingReview(false);
+        }
+
+    };
+
+    const fetchAppHistoryForReview = async (appId: string) => {
+        try {
+            const history = await getAppRejectionHistory(appId);
+            setHistoryData(history || []);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -267,13 +292,67 @@ export default function AdminZeroTrustPage() {
         }
     };
 
+    const handleReopenApp = async () => {
+        if (!selectedReviewApp) return;
+        setProcessingReview(true);
+        try {
+            await adminReopenApp(selectedReviewApp.id);
+            toast.success("App Reopened", {
+                description: "The application has been reopened for review.",
+            });
+            // Update local state and close
+            setReviewApps(prev => prev.filter(a => a.id !== selectedReviewApp.id));
+            setReviewAppOpen(false);
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to reopen app");
+        } finally {
+            setProcessingReview(false);
+        }
+    };
+
+    const handleReopenAppFromTable = async (app: ReviewedApp) => {
+        try {
+            await adminReopenApp(app.id);
+            toast.success("App Reopened", {
+                description: "The application has been reopened for review.",
+            });
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to reopen app");
+        }
+    };
+
+    // History State
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyData, setHistoryData] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [selectedHistoryApp, setSelectedHistoryApp] = useState<ReviewedApp | null>(null);
+
+    const handleViewHistory = async (app: ReviewedApp) => {
+        setSelectedHistoryApp(app);
+        setHistoryOpen(true);
+        setLoadingHistory(true);
+        try {
+            const history = await getAppRejectionHistory(app.id);
+            setHistoryData(history || []);
+        } catch (e) {
+            console.error("Failed to fetch history", e);
+            toast.error("Failed to fetch rejection history");
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
     const filteredDevelopers = developers
         .filter((d) =>
             d.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             d.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             d.id.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 
     const startSession = () => {
         const expiry = Date.now() + SESSION_DURATION;
@@ -467,6 +546,7 @@ export default function AdminZeroTrustPage() {
     const handleViewDetails = async (user: AdminUser) => {
         setDetailedUser(user);
         setViewDetailsOpen(true);
+        setSelectedUserDetail(null);
         setLoadingDetails(true);
         try {
             const data = await getAdminUserDetails(user.email);
@@ -726,6 +806,18 @@ export default function AdminZeroTrustPage() {
                                         className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
                                     >
                                         Review Apps
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="all-apps"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        All Apps
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="draft-apps"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Draft Apps
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
@@ -1024,16 +1116,16 @@ export default function AdminZeroTrustPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         {dev.verifiedBadge ? (
-                                                            <div className="flex items-center gap-1 text-blue-400">
+                                                            <div className="flex items-center gap-1 text-white">
                                                                 <CheckCircle2 className="w-4 h-4" />
-                                                                <span className="text-sm font-medium">Verified</span>
+                                                                <span className="text-sm font-medium">Badge Active</span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-sm text-neutral-500">Unverified</span>
+                                                            <span className="text-sm text-neutral-500">Badge Inactive</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-neutral-500 text-sm">
-                                                        {new Date(dev.createdAt).toLocaleDateString(undefined, {
+                                                        {new Date(dev.createdAt || '').toLocaleDateString(undefined, {
                                                             month: 'short', day: 'numeric', year: 'numeric'
                                                         })}
                                                     </TableCell>
@@ -1125,12 +1217,182 @@ export default function AdminZeroTrustPage() {
                                 </Table>
                             </div>
                         </TabsContent>
+
+                        <TabsContent value="all-apps" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="pl-6 py-4 text-neutral-400 font-medium">App Name</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Developer</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Status</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Rejection Reason</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium">Last Updated</TableHead>
+                                            <TableHead className="text-right pr-6 text-neutral-400 font-medium">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {allApps.filter(a => a.status !== 'draft').length === 0 ? (
+                                            <TableRow className="border-none hover:bg-transparent">
+                                                <TableCell colSpan={6} className="h-48 text-center text-neutral-600">
+                                                    No active apps found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            allApps.filter(a => a.status !== 'draft').map((app) => (
+                                                <TableRow key={app.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                                                    <TableCell className="pl-6 py-4 font-medium text-white">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-8 h-8 rounded-lg ${app.color || 'bg-white'} flex items-center justify-center`}>
+                                                                <span className="text-black font-bold text-xs">{app.name.charAt(0).toUpperCase()}</span>
+                                                            </div>
+                                                            {app.name}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-300">
+                                                        <div className="flex flex-col">
+                                                            <span>{app.developer?.fullName}</span>
+                                                            <span className="text-xs text-neutral-500">{app.developer?.email}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            className={`
+                                                                ${app.status === 'live' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ''}
+                                                                ${app.status === 'review' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : ''}
+                                                                ${app.status === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/20' : ''}
+                                                                ${app.status === 'terminated' ? 'bg-red-900/20 text-red-500 border-red-500/20' : ''}
+                                                                ${app.status === 'draft' ? 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20' : ''}
+                                                            `}
+                                                            variant="outline"
+                                                        >
+                                                            {app.status.toUpperCase()}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px]">
+                                                        {app.rejectionReason ? (
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div className="flex items-center gap-1.5 text-red-400 cursor-help">
+                                                                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                                                            <span className="truncate text-sm">{app.rejectionReason}</span>
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent className="max-w-xs bg-neutral-900 border-white/10 text-white">
+                                                                        <p>{app.rejectionReason}</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                        ) : (
+                                                            <span className="text-neutral-600">-</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-neutral-400">
+                                                        {new Date(app.updatedAt || '').toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            {app.status === 'terminated' && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleReopenAppFromTable(app)}
+                                                                    className="h-8 rounded-full border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 text-xs font-medium"
+                                                                >
+                                                                    Reopen
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleViewHistory(app)}
+                                                                className="w-8 h-8 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                                                title="View Rejection History"
+                                                            >
+                                                                <History className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="draft-apps" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="pl-6 py-4 text-neutral-400 font-medium">App Name</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Developer</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Status</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium">Last Updated</TableHead>
+                                            <TableHead className="text-right pr-6 text-neutral-400 font-medium">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {allApps.filter(a => a.status === 'draft').length === 0 ? (
+                                            <TableRow className="border-none hover:bg-transparent">
+                                                <TableCell colSpan={5} className="h-48 text-center text-neutral-600">
+                                                    No draft apps found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            allApps.filter(a => a.status === 'draft').map((app) => (
+                                                <TableRow key={app.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                                                    <TableCell className="pl-6 py-4 font-medium text-white">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-8 h-8 rounded-lg ${app.color || 'bg-white'} flex items-center justify-center`}>
+                                                                <span className="text-black font-bold text-xs">{app.name.charAt(0).toUpperCase()}</span>
+                                                            </div>
+                                                            {app.name}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-300">
+                                                        <div className="flex flex-col">
+                                                            <span>{app.developer?.fullName}</span>
+                                                            <span className="text-xs text-neutral-500">{app.developer?.email}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            className="bg-neutral-500/10 text-neutral-400 border-neutral-500/20"
+                                                            variant="outline"
+                                                        >
+                                                            DRAFT
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-neutral-400">
+                                                        {new Date(app.updatedAt || '').toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleViewHistory(app)}
+                                                            className="w-8 h-8 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                                            title="View Rejection History"
+                                                        >
+                                                            <History className="w-4 h-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
                     </Tabs>
                 </div>
 
                 {/* Review App Dialog */}
                 <Dialog open={reviewAppOpen} onOpenChange={setReviewAppOpen}>
-                    <DialogContent className="sm:max-w-4xl bg-[#000] rounded-3xl border-white/10 text-white shadow-2xl p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
+                    <DialogContent className="w-[55vw] max-w-none bg-[#000] rounded-3xl border-white/10 text-white shadow-2xl p-0 gap-0 overflow-hidden max-h-[95vh] flex flex-col">
                         <DialogHeader className="p-6 border-b border-white/10 bg-neutral-900/20 backdrop-blur-sm sticky top-0 z-10">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -1150,29 +1412,41 @@ export default function AdminZeroTrustPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        onClick={handleTerminateApp}
-                                        disabled={processingReview}
-                                        variant="outline"
-                                        className="border-white/5 text-white hover:bg-white/10 hover:text-white font-semibold cursor-pointer rounded-full mr-2"
-                                    >
-                                        Terminate
-                                    </Button>
-                                    <Button
-                                        onClick={handleRejectApp}
-                                        disabled={processingReview}
-                                        variant="outline"
-                                        className="border-white/5 text-white bg-red-800 hover:bg-red-900 hover:text-white font-semibold cursor-pointer rounded-full"
-                                    >
-                                        Reject
-                                    </Button>
-                                    <Button
-                                        onClick={handleApproveApp}
-                                        disabled={processingReview}
-                                        className="bg-blue-800 hover:bg-blue-700 cursor-pointer text-white rounded-full font-semibold"
-                                    >
-                                        {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve & Publish"}
-                                    </Button>
+                                    {selectedReviewApp?.status === 'terminated' ? (
+                                        <Button
+                                            onClick={handleReopenApp}
+                                            disabled={processingReview}
+                                            className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white rounded-full font-semibold"
+                                        >
+                                            {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reopen for Review"}
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                onClick={handleTerminateApp}
+                                                disabled={processingReview}
+                                                variant="outline"
+                                                className="border-white/5 text-white hover:bg-white/10 hover:text-white font-semibold cursor-pointer rounded-full mr-2"
+                                            >
+                                                Terminate
+                                            </Button>
+                                            <Button
+                                                onClick={handleRejectApp}
+                                                disabled={processingReview}
+                                                variant="outline"
+                                                className="border-white/5 text-white bg-red-800 hover:bg-red-900 hover:text-white font-semibold cursor-pointer rounded-full"
+                                            >
+                                                Reject
+                                            </Button>
+                                            <Button
+                                                onClick={handleApproveApp}
+                                                disabled={processingReview}
+                                                className="bg-blue-800 hover:bg-blue-700 cursor-pointer text-white rounded-full font-semibold"
+                                            >
+                                                {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve & Publish"}
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -1203,22 +1477,55 @@ export default function AdminZeroTrustPage() {
                             <div className="grid grid-cols-3 gap-8">
                                 <div className="col-span-2 space-y-8">
                                     <div className="space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Description</Label>
-                                        <div className="prose prose-invert max-w-none text-sm text-neutral-300">
-                                            {selectedReviewApp?.fullDescription}
+                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">Descriptions</Label>
+
+                                        <div>
+                                            <Label className="text-xs font-semibold text-neutral-400 mb-1 block">Short Description</Label>
+                                            <p className="text-sm text-white bg-white/5 p-3 rounded-lg border border-white/5">{selectedReviewApp?.shortDescription || "N/A"}</p>
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-xs font-semibold text-neutral-400 mb-1 block">Full Description</Label>
+                                            <div className="prose prose-invert max-w-none text-sm text-neutral-300 bg-white/5 p-3 rounded-lg border border-white/5">
+                                                {selectedReviewApp?.fullDescription || "N/A"}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Screenshots</Label>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">App Assets</Label>
+
+                                        {/* Banner */}
+                                        {selectedReviewApp?.bannerUrl && (
+                                            <div>
+                                                <Label className="text-xs font-semibold text-neutral-400 mb-2 block">Feature Banner</Label>
+                                                <div className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5 relative">
+                                                    <img src={selectedReviewApp.bannerUrl} className="w-full h-full object-cover" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Video */}
+                                        {selectedReviewApp?.videoUrl && (
+                                            <div>
+                                                <Label className="text-xs font-semibold text-neutral-400 mb-2 block">Preview Video</Label>
+                                                <div className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5 relative">
+                                                    <video src={selectedReviewApp.videoUrl} controls className="w-full h-full object-cover" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">Screenshots</Label>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             {selectedReviewApp?.screenshots?.map((url: string, i: number) => (
                                                 <div key={i} className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5">
-                                                    <img src={url} className="w-full h-full object-cover" />
+                                                    <img src={url} className="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(url, '_blank')} />
                                                 </div>
                                             ))}
                                             {(!selectedReviewApp?.screenshots || selectedReviewApp.screenshots.length === 0) && (
-                                                <div className="text-neutral-500 text-sm italic">No screenshots provided.</div>
+                                                <div className="text-neutral-500 text-sm italic col-span-3 text-center py-8">No screenshots provided.</div>
                                             )}
                                         </div>
                                     </div>
@@ -1226,7 +1533,7 @@ export default function AdminZeroTrustPage() {
                                     {/* Reviewer Info Section */}
                                     {selectedReviewApp?.reviewerInfo && (
                                         <div className="space-y-4 pt-6 border-t border-white/5">
-                                            <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Reviewer Information</Label>
+                                            <Label className="text-xs uppercase font-bold text-white tracking-wider">Reviewer Information</Label>
 
                                             <div className="grid gap-4 bg-white/5 p-4 rounded-xl border border-white/5 review-info-block">
                                                 {selectedReviewApp.reviewerInfo.testCredentials && (
@@ -1264,6 +1571,41 @@ export default function AdminZeroTrustPage() {
                                                         </p>
                                                     </div>
                                                 )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* App Activity History */}
+                                    {historyData && historyData.length > 0 && (
+                                        <div className="space-y-4 pt-6 border-t border-white/5">
+                                            <Label className="text-xs uppercase font-bold text-white tracking-wider flex items-center gap-2">
+                                                <History className="w-4 h-4" />
+                                                App Activity History
+                                            </Label>
+                                            <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                                <div className="divide-y divide-white/5">
+                                                    {historyData.map((record, i) => (
+                                                        <div key={i} className="p-4 hover:bg-white/[0.02] transition-colors">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className={`text-xs font-bold uppercase ${record.action === 'REJECTED' ? 'text-red-400' :
+                                                                    record.action === 'TERMINATED' ? 'text-red-500' :
+                                                                        record.action === 'REOPENED' ? 'text-emerald-400' :
+                                                                            'text-neutral-400'
+                                                                    }`}>
+                                                                    {record.action || 'REJECTED'}
+                                                                </span>
+                                                                <span className="text-xs text-neutral-500">
+                                                                    {new Date(record.createdAt).toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                            {record.reason && (
+                                                                <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                                                                    {record.reason}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1636,6 +1978,56 @@ export default function AdminZeroTrustPage() {
                                 </div>
                             </div>
                         )}
+                    </DialogContent>
+                </Dialog>
+                {/* App Activity History Dialog */}
+                <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+                    <DialogContent className="sm:max-w-[600px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+                                <History className="w-5 h-5 text-neutral-400" />
+                                App Activity History
+                            </DialogTitle>
+                            <DialogDescription className="text-neutral-400 text-sm">
+                                View activity logs for <span className="text-white font-bold">{selectedHistoryApp?.name}</span>.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                            {loadingHistory ? (
+                                <div className="p-8 flex justify-center">
+                                    <Loader2 className="w-6 h-6 animate-spin text-neutral-500" />
+                                </div>
+                            ) : (!historyData || historyData.length === 0) ? (
+                                <div className="p-8 text-center text-sm text-neutral-500">
+                                    No activity history found.
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-white/5">
+                                    {historyData.map((record, i) => (
+                                        <div key={i} className="p-4 hover:bg-white/[0.02] transition-colors">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className={`text-xs font-bold uppercase ${record.action === 'REJECTED' ? 'text-red-400' :
+                                                    record.action === 'TERMINATED' ? 'text-red-500' :
+                                                        record.action === 'REOPENED' ? 'text-emerald-400' :
+                                                            'text-neutral-400'
+                                                    }`}>
+                                                    {record.action || 'REJECTED'}
+                                                </span>
+                                                <span className="text-xs text-neutral-500">
+                                                    {new Date(record.createdAt).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            {record.reason && (
+                                                <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                                                    {record.reason}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </DialogContent>
                 </Dialog>
             </main>

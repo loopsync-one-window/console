@@ -1,5 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+
+.font-geom {
+  font-family: "Geom", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
 
 @custom-variant dark (&:is(.dark *));
 

@@ -174,29 +174,19 @@ vec3 getGradientColor(float t){
 
   // Color animation logic
   if (uAnimateColors > 0.5) {
-    // Apply start delay
     float adjustedTime = max(0.0, iTime - uStartDelay);
-    
-    // Create a smooth looping animation with 1500ms cycle
-    float cycleTime = uTransitionDuration * 2.0; // Total cycle time (forward and backward)
+    float cycleTime = uTransitionDuration * 2.0;
     float elapsed = mod(adjustedTime, cycleTime);
-    
-    // Progress from 0 to 1 and back to 0 for smooth looping
     float progress = (elapsed < uTransitionDuration) ? 
                      elapsed / uTransitionDuration : 
                      2.0 - elapsed / uTransitionDuration;
     
-    // Create wave effect from center
     vec2 center = vec2(0.5, 0.5);
     float distFromCenter = distance(vUv, center);
-    
-    // Adjust progress based on distance from center for wave effect
     float waveEffect = sin(distFromCenter * 8.0 - adjustedTime * 1.5) * 0.5 + 0.5;
     progress = progress * (0.7 + 0.3 * waveEffect);
-    
-    // Clamp progress between 0 and 1
     progress = clamp(progress, 0.0, 1.0);
-    // Blue-only animation: darker <-> lighter variations
+    
     vec3 darkerBlue = color * vec3(0.6, 0.6, 0.9);
     vec3 lighterBlue = color + vec3(0.05, 0.1, 0.2);
     lighterBlue = clamp(lighterBlue, 0.0, 1.0);
@@ -210,13 +200,33 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     vec2 uv0 = fragCoord.xy / iResolution.xy;
 
+    // --- ENTRANCE ANIMATION: EXPANSION & FADE ---
+    // Start zoomed out (showing more world, making objects look smaller) 
+    // and transition to scale 1.0 (objects expand to normal size).
+    // Let's go from Scale 1.2 -> 1.0
+    float ease = uRevealProgress; 
+    // Make ease a bit non-linear for pop
+    float easePop = 1.0 - pow(1.0 - ease, 3.0);
+    
+    float startScale = 1.3;
+    float scale = startScale + (1.0 - startScale) * easePop;
+
+    vec2 center = vec2(0.5);
+    vec2 pScale = (uv0 - center) * scale + center;
+    
+    // Safety clamp (optional but good for some texture lookups, though here we generate procedural)
+    // pScale = clamp(pScale, 0.0, 1.0);
+
+    // Apply aspect ratio correction on the scaled UVs
     float aspect = iResolution.x / iResolution.y;
-    vec2 p = uv0 * 2.0 - 1.0;
+    vec2 p = pScale * 2.0 - 1.0;
     p.x *= aspect;
+    
     vec2 pr = rotate2D(p, uAngle);
     pr.x /= aspect;
     vec2 uv = pr * 0.5 + 0.5;
 
+    // Regular logic continues...
     vec2 uvMod = uv;
     if (uDistort > 0.0) {
       float a = uvMod.y * 6.0;
@@ -225,7 +235,20 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
       uvMod.x += sin(a) * w;
       uvMod.y += cos(b) * w;
     }
-    float t = uvMod.x;
+
+    // --- SMOOTH FLUID ANIMATION ---
+    // Add a gentle, continuous wave motion to the gradient field
+    float fluidTime = iTime * 0.15; // Slow, relaxed speed
+    
+    // 1. Vertical undulation (sine wave along Y)
+    float wave = sin(uvMod.y * 2.5 + fluidTime) * 0.05;
+    
+    // 2. Slow horizontal drift (breathing effect)
+    float drift = sin(fluidTime * 0.5) * 0.05;
+    
+    // Apply animations to the gradient lookup coordinate 't'
+    float t = uvMod.x + wave + drift;
+    
     if (uMirror > 0.5) {
       t = 1.0 - abs(1.0 - 2.0 * fract(t));
     }
@@ -249,6 +272,17 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     vec3 col = cir + glowColor - ran;
     col += (rand(gl_FragCoord.xy + iTime) - 0.5) * uNoise;
+
+    // --- ENTRANCE FADE & MASK ---
+    // Circular reveal
+    float maxDist = sqrt(aspect*aspect + 1.0) * 0.6; // Cover corner
+    float dist = length((uv0 - 0.5) * vec2(aspect, 1.0));
+    float radius = easePop * maxDist * 1.5; // Expand well beyond corners
+    float mask = smoothstep(radius, radius - 0.4, dist);
+    
+    // Global opacity fade in
+    col = mix(vec3(0.0), col, easePop); // Fade from black
+    col *= mask;
 
     fragColor = vec4(col, 1.0);
 }
@@ -293,7 +327,7 @@ void main() {
       },
       iMouse: { value: [0, 0] },
       iTime: { value: 0 },
-      uRevealProgress: { value: 1.0 },
+      uRevealProgress: { value: 0.0 }, // Start at 0
       uAngle: { value: (angle * Math.PI) / 180 },
       uNoise: { value: noise },
       uBlindCount: { value: Math.max(1, blindCount) },
@@ -313,8 +347,8 @@ void main() {
       uColor7: { value: colorArr[7] },
       uColorCount: { value: colorCount },
       uAnimateColors: { value: animateColors ? 1 : 0 },
-      uTransitionDuration: { value: transitionDuration / 1000 }, // Convert ms to seconds
-      uStartDelay: { value: startDelay }, // Delay in seconds
+      uTransitionDuration: { value: transitionDuration / 1000 },
+      uStartDelay: { value: startDelay },
     }
 
     const program = new Program(gl, {
@@ -336,7 +370,6 @@ void main() {
 
       if (blindMinWidth && blindMinWidth > 0) {
         const maxByMinWidth = Math.max(1, Math.floor(rect.width / blindMinWidth))
-
         const effective = blindCount ? Math.min(blindCount, maxByMinWidth) : maxByMinWidth
         uniforms.uBlindCount.value = Math.max(1, effective)
       } else {
@@ -353,9 +386,19 @@ void main() {
     const ro = new ResizeObserver(resize)
     ro.observe(container)
 
+    let startTime = -1
+    const ENTRANCE_DURATION = 1500 // 1.5s for entrance
+
     const loop = (t: number) => {
       rafRef.current = requestAnimationFrame(loop)
+      if (startTime < 0) startTime = t
+
+      const elapsed = t - startTime
       uniforms.iTime.value = t * 0.001
+
+      // Drive Entrance Progress
+      const progress = Math.min(elapsed / ENTRANCE_DURATION, 1.0)
+      uniforms.uRevealProgress.value = progress
 
       lastTimeRef.current = t
 

@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "./api";
 
 const ADMIN_ACCESS_TOKEN_KEY = "admin.accessToken";
+const ADMIN_USER_KEY = "admin.user";
 
 const getAdminAccessToken = () => {
     if (typeof window !== 'undefined') {
@@ -9,52 +10,8 @@ const getAdminAccessToken = () => {
     return null;
 };
 
-
-// Types
-export interface AdminUser {
-    id: string;
-    fullName: string;
-    email: string;
-    status: string;
-    accountType: string;
-    createdAt: string;
-    updatedAt: string;
-    // Add other fields as returned by the backend
-}
-
-export interface SubscribedUser {
-    subscriptionId: string;
-    status: string;
-    startedAt: string;
-    expiresAt: string;
-    daysRemaining: number;
-    autoRenew: boolean;
-    amountPaise: number;
-    isFreeTrial: boolean;
-    user: {
-        id: string;
-        fullName: string;
-        email: string;
-        accountType: string;
-        status: string;
-    };
-    plan: {
-        id: string;
-        code: string;
-        name: string;
-        displayName: string;
-        currency: string;
-        billingCycle: string;
-    };
-}
-
-export interface AdminStats {
-    totalUsers: number;
-    activeSubscribers: number;
-    // ...
-}
-
-class AdminApiError extends Error {
+// Error Class
+export class AdminApiError extends Error {
     constructor(
         public statusCode: number,
         message: string,
@@ -65,10 +22,19 @@ class AdminApiError extends Error {
     }
 }
 
+// Response Handler
 const handleResponse = async (response: Response) => {
     const data = await response.json();
 
     if (!response.ok) {
+        if (response.status === 401) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem(ADMIN_ACCESS_TOKEN_KEY);
+                localStorage.removeItem(ADMIN_USER_KEY);
+                window.location.href = "/admin/auth";
+                await new Promise(() => { }); // Halt execution
+            }
+        }
         throw new AdminApiError(
             data.statusCode || response.status,
             data.message || "An unexpected error occurred",
@@ -79,10 +45,50 @@ const handleResponse = async (response: Response) => {
     return data;
 };
 
+// --- Auth APIs ---
+
+export const loginAdmin = async (email: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/admin/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+    });
+    // Don't use handleResponse here because we don't want auto-redirect on login failure 401
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+    }
+    return data;
+};
+
+export const registerAdmin = async (fullName: string, email: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/admin/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+    }
+    return data;
+};
+
+// --- Data APIs ---
+
+export interface AdminUser {
+    id: string;
+    fullName: string;
+    email: string;
+    status: string;
+    accountType: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export const getAllUsers = async (): Promise<AdminUser[]> => {
     const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/users`, {
-        method: "GET",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -91,34 +97,9 @@ export const getAllUsers = async (): Promise<AdminUser[]> => {
     return handleResponse(response);
 };
 
-export const getUserById = async (id: string): Promise<AdminUser> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return handleResponse(response);
-};
-
-export const getAllSubscribedUsers = async (): Promise<SubscribedUser[]> => { // Type might need adjustment based on real data
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/subscribed-users`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return handleResponse(response);
-};
-
-export const getActiveSubscribersDetailed = async (): Promise<SubscribedUser[]> => {
+export const getActiveSubscribersDetailed = async (): Promise<any[]> => {
     const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/active-subscribers`, {
-        method: "GET",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -128,95 +109,21 @@ export const getActiveSubscribersDetailed = async (): Promise<SubscribedUser[]> 
     return data.subscribers || [];
 };
 
-export const notifyAllUsers = async (title: string, description: string): Promise<{ success: boolean; sent: number; total: number }> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/notify-all`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title, description }),
-    });
-    return handleResponse(response);
-};
-
-export const notifyUser = async (userId: string, title: string, description: string): Promise<{ success: boolean }> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/notify-user`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, title, description }),
-    });
-    return handleResponse(response);
-};
-
-export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return handleResponse(response);
-};
-
-export const deleteUsersBulk = async (ids: string[]): Promise<{ success: boolean; results: any[] }> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/users/bulk-delete`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ids }),
-    });
-    return handleResponse(response);
-};
-
-export const getAdminUserDetails = async (email: string): Promise<any> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/billing/admin/user-details`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-    });
-    return handleResponse(response);
-};
-
-// Developer Types
 export interface Developer {
     id: string;
     fullName: string;
     email: string;
-    status: string;
-    verifiedBadge: boolean;
-    license: string | null;
-    createdAt: string;
-    paymentOrders: {
-        id: string;
-        amount: number;
-        currency: string;
-        status: string;
-        createdAt: string;
-    }[];
-    _count?: {
-        apps: number;
-    };
+    createdAt?: string;
+    status?: string;
+    license?: string;
+    verifiedBadge?: boolean;
+    paymentOrders?: any[];
+    _count?: { apps: number };
 }
 
 export const getAllDevelopers = async (): Promise<Developer[]> => {
     const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/developers`, {
-        method: "GET",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -225,46 +132,54 @@ export const getAllDevelopers = async (): Promise<Developer[]> => {
     return handleResponse(response);
 };
 
-export const getDeveloperById = async (id: string): Promise<Developer> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return handleResponse(response);
-};
+// --- Review Apps APIs ---
 
-export const deleteDeveloperAdmin = async (id: string): Promise<{ success: boolean }> => {
-    const token = getAdminAccessToken();
-    const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return handleResponse(response);
-};
-
-// App Review APIs
 export interface ReviewedApp {
     id: string;
     name: string;
     status: string;
-    version: string;
-    updatedAt: string;
     developer: {
         id: string;
         fullName: string;
         email: string;
     };
     buildUrl?: string;
-    reviewerInfo?: any;
-    // Add other fields as needed
+    verifyKey?: string;
+    color?: string;
+    rejectionReason?: string;
+    updatedAt?: string;
+    version?: string;
+    screenshots?: string[];
+    icons?: any;
+    price?: number;
+    pricingModel?: string;
+    distributionMode?: string;
+    shortDescription?: string;
+    fullDescription?: string;
+    bannerUrl?: string;
+    videoUrl?: string;
+    tags?: string[];
+
+    reviewerInfo?: {
+        testCredentials?: string;
+        functionality?: string;
+        limitations?: string;
+        guidance?: string;
+    };
 }
+
+// --- App Actions ---
+
+export const getAllAdminApps = async (): Promise<ReviewedApp[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/all`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
 
 export const getAdminAppsForReview = async (): Promise<ReviewedApp[]> => {
     const token = getAdminAccessToken();
@@ -306,7 +221,7 @@ export const adminRejectApp = async (appId: string, reason: string): Promise<any
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ reason }),
     });
@@ -319,8 +234,115 @@ export const adminTerminateApp = async (appId: string): Promise<any> => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-        }
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const adminReopenApp = async (appId: string): Promise<any> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/reopen`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getAppRejectionHistory = async (appId: string): Promise<any[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/history`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+// --- User Details API ---
+
+export const getAdminUserDetails = async (email: string): Promise<any> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/billing/admin/user-details`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+};
+
+// --- User Actions ---
+
+export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const notifyAllUsers = async (title: string, description: string): Promise<{ success: boolean; sent: number; total: number }> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/notify-all`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description }),
+    });
+    return handleResponse(response);
+};
+
+export const notifyUser = async (userId: string, title: string, description: string): Promise<{ success: boolean }> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/notify-user`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, title, description }),
+    });
+    return handleResponse(response);
+};
+
+// --- Developer Actions ---
+
+export const deleteDeveloperAdmin = async (id: string): Promise<{ success: boolean }> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/developers/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+// --- Admin Actions ---
+
+export const deleteUsersBulk = async (ids: string[]): Promise<any> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/users/bulk-delete`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ids }),
     });
     return handleResponse(response);
 };

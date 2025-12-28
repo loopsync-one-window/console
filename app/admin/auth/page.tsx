@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { Dithering } from "@paper-design/shaders-react";
 import { useRouter } from "next/navigation";
+import { loginAdmin, registerAdmin } from "@/lib/admin-api";
 
 // Define Types
 type AdminAuthResponse = {
@@ -19,8 +20,7 @@ type AdminAuthResponse = {
     };
 };
 
-// const API_BASE_URL = "http://localhost:8000";
-const API_BASE_URL = "https://srv01.loopsync.cloud";
+// Removed duplicate API_BASE_URL (using imported functions instead)
 
 function AdminAuthContent() {
     const [isLogin, setIsLogin] = useState(true);
@@ -53,30 +53,27 @@ function AdminAuthContent() {
         if (!isLogin && !formData.fullName) return;
 
         setIsSubmitting(true);
-        const endpoint = isLogin ? "/admin/auth/login" : "/admin/auth/register";
 
         try {
-            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                if (data.accessToken) {
-                    localStorage.setItem("admin.accessToken", data.accessToken);
-                    if (data.admin) {
-                        localStorage.setItem("admin.user", JSON.stringify(data.admin));
-                    }
-                    router.push("/admin/auth/zero-trust");
-                }
+            let data;
+            if (isLogin) {
+                data = await loginAdmin(formData.email, formData.password);
             } else {
-                alert(data.message || "Authentication failed");
+                data = await registerAdmin(formData.fullName, formData.email, formData.password);
             }
-        } catch (error) {
+
+            if (data.accessToken) {
+                localStorage.setItem("admin.accessToken", data.accessToken);
+                if (data.admin) {
+                    localStorage.setItem("admin.user", JSON.stringify(data.admin));
+                }
+                router.push("/admin/auth/zero-trust");
+            } else {
+                alert("Authentication successful but no token received.");
+            }
+        } catch (error: any) {
             console.error(error);
-            alert("An error occurred.");
+            alert(error.message || "An error occurred.");
         } finally {
             setIsSubmitting(false);
         }

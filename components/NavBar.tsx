@@ -68,7 +68,7 @@ export default function Navbar({ className }: NavbarProps) {
     <>
       {/* Desktop Header */}
       <header
-        className={`fixed top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full backdrop-blur-md md:flex border transition-all duration-300 max-w-6xl px-4 border-transparent shadow-none py-2 ${className || ""}`}
+        className={`fixed top-4 z-[9999] mx-auto w-full flex flex-row items-center justify-between self-start rounded-full backdrop-blur-md border transition-all duration-300 max-w-6xl px-4 border-transparent shadow-none py-2 ${className || ""}`}
         style={{
           willChange: "transform",
           transform: "translateZ(0) translateX(-50%)",
@@ -89,18 +89,15 @@ export default function Navbar({ className }: NavbarProps) {
               className="h-9 w-auto brightness-150 contrast-125"
             />
           </a>
-          {/* <CountryCurrencyDropdown /> */}
         </div>
 
+        {/* Desktop Navigation Links */}
         <div className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-semibold text-white/70 transition duration-200 hover:text-white md:flex md:space-x-2">
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/models">
             <span className="relative z-20">Models</span>
           </a>
-          <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/products">
+          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/products">
             <span className="relative z-20">Products</span>
-          </a>
-          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/use-cases">
-            <span className="relative z-20">Use Cases</span>
           </a> */}
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/pricing">
             <span className="relative z-20">Pricing</span>
@@ -119,45 +116,99 @@ export default function Navbar({ className }: NavbarProps) {
             <span className="relative z-20">Policies</span>
             <ExternalLink className="w-4 h-4 ml-1 relative bottom-0.5 inline text-white font-bold" />
           </a>
-          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/contact">
-            <span className="relative z-20">Contact Us</span>
-          </a> */}
-
-          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="https://investors.intellaris.co" target="_blank" rel="noopener noreferrer">
-            <span className="relative z-20 mb-1">Investor Relations</span>
-            <ExternalLink className="w-4 h-4 ml-1 mb-1 inline text-white font-bold" />
-          </a> */}
         </div>
 
 
         <div className="flex items-center gap-3">
+          {/* Mobile Menu Toggle */}
+          <button
+            className="flex md:hidden text-white"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
 
-          {isAuthenticated ? (
-            <Link href="https://loopsync.cloud/home">
-              <button
-                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
-              >
-                Open Console
-              </button>
-            </Link>
-          ) : (
-            <>
-              <a
-                href="https://loopsync.cloud/open-account?login=true"
-                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border border-white/10 text-white bg-transparent hover:border-white/10"
-              >
-                Login
-              </a>
-              <a
-                href="https://loopsync.cloud/open-account?login=false"
-                className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
-              >
-                Open Account
-              </a>
-            </>
-          )}
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated ? (
+              <Link href="https://loopsync.cloud/home">
+                <button
+                  className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
+                >
+                  Open Console
+                </button>
+              </Link>
+            ) : (
+              <>
+                <a
+                  href="https://loopsync.cloud/open-account?login=true"
+                  className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border border-white/10 text-white bg-transparent hover:border-white/10"
+                >
+                  Login
+                </a>
+                <a
+                  href="https://loopsync.cloud/open-account?login=false"
+                  className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
+                >
+                  Open Account
+                </a>
+              </>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[9998] bg-black/95 backdrop-blur-xl pt-24 px-6 md:hidden">
+          <nav className="flex flex-col gap-6 text-xl font-medium text-white">
+            <a href="/models" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Models</a>
+            <a href="/products" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Products</a>
+            <a href="/pricing" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Pricing</a>
+            <a href="/download-manual" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Manual</a>
+            <a href="/developers" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Developers</a>
+            <a href="/company" className="hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>Company</a>
+            <a href="https://loopsync.cloud/policies" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+              Policies <ExternalLink className="w-4 h-4" />
+            </a>
+
+            <div className="h-px bg-white/10 my-2"></div>
+
+            {isAuthenticated ? (
+              <Link href="https://loopsync.cloud/home" onClick={() => setIsMobileMenuOpen(false)}>
+                <button className="w-full rounded-full font-semibold px-4 py-3 text-base border text-black bg-white">
+                  Open Console
+                </button>
+              </Link>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <a
+                  href="https://loopsync.cloud/open-account?login=true"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full rounded-full font-semibold text-center px-4 py-3 text-base border border-white/10 text-white hover:bg-white/5"
+                >
+                  Login
+                </a>
+                <a
+                  href="https://loopsync.cloud/open-account?login=false"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full rounded-full font-semibold text-center px-4 py-3 text-base border text-black bg-white"
+                >
+                  Open Account
+                </a>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
     </>
   )
 }
