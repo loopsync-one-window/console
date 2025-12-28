@@ -703,7 +703,7 @@ const SecurePaymentPage = () => {
           <img
             src="/resources/logo.svg"
             alt="LoopSync Logo"
-            className="h-10 w-auto"
+            className="h-7 w-auto"
           />
         </div>
 

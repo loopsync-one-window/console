@@ -86,7 +86,7 @@ export default function Navbar({ className }: NavbarProps) {
             <img
               src="/resources/logo.svg"
               alt="LoopSync Logo"
-              className="h-9 w-auto brightness-150 contrast-125"
+              className="h-7 w-auto brightness-150 contrast-125"
             />
           </a>
         </div>
@@ -96,9 +96,9 @@ export default function Navbar({ className }: NavbarProps) {
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/models">
             <span className="relative z-20">Models</span>
           </a>
-          {/* <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/products">
-            <span className="relative z-20">Products</span>
-          </a> */}
+          <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/store">
+            <span className="relative z-20">Store</span>
+          </a>
           <a className="relative px-4 py-2 text-white hover:underline transition-colors cursor-pointer" href="/pricing">
             <span className="relative z-20">Pricing</span>
           </a>
@@ -139,7 +139,7 @@ export default function Navbar({ className }: NavbarProps) {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              <Link href="https://loopsync.cloud/home">
+              <Link href="/home">
                 <button
                   className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
                 >
@@ -149,13 +149,13 @@ export default function Navbar({ className }: NavbarProps) {
             ) : (
               <>
                 <a
-                  href="https://loopsync.cloud/open-account?login=true"
+                  href="/open-account?login=true"
                   className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border border-white/10 text-white bg-transparent hover:border-white/10"
                 >
                   Login
                 </a>
                 <a
-                  href="https://loopsync.cloud/open-account?login=false"
+                  href="/open-account?login=false"
                   className="rounded-full font-semibold relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border text-black bg-white"
                 >
                   Open Account
@@ -183,7 +183,7 @@ export default function Navbar({ className }: NavbarProps) {
             <div className="h-px bg-white/10 my-2"></div>
 
             {isAuthenticated ? (
-              <Link href="https://loopsync.cloud/home" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/home" onClick={() => setIsMobileMenuOpen(false)}>
                 <button className="w-full rounded-full font-semibold px-4 py-3 text-base border text-black bg-white">
                   Open Console
                 </button>
@@ -191,14 +191,14 @@ export default function Navbar({ className }: NavbarProps) {
             ) : (
               <div className="flex flex-col gap-3">
                 <a
-                  href="https://loopsync.cloud/open-account?login=true"
+                  href="/open-account?login=true"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full rounded-full font-semibold text-center px-4 py-3 text-base border border-white/10 text-white hover:bg-white/5"
                 >
                   Login
                 </a>
                 <a
-                  href="https://loopsync.cloud/open-account?login=false"
+                  href="/open-account?login=false"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full rounded-full font-semibold text-center px-4 py-3 text-base border text-black bg-white"
                 >

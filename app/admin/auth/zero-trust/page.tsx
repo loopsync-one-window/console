@@ -645,7 +645,7 @@ export default function AdminZeroTrustPage() {
                 {/* Header / Brand */}
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <div className="h-12 w-40 relative flex items-center justify-center">
+                        <div className="h-10 w-40 relative flex items-center justify-center">
                             <Image src="/resources/logo.svg" alt="LoopSync Logo" fill className="object-contain" />
                         </div>
                     </div>

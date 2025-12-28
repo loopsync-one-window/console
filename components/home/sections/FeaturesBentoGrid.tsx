@@ -6,7 +6,7 @@ export default function FeaturesBentoGrid() {
     return (
         <section className="py-16 md:py-24 mt-16 px-4 sm:px-6 max-w-7xl mx-auto w-full">
             <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl font-medium mb-3">And this is just the beginning.</h2>
+                <h2 className="text-2xl sm:text-3xl font-medium mb-3 font-geom">And this is just the beginning.</h2>
                 <p className="text-zinc-400 text-sm sm:text-base">We're actively preparing <span className="text-white font-bold">Studio 6.0</span> for release on Windows & Mac.</p>
             </div>
 

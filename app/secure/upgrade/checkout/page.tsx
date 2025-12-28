@@ -161,7 +161,7 @@ const UpgradeCheckoutPage = () => {
           });
           setSelectedCountry((addr.country || 'in').toLowerCase());
         }
-      } catch {}
+      } catch { }
     })();
   }, []);
 
@@ -236,7 +236,7 @@ const UpgradeCheckoutPage = () => {
               body: JSON.stringify({ subscriptionId: activatedId }),
             });
           }
-        } catch {}
+        } catch { }
 
         // After activation, sync subscription billing and add previous prepaid credits
         try {
@@ -275,7 +275,7 @@ const UpgradeCheckoutPage = () => {
               });
             }
           }
-        } catch {}
+        } catch { }
 
         setPaymentSuccessData({
           amount: getChargeableAmount(),
@@ -317,7 +317,7 @@ const UpgradeCheckoutPage = () => {
         const currentEmail = creditsJson?.data?.email ?? '';
         setPrepaidBeforeUpgrade(Number(currentPrepaid) || 0);
         setPrepaidEmail(String(currentEmail) || email);
-      } catch {}
+      } catch { }
       const response = await fetch('https://srv01.loopsync.cloud/upgrade/checkout', {
         method: 'POST',
         headers: {
@@ -371,16 +371,16 @@ const UpgradeCheckoutPage = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-3 mt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowCancelModal(false)}
               className="bg-black relative overflow-hidden shimmer rounded-full font-semibold cursor-pointer border border-white/30 hover:bg-black/80"
             >
               <span className="absolute inset-0 shimmer" aria-hidden="true"></span>
               <span className="relative z-10">Continue Payment</span>
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => router.push('https://loopsync.cloud')}
               className="bg-red-500 rounded-full font-semibold cursor-pointer border border-white/30 hover:bg-red-600"
             >
@@ -462,13 +462,13 @@ const UpgradeCheckoutPage = () => {
           </svg>
         </div>
         <div className="flex items-center mb-8">
-          <img src="/resources/logo.svg" alt="LoopSync Logo" className="h-10 w-auto" />
+          <img src="/resources/logo.svg" alt="LoopSync Logo" className="h-7 w-auto" />
         </div>
         <div className="flex space-x-4" style={{ height: '500px' }}>
           <div className="flex-[0.3] bg-transparent rounded-lg p-6" style={{ height: '350px' }}></div>
           <div className="flex-[0.7] mr-10 bg-transparent rounded-lg p-6" style={{ height: '650px' }}>
             <div className="flex items-center justify-between mb-4 ml-11 mr-6">
-              <div 
+              <div
                 className="flex items-center cursor-pointer text-white px-4 py-2 border border-white/10 rounded-full hover:bg-white/10 transition-all"
                 onClick={() => setShowCancelModal(true)}
               >
@@ -480,7 +480,7 @@ const UpgradeCheckoutPage = () => {
               </span>
             </div>
             <h2 className="text-[16px] ml-11 font-medium text-white/70 mb-6">
-              Upgrade to <br/>
+              Upgrade to <br />
               <span className="font-semibold text-white">
                 LoopSync One Window™ {formatPlanName('PRO_PRIME-X')}
               </span>
@@ -536,9 +536,9 @@ const UpgradeCheckoutPage = () => {
               <div className="flex justify-between items-center">
                 <span className="text-[14px] font-semibold">Subtotal</span>
                 <div className="flex items-center gap-2">
-                <span className="text-[14px] font-semibold">
-                  {getDisplayAmount()}
-                </span>
+                  <span className="text-[14px] font-semibold">
+                    {getDisplayAmount()}
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-start">
@@ -596,7 +596,7 @@ const UpgradeCheckoutPage = () => {
               <div>PIN {billingAddress.pinCode || '—'} • {billingAddress.phoneNumber || '—'}</div>
             </div>
           </div>
-          
+
           <div className="rounded-xl w-full p-4 bg-white border border-black/5 mt-6">
             <div className="flex justify-between items-center">
               <span className="text-black text-[14px] font-semibold">Email</span>
@@ -608,10 +608,10 @@ const UpgradeCheckoutPage = () => {
             <div className="border border-black/5 rounded-xl p-4 space-y-4 bg-white">
               <label className="flex items-center justify-between cursor-pointer">
                 <div className="flex items-center gap-3">
-                  <input 
-                    type="radio" 
-                    name="payment-method" 
-                    className="h-4 w-4 accent-black cursor-pointer" 
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    className="h-4 w-4 accent-black cursor-pointer"
                     checked={selectedPaymentMethod === 'razorpay'}
                     onChange={() => setSelectedPaymentMethod('razorpay')}
                   />
@@ -758,19 +758,18 @@ const UpgradeCheckoutPage = () => {
           </div>
           <div className="mt-8">
             <button
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-base flex items-center justify-center ${
-                (selectedPaymentMethod === 'razorpay' &&
-                 billingAddress.addressLine1 &&
-                 billingAddress.phoneNumber &&
-                 billingAddress.city &&
-                 billingAddress.pinCode &&
-                 billingAddress.country &&
-                 billingAddress.state &&
-                 billingAddress.phoneNumber.length === 10 &&
-                 billingAddress.pinCode.length === 6)
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-base flex items-center justify-center ${(selectedPaymentMethod === 'razorpay' &&
+                billingAddress.addressLine1 &&
+                billingAddress.phoneNumber &&
+                billingAddress.city &&
+                billingAddress.pinCode &&
+                billingAddress.country &&
+                billingAddress.state &&
+                billingAddress.phoneNumber.length === 10 &&
+                billingAddress.pinCode.length === 6)
                 ? "bg-black text-white hover:bg-black/80 cursor-pointer"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+                }`}
               onClick={handleSubscribe}
               disabled={isSubscribing || !(
                 selectedPaymentMethod === 'razorpay' &&
@@ -807,7 +806,7 @@ const UpgradeCheckoutPage = () => {
           )}
           <div className="mt-4 text-center mb-8">
             <p className="text-xs text-black">
-              By upgrading, you agree to recurring <a href="https://loopsync.cloud/policies" className="font-semibold underline">LoopSync One Window</a>™ charges<br/>
+              By upgrading, you agree to recurring <a href="https://loopsync.cloud/policies" className="font-semibold underline">LoopSync One Window</a>™ charges<br />
               under our <a href="https://loopsync.cloud/policies/terms-of-use" className="font-semibold underline">terms</a> and <a href="https://loopsync.cloud/policies/privacy-policy" className="font-semibold underline">privacy</a> policies until you cancel.
             </p>
           </div>
@@ -843,15 +842,14 @@ const UpgradeCheckoutPage = () => {
                             setSelectedBank(bank.id);
                             setShowBankModal(false);
                           }}
-                          className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                            selectedBank === bank.id ? 'bg-black/5' : 'hover:bg-gray-100'
-                          }`}
+                          className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedBank === bank.id ? 'bg-black/5' : 'hover:bg-gray-100'
+                            }`}
                         >
                           <img src={bank.icon} alt={`${bank.name} logo`} className="h-7 w-7 mr-3 rounded-md" />
                           <span className="text-black font-medium text-sm">{bank.name}</span>
                           {selectedBank === bank.id && (
                             <svg className="ml-auto h-5 w-5 text-black" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 1 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 1 1 1.414 0z" clipRule="evenodd"/>
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 1 1 1.414 1.414l-8 8a1 1 0 1 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 1 1 1.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
                         </div>

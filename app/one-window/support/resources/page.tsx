@@ -127,7 +127,7 @@ export default function SupportPage() {
                 <img
                   src="/resources/logo.svg"
                   alt="LoopSync Logo"
-                  className="h-9 w-auto brightness-150 contrast-125"
+                  className="h-7 w-auto brightness-150 contrast-125"
                 />
               </a>
               <div className="h-3 w-[1px] bg-white/20" />

@@ -16,7 +16,7 @@ export default function NotesSection() {
                 </div>
 
                 {/* Headline */}
-                <h2 className="text-5xl md:text-4xl font-bold tracking-tight text-white mb-6 leading-tight">
+                <h2 className="text-5xl md:text-4xl font-bold tracking-tight text-white mb-6 leading-tight font-geom">
                     A space for<br className="hidden md:block" />
                     uninterrupted thinking.
                 </h2>

@@ -7,7 +7,7 @@ export default function ExtensibilitySection() {
     return (
         <section className="px-4 sm:px-6 max-w-7xl mx-auto w-full mt-16 md:mt-24">
             <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-xl sm:text-3xl font-medium text-zinc-400">
+                <h2 className="text-xl sm:text-2xl font-medium text-zinc-400 font-geom">
                     Built to extend as your <span className="text-white font-medium">needs grow.</span>
                 </h2>
             </div>

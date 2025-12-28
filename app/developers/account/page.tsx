@@ -29,8 +29,8 @@ declare global {
     }
 }
 
-// const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
+// const API_BASE_URL = "http://localhost:8000/api/v1";
 
 function AccountContent() {
     const [isLogin, setIsLogin] = useState(false);
@@ -430,7 +430,7 @@ function AccountContent() {
                                 <img
                                     src="/resources/logo.svg"
                                     alt="LoopSync Logo"
-                                    className="h-9 w-auto brightness-150 contrast-125"
+                                    className="h-7 w-auto brightness-150 contrast-125"
                                 />
                             </Link>
                             <div className="h-3 w-[1px] bg-white/20" />
@@ -668,7 +668,7 @@ function AccountContent() {
                         <Dithering
                             style={{ height: "100%", width: "100%" }}
                             colorBack="#000000"
-                            colorFront="#09ee70ff"
+                            colorFront="#0033ffff"
                             shape={"circle" as any}
                             type="4x4"
                             pxSize={3.5}

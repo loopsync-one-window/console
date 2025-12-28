@@ -9,7 +9,7 @@ export default function GameLauncherSection() {
 
                 {/* Left Content */}
                 <div className="order-2 lg:order-1">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6 font-geom">
                         Play Free Games. Powered by the xCloud.
                     </h2>
                     <p className="text-xl text-zinc-400 mb-8 leading-relaxed">

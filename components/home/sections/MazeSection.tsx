@@ -163,7 +163,7 @@ export default function MazeSection() {
                         <span>Smart Routing</span>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl lg:text-3xl font-semibold text-white tracking-tight leading-[1.1]">
+                    <h2 className="text-2xl sm:text-3xl lg:text-3xl font-semibold text-white tracking-tight leading-[1.1] font-geom">
                         Finds the path,<br />
                         <span className="text-zinc-600">so you don't have to.</span>
                     </h2>

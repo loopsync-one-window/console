@@ -68,14 +68,14 @@ export default function ProductivityKeyboardSection() {
 
                 {/* Left Content */}
                 <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6 lg:gap-8 z-10">
-                    <h2 className="text-2xl sm:text-4xl md:text-4xl font-semibold text-white tracking-tight leading-tight">
+                    <h2 className="text-2xl sm:text-4xl md:text-4xl font-semibold text-white tracking-tight leading-tight font-geom">
                         It's not about more options.<br />
-                        <span className="text-zinc-600">It's about less searching.</span>
+                        <span className="text-zinc-600 font-normal">It's about less searching.</span>
                     </h2>
 
                     <button className="bg-white text-black min-h-12 px-8 rounded-full font-semibold flex items-center gap-2.5 hover:bg-zinc-200 transition-colors shadow-[0_0_40px_rgba(255,255,255,0.15)] active:scale-95 duration-200 text-sm sm:text-base"
 
-                        onClick={() => window.location.href = "https://loopsync.cloud/open-account?login=false"}>
+                        onClick={() => window.location.href = "/open-account?login=false"}>
 
                         <span>Open Account</span>
                     </button>

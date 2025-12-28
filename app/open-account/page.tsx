@@ -1410,7 +1410,7 @@ const OpenAccountContent = () => {
           <img
             src="/resources/logo.svg"
             alt="LoopSync Logo"
-            className="h-9 w-auto brightness-150 contrast-125"
+            className="h-7 w-auto brightness-150 contrast-125"
           />
         </div>
 
@@ -1484,7 +1484,7 @@ const OpenAccountContent = () => {
           <Dithering
             style={{ height: "100%", width: "100%" }}
             colorBack="hsl(0, 0%, 0%)"
-            colorFront={isLogin ? "#3b31c9ff" : "#e1ff00ff"}
+            colorFront={isLogin ? "#0033ffff" : "#0033ffff"}
             shape={"cat" as any}
             type="4x4"
             pxSize={3}
@@ -1509,7 +1509,7 @@ const OpenAccountContent = () => {
                   <p className="text-white font-semibold text-2xl">A spectrum of models.</p>
 
                   <div className="mt-12 mb-12 w-full">
-                    <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-6">Top Models</p>
+                    <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-6">Our Top Models</p>
                     <div className="grid grid-cols-3 gap-4">
                       {/* LS Compute-Max */}
                       <div className="p-4 border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-default flex flex-col items-center gap-3 backdrop-blur-md group hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
@@ -1517,7 +1517,7 @@ const OpenAccountContent = () => {
                           <TreeDeciduousIcon className="w-5 h-5 text-white" />
                         </div>
                         <div className="text-center">
-                          <p className="font-bold text-sm">LS Compute-Max</p>
+                          <p className="font-bold text-sm">Compute-Max</p>
                         </div>
                       </div>
 

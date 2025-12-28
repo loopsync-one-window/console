@@ -1,12 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
-.font-geom {
-  font-family: "Geom", sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-}
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -97,6 +92,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-playfair: var(--font-playfair);
+  --font-geom: var(--font-geom);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -799,6 +795,32 @@
   color: transparent;
 }
 
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float 4s ease-in-out infinite;
+}
+
 .loader .text:nth-child(9) span {
   background: linear-gradient(to right,
       var(--shadow-color) 45%,
@@ -895,4 +917,20 @@
   to {
     background-position: 80px 0;
   }
+}
+
+
+/* iOS-style momentum scrolling */
+.scroll-smooth-ios {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars (Apple default) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

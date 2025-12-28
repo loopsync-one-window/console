@@ -118,12 +118,12 @@ export default function Home() {
             </h1>
 
             <p className="max-w-xl lg:max-w-3xl text-sm sm:text-base lg:text-lg font-semibold text-white drop-shadow-lg opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards]">
-              Find apps, extensions, and software in one simple platform. <br className="hidden sm:block" />Discover useful tools without the clutter.
+              Find apps, games, extensions, and software in one simple platform. <br className="hidden sm:block" />Discover useful tools without the clutter.
             </p>
 
             <div className="mt-4 flex w-full flex-col gap-4 sm:w-auto sm:flex-row opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards]">
               <a
-                href="https://loopsync.cloud/open-account?login=false"
+                href="/open-account?login=false"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-lg backdrop-blur-xl transition-all duration-200 hover:border-white/40 hover:bg-white/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0 active:scale-[0.97] sm:w-auto"
               >
                 Try for Free
@@ -143,10 +143,10 @@ export default function Home() {
               </a>
 
               <a
-                href="https://loopsync.cloud/models"
+                href="/store"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-3 text-sm sm:text-base font-semibold text-white shadow-lg backdrop-blur-xl transition-all duration-200 hover:border-white/40 hover:bg-white/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-0 active:scale-[0.97] sm:w-auto"
               >
-                Explore Models
+                Visit Store
                 <svg
                   className="ml-2 h-5 w-5"
                   fill="none"
@@ -181,7 +181,7 @@ export default function Home() {
       {/* FIXED ELEMENTS - Stay on screen while scrolling */}
 
       {/* QR Code - Hidden on Mobile */}
-      <div className="fixed bottom-6 right-6 hidden flex-col items-center space-y-1 lg:flex z-50">
+      <div className="fixed bottom-6 right-20 hidden flex-col items-center space-y-1 lg:flex z-50">
         <a href="https://loopsync.cloud/one-window/support/resources" target="_blank" rel="noopener noreferrer">
           <img
             src="/resources/qr-support.svg"
@@ -195,7 +195,7 @@ export default function Home() {
       </div>
 
       {/* Developer Popup - Hidden on Mobile */}
-      <div className="fixed bottom-6 left-6 hidden animate-[slideUpFade_1s_ease-out_forwards] flex-col items-start lg:flex z-50">
+      <div className="fixed bottom-6 left-20 hidden animate-[slideUpFade_1s_ease-out_forwards] flex-col items-start lg:flex z-50">
         <Link href="/developers" className="group relative w-64 overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-4 shadow-2xl backdrop-blur-md transition-all hover:scale-105 hover:border-white/20 active:scale-95">
           <style dangerouslySetInnerHTML={{
             __html: `

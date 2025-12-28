@@ -54,13 +54,13 @@ export default function TitaniumAppleCard() {
         {/* Top section with Logo and Flag */}
         <div className="flex justify-between items-center">
           <div className="opacity-100">
-            <img 
-              src="/resources/logo.svg" 
-              alt="LoopSync Logo" 
-              className="h-8 w-auto"
+            <img
+              src="/resources/logo.svg"
+              alt="LoopSync Logo"
+              className="h-7 w-auto"
             />
           </div>
-          
+
           {/* Indian Flag */}
           <div className="opacity-100">
             <img
@@ -74,14 +74,14 @@ export default function TitaniumAppleCard() {
         {/* Bottom section */}
         <div className="flex items-end justify-between w-full">
           {/* Cardholder Name */}
-            <div className="flex items-center gap-2 text-gray-300 tracking-wide text-[14px] font-medium">
+          <div className="flex items-center gap-2 text-gray-300 tracking-wide text-[14px] font-medium">
             <span>Powered by</span>
             <img
-            src="/payment/razorpay.png"
-            alt="Razorpay"
-            className="h-4 w-auto brightness-0 invert relative -top-[-2px]"
-            />            
-            </div>
+              src="/payment/razorpay.png"
+              alt="Razorpay"
+              className="h-4 w-auto brightness-0 invert relative -top-[-2px]"
+            />
+          </div>
 
 
           {/* Metal Chip */}
@@ -96,10 +96,10 @@ export default function TitaniumAppleCard() {
           >
             {/* Etched lines */}
             <div className="absolute inset-0 grid grid-cols-4 opacity-25">
-            <div className="border-r border-neutral-500" />
-            <div className="border-r border-neutral-500" />
-            <div className="border-r border-neutral-500" />
-            <div className="border-r border-neutral-500" />
+              <div className="border-r border-neutral-500" />
+              <div className="border-r border-neutral-500" />
+              <div className="border-r border-neutral-500" />
+              <div className="border-r border-neutral-500" />
             </div>
 
           </div>

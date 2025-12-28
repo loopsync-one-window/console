@@ -76,7 +76,7 @@ export function Sidebar() {
         <img
           src="/resources/logo.svg"
           alt="LoopSync Logo"
-          className="h-10 ml-2 w-auto brightness-150 contrast-125"
+          className="h-7 ml-2 w-auto brightness-150 contrast-125"
         />
 
       </div>

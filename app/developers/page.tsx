@@ -44,7 +44,7 @@ export default function DevelopersPage() {
                         Bring your projects to LoopSync and offer them to the world.
                     </p>
 
-                    <Link href="/developers/account" className="group relative inline-flex items-center gap-3 pl-8 pr-2 py-2 rounded-full bg-white text-black font-semibold hover:bg-[#09ee70] transition-all">
+                    <Link href="/developers/account" className="group relative inline-flex items-center gap-3 pl-8 pr-2 py-2 rounded-full bg-white text-black font-semibold hover:text-[#fff] hover:bg-[#0033ffff] transition-all">
                         <span className="text-sm">Open Dev Console</span>
                         <div className="w-8 h-8 rounded-full bg-black/10 group-hover:bg-black/20 flex items-center justify-center">
                             <ArrowUpRight className="w-4 h-4" />

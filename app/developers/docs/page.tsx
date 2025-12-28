@@ -29,7 +29,7 @@ export default function DocsPage() {
             <header className="fixed top-0 left-0 right-0 h-16 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md z-50 flex items-center justify-between px-6">
                 <div className="flex items-center gap-4">
                     <Link href="/" className="flex items-center gap-4 group">
-                        <img src="/resources/logo.svg" alt="LoopSync" className="h-9 w-auto brightness-200" />
+                        <img src="/resources/logo.svg" alt="LoopSync" className="h-7 w-auto brightness-200" />
                         <div className="h-4 w-[1px] bg-white/10"></div>
                         <div className="flex items-center gap-2">
                             <div className="p-1 rounded bg-[#d1aea0]/10 border border-[#d1aea0]/20">
