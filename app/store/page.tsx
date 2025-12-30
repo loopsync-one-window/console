@@ -1,199 +1,170 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Play, Globe, ChevronDown, Check, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Globe, ChevronDown, Check, Heart, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Dithering } from "@paper-design/shaders-react";
 
 // Hero Carousel (Single Item) with Dithered Backdrop & Glass Card
+// Hero Carousel (Today Tab Style)
 function FeaturedCarousel({ apps }: { apps: AppMock[] }) {
-    const [current, setCurrent] = useState(0);
-    const count = apps.length;
-
-    const next = () => {
-        if (count > 0) setCurrent((c) => (c + 1) % count);
-    };
-    const prev = () => {
-        if (count > 0) setCurrent((c) => (c - 1 + count) % count);
-    };
+    // Take first 5 apps for the "Today" grid
+    const featuredApps = apps.slice(0, 5);
+    const [ratings, setRatings] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        if (count === 0) return;
-        const t = setInterval(next, 8000);
-        return () => clearInterval(t);
-    }, [count]);
+        if (featuredApps.length === 0) return;
 
-    if (count === 0) {
+        const fetchRatings = async () => {
+            const results = await Promise.all(
+                featuredApps.map(app =>
+                    getAppReviews(app.id)
+                        .then((data: any) => ({ id: app.id, rating: data.stats.averageRating }))
+                        .catch(() => ({ id: app.id, rating: app.stats?.rating ?? 0 }))
+                )
+            );
+
+            const newRatings: Record<string, number> = {};
+            results.forEach((r: { id: string, rating: number }) => newRatings[r.id] = r.rating);
+            setRatings(newRatings);
+        };
+
+        fetchRatings();
+    }, [apps]); // Depend on apps prop since featuredApps is derived
+
+    const getRandomTag = (index: number) => {
+        const tags = ["HAPPENING NOW", "NOW AVAILABLE", "MAJOR UPDATE", "NEW SEASON"];
+        return tags[index % tags.length];
+    };
+
+    const getRandomSubtitle = (index: number) => {
+        const subs = ["New Features", "Major Update", "Limited Time Event", "Editor's Choice"];
+        return subs[index % subs.length];
+    };
+
+    const getGridClass = (index: number) => {
+        switch (index) {
+            case 0: return "md:col-span-2 h-[500px]";
+            case 1: return "md:col-span-1 h-[500px]";
+            case 2: return "md:col-span-1 h-[500px]";
+            case 3: return "md:col-span-2 h-[500px]";
+            case 4: return "md:col-span-3 h-[450px]";
+            default: return "md:col-span-1 h-[500px]";
+        }
+    };
+
+    if (apps.length === 0) {
         return (
-            <section className="px-6 max-w-[1400px] mx-auto mt-6">
-                <div className="w-full aspect-[21/9] rounded-[2rem] bg-black animate-pulse border border-white/5" />
+            <section className="px-6 max-w-[1600px] mx-auto mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="w-full h-[500px] rounded-[2rem] bg-zinc-900 animate-pulse border border-white/5" />
+                    <div className="w-full h-[500px] rounded-[2rem] bg-zinc-900 animate-pulse border border-white/5" />
+                </div>
             </section>
         );
     }
 
-    const app = apps[current];
-    const iconSrc = typeof app.icon === 'string' ? app.icon : (app.icon as any)?.['512'] || '';
-    const slug = app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-    // Determine color for dithering based on app branding or default to blue
-    const ditherColor = (app.branding?.activeColor && app.branding.activeColor.startsWith('#'))
-        ? app.branding.activeColor
-        : '#3b82f6';
-
     return (
-        <section className="relative w-full py-12 px-6 overflow-hidden">
-            {/* BACKGROUND: Dithering + Blur */}
-            <div className="absolute inset-0 z-0 transition-colors duration-1000">
-                {/* Dithering Component */}
-                <div className="absolute inset-0 opacity-100">
-                    <Dithering
-                        key={app.id} /* Re-render dither on app change to animate color if possible, or just let uniform update */
-                        style={{ height: "100%", width: "100%" }}
-                        colorBack="#000000ff"
-                        colorFront={ditherColor}
-                        shape={"wave" as any}
-                        type="8x8"
-                        pxSize={1}
-                        offsetX={0}
-                        offsetY={0}
-                        scale={2}
-                        rotation={0}
-                    />
-                </div>
+        <section className="px-6 max-w-[1600px] mx-auto pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {featuredApps.map((app, index) => {
+                    const iconSrc = typeof app.icon === 'string' ? app.icon : (app.icon as any)?.['512'] || '';
+                    const itemSrc = app.media?.featureBanner || app.media?.screenshots?.[0] || '/banner/banner.png';
+                    const slug = app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    const color = app.branding?.activeColor || '#3b82f6';
 
-                {/* Heavy Blur Overlay */}
-                <div className="absolute inset-0 backdrop-blur-sm bg-gradient-to-t from-black via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-black/10" />
-            </div>
+                    // Use fetched real-time rating or fallback to list stats
+                    const displayRating = ratings[app.id] !== undefined ? ratings[app.id] : (app.stats?.rating ?? 0);
 
-            {/* FOREGROUND: Single "Hero" Card */}
-            <div className="relative z-10 max-w-[95%] mx-auto group/carousel">
-                <div className="relative w-full aspect-[16/10] md:aspect-[21/9] rounded-[2.5rem] overflow-hidden bg-black">
-
-                    {/* Card Content (Background Image + Overlays) */}
-                    <div className="absolute inset-0">
-                        {apps.map((item, index) => {
-                            const itemSrc = item.media?.featureBanner || item.media?.screenshots?.[0] || '/banner/banner.png';
-                            const isActive = index === current;
-
-                            return (
-                                <div
-                                    key={item.id}
-                                    className={cn(
-                                        "absolute inset-0 transition-opacity duration-1000",
-                                        isActive ? "opacity-100 z-10" : "opacity-0 z-0"
-                                    )}
-                                >
-                                    {/* Blurred Background to fill space */}
-                                    <div className="absolute inset-0">
-                                        <img
-                                            src={itemSrc}
-                                            alt=""
-                                            className="w-full h-full object-cover rounded-[2.5rem] blur-2xl opacity-50 scale-105"
-                                        />
-                                    </div>
-
-                                    {/* Main Fitted Image */}
-                                    <div className="absolute inset-0 flex rounded-[2.5rem] items-center justify-end p-4 z-10">
-                                        <img
-                                            src={itemSrc}
-                                            alt={item.name}
-                                            className="max-w-full max-h-full rounded-[2.5rem] shadow-2xl"
-                                        />
-                                    </div>
-
-
-                                    {/* Active Content Layer - Now with Blur Card */}
-                                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
-                                        <div className="w-full md:w-auto md:max-w-[500px]">
-                                            {/* Glassmorphism Card Wrapper */}
-                                            <div className="bg-black/10 backdrop-blur-sm rounded-[2.5rem] p-8 border border-white/5 shadow-2xl flex flex-col items-start gap-6">
-
-                                                {/* Thumbnail - Card Context */}
-                                                <div className="hidden md:block w-36 aspect-square rounded-3xl overflow-hidden shadow-2xl border border-white/5 relative shrink-0 bg-black/50">
-                                                    <img
-                                                        src={typeof item.icon === 'string' ? item.icon : (item.icon as any)?.['512'] || ''}
-                                                        alt={item.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-1 space-y-4 pb-1">
-                                                    <h1 className="text-3xl md:text-3xl font-black text-white tracking-tight drop-shadow-xl line-clamp-1">
-                                                        {item.name}
-                                                    </h1>
-
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 text-white/90 font-medium text-xs uppercase tracking-wider backdrop-blur-md">
-                                                            {item.category}
-                                                        </span>
-                                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/20 border border-white/5 backdrop-blur-md">
-                                                            <div className="flex text-amber-400">
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <svg key={i} className={`w-3.5 h-3.5 ${i < Math.floor(item.stats?.rating || 4.8) ? 'fill-current' : 'text-white/20 fill-white/20'}`} viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-                                                                ))}
-                                                            </div>
-                                                            <span className="text-white/70 text-xs font-bold">{(item.stats?.rating || 4.8).toFixed(1)}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="pt-2 flex gap-3">
-                                                        <Link href={`/store/${item.id}/${slug}`}>
-                                                            <button className="h-11 px-8 rounded-full bg-white text-black font-bold text-sm tracking-wide hover:bg-zinc-200 transition-colors shadow-lg active:scale-95">
-                                                                View Details
-                                                            </button>
-                                                        </Link>
-                                                        <button className="h-11 w-11 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/10">
-                                                            <Heart className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {/* Navigation Arrows */}
-                    <div className="absolute inset-y-0 right-6 z-40 flex flex-col justify-center gap-3">
-                        <button
-                            onClick={prev}
-                            className="w-12 h-12 rounded-full border border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
-                        >
-                            <ChevronLeft className="w-6 h-6 -ml-0.5" />
-                        </button>
-                        <button
-                            onClick={next}
-                            className="w-12 h-12 rounded-full border border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
-                        >
-                            <ChevronRight className="w-6 h-6 ml-0.5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Bottom Indicators */}
-                <div className="flex justify-center gap-2 mt-6">
-                    {apps.map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setCurrent(i)}
+                    return (
+                        <div
+                            key={app.id}
+                            style={{ backgroundColor: color }}
                             className={cn(
-                                "h-1.5 rounded-full transition-all duration-300",
-                                i === current ? "bg-white w-8 shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "bg-white/20 w-1.5 hover:bg-white/40"
+                                "group relative w-full rounded-[1.75rem] overflow-hidden shadow-2xl transition-all hover:scale-[1.01] duration-300 border border-white/5",
+                                getGridClass(index)
                             )}
-                        />
-                    ))}
-                </div>
+                        >
+                            {/* Background Image - Blurred Texture */}
+                            <div className="absolute inset-0 opacity-100 mix-blend-overlay">
+                                <img
+                                    src={itemSrc}
+                                    alt={app.name}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125 blur-xl scale-110 saturate-150"
+                                />
+                            </div>
+
+                            {/* Gradient Overlay for Uniformity */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-40" />
+
+                            {/* Card Content Wrapper */}
+                            <div className="absolute inset-0 z-10 pointer-events-none">
+
+                                {/* Top Tag - Absolute */}
+                                <div className="absolute top-6 left-6 flex items-start">
+                                    <span
+                                        style={{ backgroundColor: color }}
+                                        className="px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-sm"
+                                    >
+                                        {getRandomTag(index)}
+                                    </span>
+                                </div>
+
+                                {/* Editorial Text - Absolute above footer */}
+                                <div className="absolute bottom-[5.5rem] left-6 right-6 p-2">
+                                    <h4 className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-1.5">
+                                        {getRandomSubtitle(index)}
+                                    </h4>
+                                    <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
+                                        {app.shortDescription || app.name}
+                                    </h3>
+                                    <p className="text-white/80 text-sm uppercase font-medium line-clamp-2">
+                                        {app.name} &mdash; {app.category}
+                                    </p>
+                                </div>
+
+                                {/* Colored Footer Bar - Pinned to Bottom */}
+                                <div
+                                    style={{ backgroundColor: color }}
+                                    className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-4 pointer-events-auto border-t border-white/10"
+                                >
+                                    {/* Icon */}
+                                    <div className="relative ml-3 w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 shadow-lg bg-black/20">
+                                        <img
+                                            src={iconSrc}
+                                            alt={app.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+
+                                    {/* Meta */}
+                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                        <h5 className="text-white font-bold text-[15px] truncate leading-tight">
+                                            {app.name}
+                                        </h5>
+                                        <p className="text-white/60 uppercase text-[13px] truncate">
+                                            {app.category} &bull; {displayRating.toFixed(1)} ★
+                                        </p>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <Link href={`/store/${app.id}/${slug}`}>
+                                        <button className="h-9 px-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold uppercase tracking-wider transition-colors border border-white/10">
+                                            View
+                                        </button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
 }
 
-import { getStoreApps, AppMock } from "@/lib/store-api";
+import { getStoreApps, AppMock, getAppReviews } from "@/lib/store-api";
 
 import { AppListItem } from "./components/AppListItem";
 
@@ -221,19 +192,26 @@ export default function StorePage() {
         <div className="w-full min-h-full pb-20 pt-8" onClick={() => setRegionOpen(false)}>
             {/* Top Navigation / Filters */}
             <div className="px-6 max-w-[1600px] mx-auto flex items-center justify-between gap-8 mb-8">
-                <h1 className="text-3xl font-medium text-white font-geom tracking-tight">Discover</h1>
+                <div className="flex items-center gap-5">
+                    <h1 className="text-5xl font-bold text-white tracking-tight">Today</h1>
+                    <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5 relative top-1">
+                        <span className="text-[11px] font-semibold text-white/60 uppercase relative bottom-0.5">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        </span>
+                    </div>
+                </div>
 
                 <div className="flex items-center gap-8">
                     {/* Text Links */}
-                    {/* Text Links */}
                     <nav className="flex items-center gap-6">
-                        <Link href="/changelog" className="text-sm font-medium text-white hover:text-white/70 transition-colors">
+                        <Link href="/changelog" className="flex items-center gap-1 text-sm font-medium text-white hover:underline transition-colors">
                             Changelogs
+                            <ArrowUpRight className="w-3.5 h-3.5 text-white" />
                         </Link>
-                        <Link href="/developers" className="text-sm font-medium text-white hover:text-white/70 transition-colors">
+                        <Link href="/developers" className="text-sm font-medium text-white hover:underline transition-colors">
                             Developers
                         </Link>
-                        <Link href="/beta" className="text-sm font-medium text-white hover:text-white/70 transition-colors">
+                        <Link href="/beta" className="text-sm font-medium text-white hover:underline transition-colors">
                             Beta
                         </Link>
                     </nav>

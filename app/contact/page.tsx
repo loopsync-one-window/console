@@ -28,7 +28,7 @@ export default function ContactUs() {
   return (
     <div className="min-h-screen bg-[#07080a]">
       <Navbar />
-      
+
       {/* Animated Gradient Background */}
       <div className="fixed inset-0 w-full h-screen flex items-center justify-center">
         <GradientBlinds
@@ -94,7 +94,7 @@ export default function ContactUs() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-white mb-2">
                   Subject
@@ -110,7 +110,7 @@ export default function ContactUs() {
                   placeholder="How can we help?"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
                   Message
@@ -126,7 +126,7 @@ export default function ContactUs() {
                   placeholder="Your message..."
                 ></textarea>
               </div>
-              
+
               <div>
                 <button
                   type="submit"

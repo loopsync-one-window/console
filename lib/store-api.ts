@@ -100,24 +100,18 @@ export interface ReviewStats {
     };
 }
 
-// Cache Config
+// Cache Storage
+const memoryCache = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const CACHE_PREFIX = 'loopsync_store_';
 
 // Helper to handle caching
 const fetchWithCache = async <T>(url: string, options: RequestInit, key: string): Promise<T> => {
-    // 1. Try Cache (Client Side Only)
+    // 1. Try Cache (Client Side Only - Memory)
     if (typeof window !== 'undefined') {
-        try {
-            const cached = localStorage.getItem(key);
-            if (cached) {
-                const entry = JSON.parse(cached);
-                if (Date.now() - entry.timestamp < CACHE_TTL) {
-                    return entry.data;
-                }
-            }
-        } catch (e) {
-            // Ignore cache errors
+        const cached = memoryCache.get(key);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            return cached.data;
         }
     }
 
@@ -125,16 +119,12 @@ const fetchWithCache = async <T>(url: string, options: RequestInit, key: string)
     const response = await fetch(url, options);
     const data = await handleResponse(response);
 
-    // 3. Save Cache (Client Side Only)
+    // 3. Save Cache (Client Side Only - Memory)
     if (typeof window !== 'undefined') {
-        try {
-            localStorage.setItem(key, JSON.stringify({
-                timestamp: Date.now(),
-                data
-            }));
-        } catch (e) {
-            // Quota exceeded
-        }
+        memoryCache.set(key, {
+            timestamp: Date.now(),
+            data
+        });
     }
 
     return data;
@@ -262,7 +252,7 @@ export const submitAppReview = async (appId: string, data: { rating: number; tit
     });
     // Invalidate cache after submission
     if (typeof window !== 'undefined') {
-        localStorage.removeItem(`${CACHE_PREFIX}reviews_${appId}`);
+        memoryCache.delete(`${CACHE_PREFIX}reviews_${appId}`);
     }
     return handleResponse(response);
 };
@@ -277,7 +267,7 @@ export const deleteReview = async (appId: string, reviewId: string, token: strin
     });
     // Invalidate cache
     if (typeof window !== 'undefined') {
-        localStorage.removeItem(`${CACHE_PREFIX}reviews_${appId}`);
+        memoryCache.delete(`${CACHE_PREFIX}reviews_${appId}`);
     }
     return handleResponse(response);
 };

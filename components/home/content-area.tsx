@@ -148,14 +148,14 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
       let ok = false
       try {
         ok = document.execCommand("copy")
-      } catch {}
+      } catch { }
       document.body.removeChild(ta)
       return ok
     }
     try {
       await copyViaClipboard(fallback)
-      try { await updateOnboardStatus(true) } catch {}
-      
+      try { await updateOnboardStatus(true) } catch { }
+
       // Register user with Atlas and Ceres APIs
       if (userEmail) {
         console.log("Registering user with Atlas and Ceres APIs:", userEmail);
@@ -215,14 +215,14 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
         <div className="flex flex-col justify-center items-start px-10 py-12 max-w-screen-2xl">
           <h1 className="text-6xl font-bold mb-4 text-foreground">You're all set!</h1>
           <p className="text-base font-medium text-white leading-relaxed mb-6">
-            Your account is ready. Feel free to move through <br/>the next steps at your own pace.
+            Your account is ready. Feel free to move through <br />the next steps at your own pace.
           </p>
           <Button
             className="rounded-none font-semibold cursor-pointer border border-white/20 bg-white/5 text-white hover:bg-white/10"
             onClick={async () => {
               setShowDashboard(true)
-              try { await updateOnboardStatus(true) } catch {}
-              
+              try { await updateOnboardStatus(true) } catch { }
+
               // Register user with Atlas and Ceres APIs
               if (userEmail) {
                 console.log("Registering user with Atlas and Ceres APIs:", userEmail);
@@ -245,31 +245,30 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
             {steps.map((step, index) => (
               <div
                 key={index}
-                className={`flex items-center gap-3 p-5 rounded-full border-2 border-white/5 border-border bg-sidebar/30 hover:bg-sidebar/50 transition-all duration-200 backdrop-blur-sm ${
-                  index === 2 ? "cursor-pointer" : ""
-                }`}
+                className={`flex items-center gap-3 p-5 rounded-full border-2 border-white/5 border-border bg-sidebar/30 hover:bg-sidebar/50 transition-all duration-200 backdrop-blur-sm ${index === 2 ? "cursor-pointer" : ""
+                  }`}
                 onClick={
                   index === 1
                     ? async () => {
-                        setActiveItem("products")
-                        try { await updateOnboardStatus(true) } catch {}
-                        
-                        // Register user with Atlas and Ceres APIs
-                        if (userEmail) {
-                          console.log("Registering user with Atlas and Ceres APIs:", userEmail);
-                          Promise.all([
-                            registerAtlasUserClient(userEmail).catch(err => console.error("Failed to register with Atlas:", err)),
-                            registerCeresUserClient(userEmail).catch(err => console.error("Failed to register with Ceres:", err))
-                          ]).then(() => {
-                            console.log("Successfully registered with Atlas and Ceres APIs");
-                          }).catch(err => console.error("Failed to register with services:", err));
-                        }
+                      setActiveItem("products")
+                      try { await updateOnboardStatus(true) } catch { }
+
+                      // Register user with Atlas and Ceres APIs
+                      if (userEmail) {
+                        console.log("Registering user with Atlas and Ceres APIs:", userEmail);
+                        Promise.all([
+                          registerAtlasUserClient(userEmail).catch(err => console.error("Failed to register with Atlas:", err)),
+                          registerCeresUserClient(userEmail).catch(err => console.error("Failed to register with Ceres:", err))
+                        ]).then(() => {
+                          console.log("Successfully registered with Atlas and Ceres APIs");
+                        }).catch(err => console.error("Failed to register with services:", err));
                       }
+                    }
                     : index === 2
-                    ? async () => {
+                      ? async () => {
                         setShowDashboard(true)
-                        try { await updateOnboardStatus(true) } catch {}
-                        
+                        try { await updateOnboardStatus(true) } catch { }
+
                         // Register user with Atlas and Ceres APIs
                         if (userEmail) {
                           console.log("Registering user with Atlas and Ceres APIs:", userEmail);
@@ -281,7 +280,7 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
                           }).catch(err => console.error("Failed to register with services:", err));
                         }
                       }
-                    : undefined
+                      : undefined
                 }
               >
                 <div className="flex-shrink-0">
@@ -306,7 +305,7 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
           </div>
         </div>
       </div>
-      
+
       {/* Tutorial link with play icon - moved higher up for better visibility */}
       {/* <div className="relative z-10 flex justify-center -mt-35">
         <div 
@@ -321,21 +320,21 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
           </span>
         </div>
       </div> */}
-      
+
       {/* Tutorial Video Modal with Apple-like animation */}
       {showTutorialModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setShowTutorialModal(false)}
         >
-          <div 
+          <div
             className="relative w-full max-w-4xl bg-black rounded-lg overflow-hidden shadow-2xl transform transition-all duration-300 scale-95 opacity-0"
-            style={{ 
+            style={{
               animation: 'modalEnter 0.3s forwards',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 text-white z-10 bg-black/30 rounded-full p-2 hover:bg-black/50 transition-colors"
               onClick={() => setShowTutorialModal(false)}
             >
@@ -355,7 +354,7 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
           </div>
         </div>
       )}
-      
+
       {/* Add the keyframes for the animation */}
       <style jsx>{`
         @keyframes modalEnter {

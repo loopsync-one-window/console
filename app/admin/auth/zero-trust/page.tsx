@@ -27,7 +27,9 @@ import {
     getAppRejectionHistory,
     getAdminFlags,
     getAdminPurchases,
-    getAdminContributions
+    getAdminContributions,
+    getAdminAppReviews,
+    deleteAdminAppReview
 } from "@/lib/admin-api";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,7 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut, History, Folder, File as FileIcon, ChevronRight, ChevronDown, Package, Key, Copy, Check, Download, FileWarning, CloudUpload, X, Plus, MoreHorizontal } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut, History, Folder, File as FileIcon, ChevronRight, ChevronDown, Package, Key, Copy, Check, Download, FileWarning, CloudUpload, X, Plus, MoreHorizontal, Star } from "lucide-react";
 import JSZip from "jszip";
 import { toast } from "sonner";
 import {
@@ -96,6 +98,52 @@ export default function AdminZeroTrustPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [hideTrialUsers, setHideTrialUsers] = useState(false);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+    // Confirmation Dialog State
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<() => Promise<void>>(() => async () => { });
+    const [confirmTitle, setConfirmTitle] = useState("");
+    const [confirmDescription, setConfirmDescription] = useState("");
+    const [confirmType, setConfirmType] = useState<"danger" | "warning" | "info">("danger");
+
+    // Review Management State
+    const [expandedReviewAppId, setExpandedReviewAppId] = useState<string | null>(null);
+    const [fetchedReviews, setFetchedReviews] = useState<any[]>([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+
+    const handleFetchReviews = async (appId: string) => {
+        if (expandedReviewAppId === appId) {
+            setExpandedReviewAppId(null);
+            return;
+        }
+        setExpandedReviewAppId(appId);
+        setReviewsLoading(true);
+        try {
+            const data = await getAdminAppReviews(appId);
+            setFetchedReviews(data);
+        } catch (e) {
+            toast.error("Failed to fetch reviews");
+        } finally {
+            setReviewsLoading(false);
+        }
+    };
+
+    const handleDeleteReview = async (appId: string, reviewId: string) => {
+        try {
+            await deleteAdminAppReview(appId, reviewId);
+            toast.success("Review deleted");
+            setFetchedReviews(prev => prev.filter(r => r.id !== reviewId));
+        } catch (e) {
+            toast.error("Failed to delete review");
+        }
+    };
+
+    const confirm = (title: string, action: () => Promise<void>, type: "danger" | "warning" | "info" = "danger") => {
+        setConfirmTitle(title);
+        setConfirmAction(() => action);
+        setConfirmType(type);
+        setConfirmOpen(true);
+    };
 
     // Notification State
     const [notifyOpen, setNotifyOpen] = useState(false);
@@ -986,10 +1034,10 @@ export default function AdminZeroTrustPage() {
             <main className="flex-1 p-6 md:p-10 lg:p-12 min-w-0 bg-black h-full overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8">
 
-                    <Tabs defaultValue="users" className="space-y-8">
+                    <Tabs defaultValue="users" className="space-y-8" value={undefined}>
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl font-semibold tracking-tight text-white">Data Console</h2>
+                                <h2 className="text-2xl font-semibold tracking-tight text-white">Database</h2>
                                 {/* <p className="text-sm text-neutral-500 mt-1">Manage users, view plans, and monitor activity.</p> */}
                             </div>
 
@@ -1048,6 +1096,12 @@ export default function AdminZeroTrustPage() {
                                         className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
                                     >
                                         Contributions
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="reviews-mgmt"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Reviews
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
@@ -1788,6 +1842,145 @@ export default function AdminZeroTrustPage() {
                                 </Table>
                             </div>
                         </TabsContent>
+                        <TabsContent value="reviews-mgmt" className="mt-0 h-[calc(100%-80px)] min-h-[500px]">
+                            <Card className="bg-[#0A0A0A] border-white/5 h-full flex flex-col">
+                                <CardHeader className="border-b border-white/5 pb-4 shrink-0">
+                                    <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-zinc-400" />
+                                        App Reviews Management
+                                    </CardTitle>
+                                    <CardDescription className="text-zinc-500">
+                                        View and manage user reviews for all applications.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1 overflow-hidden">
+                                    <ScrollArea className="h-full">
+                                        <Table>
+                                            <TableHeader className="bg-white/[0.02] sticky top-0 z-10 backdrop-blur-sm">
+                                                <TableRow className="border-white/5 hover:bg-transparent">
+                                                    <TableHead className="text-zinc-400 w-[50px]"></TableHead>
+                                                    <TableHead className="text-zinc-400">Application</TableHead>
+                                                    <TableHead className="text-zinc-400">Developer</TableHead>
+                                                    <TableHead className="text-zinc-400">Status</TableHead>
+                                                    <TableHead className="text-zinc-400 text-center">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {allApps.map((app) => (
+                                                    <>
+                                                        <TableRow key={app.id} className="border-white/5 hover:bg-white/[0.02] group">
+                                                            <TableCell>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-white/10"
+                                                                    onClick={() => handleFetchReviews(app.id)}
+                                                                >
+                                                                    {expandedReviewAppId === app.id ? (
+                                                                        <ChevronDown className="w-4 h-4" />
+                                                                    ) : (
+                                                                        <ChevronRight className="w-4 h-4" />
+                                                                    )}
+                                                                </Button>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold bg-zinc-800 text-zinc-400 border border-white/5`}>
+                                                                        {app.icons ? (
+                                                                            <img src={app.icons['512'] || Object.values(app.icons)[0]} className="w-full h-full object-cover rounded-xl" />
+                                                                        ) : app.name.charAt(0)}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-medium text-white">{app.name}</div>
+                                                                        <div className="text-xs text-zinc-500 capitalize">{app._count?.reviews || 0} Reviews</div>
+                                                                    </div>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-zinc-300">{app.developer.fullName}</span>
+                                                                    <span className="text-xs text-zinc-500">{app.developer.email}</span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge variant="outline" className={`
+                                                                ${app.status === 'live' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                                        app.status === 'review' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                                                            'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'}
+                                                                capitalize
+                                                            `}>
+                                                                    {app.status}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {/* Actions if any */}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                        {expandedReviewAppId === app.id && (
+                                                            <TableRow className="border-white/5 bg-white/[0.01] hover:bg-white/[0.01]">
+                                                                <TableCell colSpan={5} className="p-0">
+                                                                    <div className="p-6">
+                                                                        {reviewsLoading ? (
+                                                                            <div className="flex items-center justify-center py-8">
+                                                                                <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+                                                                            </div>
+                                                                        ) : fetchedReviews.length > 0 ? (
+                                                                            <div className="space-y-4">
+                                                                                {fetchedReviews.map((review) => (
+                                                                                    <div key={review.id} className="bg-[#0A0A0A] border border-white/5 rounded-xl p-4 flex gap-4 hover:border-white/10 transition-colors">
+                                                                                        <div className="shrink-0 pt-1">
+                                                                                            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400">
+                                                                                                {review.userName.charAt(0)}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <div className="flex items-start justify-between mb-1">
+                                                                                                <div>
+                                                                                                    <span className="text-sm font-medium text-white block">{review.title}</span>
+                                                                                                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                                                                                        <span>{review.userName}</span>
+                                                                                                        <span>•</span>
+                                                                                                        <span>{format(new Date(review.createdAt), 'MMM d, yyyy')}</span>
+                                                                                                        <span>•</span>
+                                                                                                        <div className="flex items-center text-amber-400">
+                                                                                                            <Star className="w-3 h-3 fill-current mr-1" />
+                                                                                                            {review.rating}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <Button
+                                                                                                    variant="ghost"
+                                                                                                    size="icon"
+                                                                                                    className="h-7 w-7 text-zinc-600 hover:text-red-400 hover:bg-red-500/10"
+                                                                                                    onClick={() => {
+                                                                                                        confirm("Are you sure you want to delete this review?", async () => await handleDeleteReview(app.id, review.id), "danger");
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Trash2 className="w-4 h-4" />
+                                                                                                </Button>
+                                                                                            </div>
+                                                                                            <p className="text-sm text-zinc-400 leading-relaxed font-light">{review.content}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="text-center py-8 text-zinc-500 text-sm">
+                                                                                No reviews found for this app.
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
+                                                    </>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </ScrollArea>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
                     </Tabs>
                 </div>
 
@@ -2399,11 +2592,15 @@ export default function AdminZeroTrustPage() {
                                                         </div>
                                                         <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
                                                             <span className="text-sm text-neutral-400">Price</span>
-                                                            <span className="text-sm text-white">₹{selectedReviewApp?.price}</span>
+                                                            <span className="text-sm text-white">
+                                                                {selectedReviewApp?.pricingModel === 'free' ? 'Free' :
+                                                                    selectedReviewApp?.pricingModel === 'sub' ? 'Subscription' :
+                                                                        `₹${selectedReviewApp?.price}`}
+                                                            </span>
                                                         </div>
                                                         <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
                                                             <span className="text-sm text-neutral-400">Category</span>
-                                                            <span className="text-sm text-white">Productivity</span>
+                                                            <span className="text-sm text-white capitalize">{selectedReviewApp?.category || 'Uncategorized'}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
                                                             <span className="text-sm text-neutral-400">Platforms</span>
@@ -3033,6 +3230,50 @@ export default function AdminZeroTrustPage() {
                                 </div>
                             )}
                         </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Generic Confirmation Dialog */}
+                <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                    <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] rounded-3xl border-white/10 text-white shadow-2xl p-6 gap-6">
+                        <DialogHeader>
+                            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-2 ${confirmType === 'danger' ? 'bg-red-500/10' :
+                                confirmType === 'warning' ? 'bg-amber-500/10' :
+                                    'bg-blue-500/10'
+                                }`}>
+                                <AlertTriangle className={`h-6 w-6 ${confirmType === 'danger' ? 'text-red-500' :
+                                    confirmType === 'warning' ? 'text-amber-500' :
+                                        'text-blue-500'
+                                    }`} />
+                            </div>
+                            <DialogTitle className="text-center text-xl font-semibold text-white">{confirmTitle}</DialogTitle>
+                            {confirmDescription && (
+                                <DialogDescription className="text-center text-neutral-400 text-sm">
+                                    {confirmDescription}
+                                </DialogDescription>
+                            )}
+                        </DialogHeader>
+                        <DialogFooter className="grid grid-cols-2 gap-3 mt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setConfirmOpen(false)}
+                                className="bg-transparent border-white/10 text-neutral-400 hover:bg-white/5 hover:text-white rounded-full w-full"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    await confirmAction();
+                                    setConfirmOpen(false);
+                                }}
+                                className={`rounded-full w-full text-white ${confirmType === 'danger' ? 'bg-red-800 hover:bg-red-900' :
+                                    confirmType === 'warning' ? 'bg-amber-700 hover:bg-amber-800' :
+                                        'bg-blue-700 hover:bg-blue-800'
+                                    }`}
+                            >
+                                Confirm
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </main >

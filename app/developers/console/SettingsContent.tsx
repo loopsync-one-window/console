@@ -134,14 +134,24 @@ export default function SettingsContent() {
         const file = e.target.files?.[0];
         if (!file || !profile) return;
 
+        if (file.size > 500 * 1024 * 1024) {
+            alert("Image must be smaller than 500MB");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+
         setUploadingAvatar(true);
 
         try {
             const { avatarUrl } = await updateDeveloperAvatar(file);
             setProfile({ ...profile, avatarUrl: `${avatarUrl}?t=${Date.now()}` });
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to upload avatar", e);
-            alert("Failed to upload avatar");
+            if (e?.statusCode === 413 || e?.message?.toLowerCase().includes("too large")) {
+                alert("File is too large to upload.");
+            } else {
+                alert("Failed to upload avatar");
+            }
         } finally {
             setUploadingAvatar(false);
             // reset input

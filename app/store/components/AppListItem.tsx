@@ -26,8 +26,16 @@ export function AppListItem({ id, icon, color, title, subtitle, category }: { id
                     <span className="text-[11px] font-bold tracking-wider text-zinc-600 mt-1 inline-block uppercase bg-white/5 px-2 py-0.5 rounded-md text-zinc-500">{category}</span>
                 </div>
                 <div className="flex-shrink-0">
-                    <button className="bg-white/5 text-white font-bold text-xs uppercase px-5 py-2 rounded-full hover:bg-white hover:text-black transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                        Get
+                    <button
+                        onClick={(e) => {
+                            if (category.toLowerCase() === 'extension') {
+                                e.preventDefault();
+                                window.open("https://loopsync.cloud/home", "_blank");
+                            }
+                        }}
+                        className="bg-white/5 text-white font-bold text-xs uppercase px-5 py-2 rounded-full hover:bg-white hover:text-black transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                    >
+                        {category.toLowerCase() === 'extension' ? 'Add Extension' : 'Get'}
                     </button>
                 </div>
             </div>

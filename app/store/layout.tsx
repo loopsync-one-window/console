@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { StoreSearchModal } from "./components/StoreSearchModal";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Navbar from "@/components/NavBar";
 import { getCurrentUserId } from "@/lib/api";
 import {
@@ -35,6 +35,7 @@ export default function StoreLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const router = useRouter();
     const pathname = usePathname();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [user, setUser] = useState<{ fullName: string; email: string } | null>(null);
@@ -85,7 +86,7 @@ export default function StoreLayout({
             <aside className="w-[260px] flex-shrink-0 flex flex-col bg-[#000] border-r border-white/5 backdrop-blur-2xl h-full pt-8 pb-6 px-4 z-40 transition-all duration-300">
 
                 {/* Logo */}
-                <div className="px-5 mb-8">
+                <div className="px-5 mb-8" onClick={() => router.push("/")}>
                     <img src="/resources/logo.svg" alt="LoopSync" className="h-7 w-auto" />
                 </div>
 

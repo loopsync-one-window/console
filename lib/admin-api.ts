@@ -168,6 +168,7 @@ export interface ReviewedApp {
     };
     platforms?: string[];
     distributionRegions?: string[];
+    _count?: { reviews: number };
 }
 
 // --- App Actions ---
@@ -419,6 +420,31 @@ export const getAdminContributions = async (): Promise<any[]> => {
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+// --- Review Management ---
+
+export const getAdminAppReviews = async (appId: string): Promise<any[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/reviews`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const deleteAdminAppReview = async (appId: string, reviewId: string): Promise<any> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
         },
     });
     return handleResponse(response);

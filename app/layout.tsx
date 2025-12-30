@@ -5,6 +5,12 @@ import "./globals.css";
 import ProfileInit from "./profile-init";
 import { Toaster } from "../components/ui/toaster";
 
+if (process.env.NODE_ENV === "production") {
+  console.log = () => { };
+  console.warn = () => { };
+  console.info = () => { };
+}
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

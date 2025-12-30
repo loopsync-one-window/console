@@ -625,24 +625,26 @@ export default function AppDetailsPage() {
                             {/* Main Action Button */}
                             <button
                                 onClick={
-                                    app.pricing.type === 'sub' ? () => window.location.href = "https://loopsync.cloud/home" :
-                                        (isOwned || app.pricing.type === 'free') ? () => handleDownload() :
-                                            handlePayment
+                                    app.category.toLowerCase() === 'extension' ? () => window.open("https://loopsync.cloud/home", "_blank") :
+                                        app.pricing.type === 'sub' ? () => window.location.href = "https://loopsync.cloud/home" :
+                                            (isOwned || app.pricing.type === 'free') ? () => handleDownload() :
+                                                handlePayment
                                 }
                                 disabled={paymentProcessing}
                                 className={`
                                     relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] rounded-full text-sm font-semibold flex items-center justify-center
                                     ${downloadState === 'idle' && !paymentProcessing
-                                        ? 'bg-white hover:bg-white/90 text-black w-32 py-5 active:scale-95'
+                                        ? 'bg-white hover:bg-white/90 text-black w-auto min-w-[140px] px-6 py-5 active:scale-95'
                                         : 'bg-white/20 text-white w-36 py-5 cursor-default'
                                     }
                                 `}
                             >
                                 {/* Idle Text */}
                                 <span className={`absolute transition-all duration-300 ${downloadState === 'idle' && !paymentProcessing ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-                                    {app.pricing.type === 'sub' ? 'Subscribe' :
-                                        (isOwned || app.pricing.type === 'free') ? 'Get' :
-                                            `Pay ₹${app.pricing.price}`}
+                                    {app.category.toLowerCase() === 'extension' ? 'Add Extension' :
+                                        app.pricing.type === 'sub' ? 'Subscribe' :
+                                            (isOwned || app.pricing.type === 'free') ? 'Get' :
+                                                `Pay ₹${app.pricing.price}`}
                                 </span>
 
                                 {/* Downloading/Processing State */}

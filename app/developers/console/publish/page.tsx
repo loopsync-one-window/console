@@ -409,8 +409,8 @@ function PublishAppContent() {
                 try {
                     const res = await fetch(url, { method: 'HEAD' });
                     const size = res.headers.get('content-length');
-                    if (size && parseInt(size) > 100 * 1024 * 1024) {
-                        throw new Error(`${items} must be smaller than 100MB`);
+                    if (size && parseInt(size) > 500 * 1024 * 1024) {
+                        throw new Error(`${items} must be smaller than 500MB`);
                     }
                 } catch (e: any) {
                     throw new Error(e.message || `Failed to verify ${items} size`);
@@ -572,6 +572,11 @@ function PublishAppContent() {
                         setVerificationStatus('idle');
                         setUploadProgress(0); // Reset progress so onClick works again
                         setIsSaving(false);
+                    } else if (xhr.status === 413) {
+                        console.error('Upload failed: Payload Too Large');
+                        setVerificationStatus('error');
+                        setVerificationError("File is too large. Please upload a smaller file.");
+                        setUploadProgress(0);
                     } else {
                         console.error('Upload failed', xhr.statusText);
                         setVerificationStatus('error');
@@ -591,8 +596,8 @@ function PublishAppContent() {
             } else {
                 // Asset Validation Logic
                 if (type === 'video') {
-                    if (file.size > 100 * 1024 * 1024) { // 100MB
-                        showWarning("Video file size must be less than 100MB.");
+                    if (file.size > 500 * 1024 * 1024) { // 500MB
+                        showWarning("Video file size must be less than 500MB.");
                         return;
                     }
                 } else if (type === 'icon' || type === 'banner') {
@@ -617,7 +622,11 @@ function PublishAppContent() {
                 }
 
                 const { uploadUrl, assetUrl } = await getAssetUploadUrl(appId, type === 'banner' ? 'banner' : (type === 'video' ? 'video' : 'icon'), file.type);
-                await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+                const res = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+                if (!res.ok) {
+                    if (res.status === 413) throw new Error("File is too large.");
+                    throw new Error("Upload failed");
+                }
 
                 if (type === 'banner') {
                     await updateAppAssets(appId, { bannerUrl: assetUrl });
@@ -671,7 +680,11 @@ function PublishAppContent() {
             if (!isValid) return;
 
             const { uploadUrl, assetUrl } = await getAssetUploadUrl(appId, 'screenshot', file.type);
-            await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+            const res = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+            if (!res.ok) {
+                if (res.status === 413) throw new Error("File is too large.");
+                throw new Error("Upload failed");
+            }
 
             const newScreenshots = [...screenshots];
             newScreenshots[index] = assetUrl;
@@ -851,9 +864,18 @@ function PublishAppContent() {
                                                             { label: 'Games', value: 'games' },
                                                             { label: 'Utilities', value: 'utilities' },
                                                             { label: 'Travel', value: 'travel' },
+                                                            { label: 'Extensions', value: 'extension' },
                                                             { label: 'Others', value: 'others' }
                                                         ]}
                                                     />
+                                                    {category === 'extension' && (
+                                                        <div className="flex items-start gap-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 mt-2">
+                                                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                                            <p className="text-xs leading-relaxed">
+                                                                Extensions usually take longer to get approved due to extra review checks.
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                     {category === 'others' && (
                                                         <div className="animate-in fade-in slide-in-from-top-1 pt-1">
                                                             <Input
@@ -1198,7 +1220,7 @@ function PublishAppContent() {
                                                 <div className="grid grid-cols-3 gap-4">
                                                     <PricingCard
                                                         active={pricing === 'free'}
-                                                        onClick={() => setPricing('free')}
+                                                        onClick={() => { setPricing('free'); setPrice(""); }}
                                                         title="Free"
                                                         desc="Free to download"
                                                     />
@@ -1208,14 +1230,28 @@ function PublishAppContent() {
                                                         title="Paid"
                                                         desc="One-time purchase"
                                                     />
-                                                    <PricingCard
-                                                        active={pricing === 'sub'}
-                                                        onClick={() => setPricing('sub')}
-                                                        title="Subscription"
-                                                        desc="Recurring billing"
-                                                    />
+                                                    {category === 'extension' && (
+                                                        <PricingCard
+                                                            active={pricing === 'sub'}
+                                                            onClick={() => { setPricing('sub'); setPrice(""); }}
+                                                            title="Subscription"
+                                                            desc="Recurring billing"
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
+
+                                            {pricing === 'sub' && category === 'extension' && (
+                                                <div className="animate-in fade-in slide-in-from-top-2 duration-500 mt-4 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 text-sm leading-relaxed flex gap-3">
+                                                    <div className="shrink-0 mt-0.5">
+                                                        <Cpu className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        If your extension uses any pricing-related utilities, you must use our <b className="text-white">Consume Credit API</b>. <Link href="/developers/docs" target="_blank" className="underline hover:text-white transition-colors">View Documentation</Link>
+                                                        <div className="mt-1 opacity-80">Otherwise, everything is fine.</div>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {pricing === 'paid' && (
                                                 <div className="animate-in fade-in slide-in-from-top-2 duration-500">
