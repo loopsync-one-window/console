@@ -644,7 +644,7 @@ export default function AppDetailsPage() {
                                     {app.category.toLowerCase() === 'extension' ? 'Add Extension' :
                                         app.pricing.type === 'sub' ? 'Subscribe' :
                                             (isOwned || app.pricing.type === 'free') ? 'Get' :
-                                                `Pay ₹${app.pricing.price}`}
+                                                `Pay ₹${new Intl.NumberFormat('en-IN').format(Number(app.pricing.price))}`}
                                 </span>
 
                                 {/* Downloading/Processing State */}
@@ -1338,7 +1338,7 @@ export default function AppDetailsPage() {
                                                 : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10"
                                         )}
                                     >
-                                        ₹{amt}
+                                        ₹{new Intl.NumberFormat('en-IN').format(amt)}
                                     </button>
                                 ))}
                             </div>
@@ -1394,7 +1394,7 @@ export default function AppDetailsPage() {
                                     disabled={!contributionAmount || parseInt(contributionAmount) < 50}
                                     className="flex-[2] h-12 rounded-full bg-white text-black font-bold hover:bg-zinc-200 transition shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {paymentProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : `Pay ${contributionAmount ? `₹${contributionAmount}` : ''}`}
+                                    {paymentProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : `Pay ${contributionAmount ? `₹${new Intl.NumberFormat('en-IN').format(Number(contributionAmount))}` : ''}`}
                                 </Button>
                             </div>
                         </div>
@@ -1409,7 +1409,7 @@ export default function AppDetailsPage() {
                                 We're grateful for your support. Thank you.
                             </DialogTitle>
                             <p className="text-zinc-300 text-lg leading-relaxed mb-8 max-w-sm">
-                                Your contribution of <span className="text-white font-bold">₹{contributionAmount}</span> has been received successfully.
+                                Your contribution of <span className="text-white font-bold">₹{new Intl.NumberFormat('en-IN').format(Number(contributionAmount))}</span> has been received successfully.
                             </p>
 
                             <Button
