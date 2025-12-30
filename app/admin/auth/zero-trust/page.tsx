@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import {
     getAllUsers,
@@ -16,21 +16,30 @@ import {
     getAdminAppsForReview,
     getAdminAppDetails,
     adminApproveApp,
+    adminPublishApp,
     adminRejectApp,
     adminTerminateApp,
     adminReopenApp,
+    uploadAdminBuild,
     AdminUser,
     Developer,
     ReviewedApp,
     getAppRejectionHistory,
+    getAdminFlags,
+    getAdminPurchases,
+    getAdminContributions
 } from "@/lib/admin-api";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut, History } from "lucide-react";
+import { Loader2, Search, Mail, RefreshCcw, ShieldCheck, Users, Activity, Bell, Eye, EyeOff, Trash2, AlertTriangle, FileText, Code2, CheckCircle2, AppWindow, AlertCircle, LogOut, History, Folder, File as FileIcon, ChevronRight, ChevronDown, Package, Key, Copy, Check, Download, FileWarning, CloudUpload, X, Plus, MoreHorizontal } from "lucide-react";
+import JSZip from "jszip";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -75,10 +84,14 @@ export default function AdminZeroTrustPage() {
 
     const [loading, setLoading] = useState(false); // Changed to false initially to avoid flash before auth check
     const [users, setUsers] = useState<AdminUser[]>([]);
-    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [activeSubscribers, setActiveSubscribers] = useState<any[]>([]);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [reviewApps, setReviewApps] = useState<ReviewedApp[]>([]);
     const [allApps, setAllApps] = useState<ReviewedApp[]>([]);
+    const [flags, setFlags] = useState<any[]>([]);
+    const [purchases, setPurchases] = useState<any[]>([]);
+    const [contributions, setContributions] = useState<any[]>([]);
+    const [stats, setStats] = useState({ activeSubscribers: 0, totalUsers: 0 });
     const [searchQuery, setSearchQuery] = useState("");
     const [refreshing, setRefreshing] = useState(false);
     const [hideTrialUsers, setHideTrialUsers] = useState(false);
@@ -107,11 +120,105 @@ export default function AdminZeroTrustPage() {
     const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
     const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    // Add missing state for bundle size in review dialog
+    const [bundleSize, setBundleSize] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<{
+        name: string;
+        content: string | null;
+        type: 'image' | 'text' | 'other';
+        language?: string;
+    } | null>(null);
     const [detailedUser, setDetailedUser] = useState<AdminUser | null>(null);
+    const [registerBuildOpen, setRegisterBuildOpen] = useState(false);
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const [droppedFiles, setDroppedFiles] = useState<any[]>([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [manualUploadStatus, setManualUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+    const [uploadedBuildInfo, setUploadedBuildInfo] = useState<{ path: string, filename: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [loadedZip, setLoadedZip] = useState<JSZip | null>(null);
 
     // Developer Details State
     const [viewDevDetailsOpen, setViewDevDetailsOpen] = useState(false);
     const [detailedDev, setDetailedDev] = useState<Developer | null>(null);
+
+    // App Privacy & Info State
+    const [privacyTracking, setPrivacyTracking] = useState<string[]>([]);
+    const [privacyLinked, setPrivacyLinked] = useState<string[]>([]);
+    const [extraInfo, setExtraInfo] = useState({
+        ageRating: '4+',
+        copyright: '',
+        website: '',
+        supportEmail: ''
+    });
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            setDroppedFiles([{
+                name: file.name,
+                path: file.name, // Local path not available in browser
+                size: file.size,
+                type: 'file', // generic
+                rawFile: file
+            }]);
+            setManualUploadStatus('idle');
+            setUploadedBuildInfo(null);
+            setUploadProgress(0);
+        }
+    };
+
+    const handleManualUpload = async (fileNode: any) => {
+        console.log("Manual upload triggered", fileNode);
+        if (!selectedReviewApp) {
+            toast.error("No app selected for review");
+            console.error("No selectedReviewApp");
+            return;
+        }
+        if (!fileNode.rawFile) {
+            toast.error("File data missing");
+            console.error("No rawFile in fileNode", fileNode);
+            return;
+        }
+
+        setManualUploadStatus('uploading');
+        setUploadProgress(5);
+
+        try {
+            // Simulated progress for UX
+            const interval = setInterval(() => {
+                setUploadProgress(prev => {
+                    if (prev >= 90) {
+                        return 90;
+                    }
+                    return prev + 10;
+                });
+            }, 300);
+
+            console.log("Starting uploadAdminBuild...");
+            const uploadResult = await uploadAdminBuild(
+                selectedReviewApp.id,
+                selectedReviewApp.version || '1.0.0',
+                'windows',
+                fileNode.rawFile
+            );
+            console.log("Upload result:", uploadResult);
+
+            clearInterval(interval);
+            setUploadProgress(100);
+            setManualUploadStatus('success');
+            setUploadedBuildInfo({
+                path: uploadResult.key,
+                filename: uploadResult.filename
+            });
+            toast.success("Manual upload successful! You can now publish.");
+        } catch (error) {
+            console.error("Manual upload failed:", error);
+            setManualUploadStatus('error');
+            setUploadProgress(0);
+            toast.error("Upload failed");
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -122,18 +229,10 @@ export default function AdminZeroTrustPage() {
                 const usersData = await getAllUsers();
                 console.log("Users fetched:", usersData);
                 setUsers(usersData || []);
+                setStats(prev => ({ ...prev, totalUsers: usersData.length }));
             } catch (e) {
                 console.error("Failed to fetch users", e);
                 toast.error("Failed to fetch users");
-            }
-
-            // Fetch subscribers
-            try {
-                const subscribersData = await getActiveSubscribersDetailed();
-                console.log("Subscribers fetched:", subscribersData);
-                setActiveSubscribers(subscribersData || []);
-            } catch (e) {
-                console.error("Failed to fetch subscribers", e);
             }
 
             // Fetch developers
@@ -162,6 +261,41 @@ export default function AdminZeroTrustPage() {
             } catch (e) {
                 console.error("Failed to fetch all apps", e);
             }
+
+            // Fetch Flags
+            try {
+                const flagsData = await getAdminFlags();
+                setFlags(flagsData || []);
+            } catch (e) {
+                console.error("Failed to fetch flags", e);
+            }
+
+            // Fetch Purchases
+            try {
+                const purchasesData = await getAdminPurchases();
+                setPurchases(purchasesData || []);
+            } catch (e) {
+                console.error("Failed to fetch purchases", e);
+            }
+
+            // Fetch Contributions
+            try {
+                const contributionsData = await getAdminContributions();
+                setContributions(contributionsData || []);
+            } catch (e) {
+                console.error("Failed to fetch contributions", e);
+            }
+
+            // Fetch subscribers
+            try {
+                const subscribersData = await getActiveSubscribersDetailed();
+                setActiveSubscribers(subscribersData || []);
+                setStats(prev => ({ ...prev, activeSubscribers: subscribersData.length }));
+            } catch (e) { console.error(e); }
+
+            // Users count
+            // setStats(prev => ({ ...prev, totalUsers: users.length })); // users might not be set yet due to async state
+
 
         } catch (error) {
             console.error("Critical failure in fetching data", error);
@@ -211,6 +345,17 @@ export default function AdminZeroTrustPage() {
         try {
             const details = await getAdminAppDetails(app.id);
             setSelectedReviewApp(details);
+
+            // Pre-fill store info from developer details
+            // 'website' is on the App object (Official Website), not the developer relation
+            // 'supportEmail' is also on the App object
+            setExtraInfo({
+                ageRating: '4+',
+                copyright: `2025 ${details.developer?.fullName || ''}`,
+                website: details.website || '',
+                supportEmail: details.supportEmail || details.developer?.email || ''
+            });
+
             // Fetch history when opening review details
             await fetchAppHistoryForReview(app.id);
             setReviewAppOpen(true);
@@ -237,12 +382,79 @@ export default function AdminZeroTrustPage() {
         if (!selectedReviewApp) return;
         setProcessingReview(true);
         try {
-            await adminApproveApp(selectedReviewApp.id);
-            toast.success("App approved successfully");
+            // Prepare build details from dropped files if available
+            let buildDetails = null;
+
+            if (droppedFiles.length > 0) {
+                const fileNode = droppedFiles[0];
+                let uploadedPath = fileNode.path;
+                let buildId = fileNode.name;
+
+                // 1. Check if manually uploaded first
+                if (uploadedBuildInfo && manualUploadStatus === 'success') {
+                    uploadedPath = uploadedBuildInfo.path;
+                    buildId = uploadedBuildInfo.filename;
+                }
+                // 2. Otherwise upload now
+                else if (fileNode.rawFile) {
+                    try {
+                        toast.loading("Uploading build...");
+                        const uploadResult = await uploadAdminBuild(
+                            selectedReviewApp.id,
+                            selectedReviewApp.version || '1.0.0',
+                            'windows',
+                            fileNode.rawFile
+                        );
+                        toast.dismiss();
+                        uploadedPath = uploadResult.key; // S3 Key
+                        // The backend returns { key, url, filename }
+                        // BUT consistent with other parts, we might want to store just the filename or whatever schema uses.
+                        // based on schema: platforms: { [platform]: { buildId, sizeMB, path } }
+                        // The user's system seems to treat 'buildId' synonymous with 'filename' in the S3 key construction for downloads.
+                        buildId = uploadResult.filename;
+
+                        // Force a small delay to ensure S3 consistency if immediate download is attempted (optional but safer)
+                        await new Promise(r => setTimeout(r, 1000));
+
+                        toast.success("Build uploaded successfully");
+                    } catch (uploadError) {
+                        console.error("Upload failed", uploadError);
+                        toast.error("Failed to upload build file");
+                        setProcessingReview(false);
+                        return;
+                    }
+                }
+
+                buildDetails = {
+                    platform: 'windows',
+                    buildId: buildId,
+                    version: selectedReviewApp.version || '1.0.0',
+                    sizeMB: fileNode.size ? parseFloat((fileNode.size / (1024 * 1024)).toFixed(2)) : 0,
+                    path: uploadedPath,
+                    color: selectedReviewApp.color,
+                    privacyTracking,
+                    privacyLinked,
+                    ...extraInfo
+                };
+            } else {
+                // Even if no specific build dropped, send metadata if updated
+                buildDetails = {
+                    color: selectedReviewApp.color,
+                    privacyTracking,
+                    privacyLinked,
+                    ...extraInfo
+                };
+            }
+
+            await adminPublishApp(selectedReviewApp.id, buildDetails);
+            toast.success("App approved & published successfully");
             setReviewApps(prev => prev.filter(a => a.id !== selectedReviewApp.id));
             setReviewAppOpen(false);
+            // Refresh to see status update
+            fetchData();
         } catch (e) {
-            toast.error("Failed to approve app");
+            console.error(e);
+            toast.error("Failed to approve & publish app");
         } finally {
             setProcessingReview(false);
         }
@@ -777,8 +989,8 @@ export default function AdminZeroTrustPage() {
                     <Tabs defaultValue="users" className="space-y-8">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl font-semibold tracking-tight text-white">Database</h2>
-                                <p className="text-sm text-neutral-500 mt-1">Manage users, view plans, and monitor activity.</p>
+                                <h2 className="text-2xl font-semibold tracking-tight text-white">Data Console</h2>
+                                {/* <p className="text-sm text-neutral-500 mt-1">Manage users, view plans, and monitor activity.</p> */}
                             </div>
 
                             <div className="flex items-center gap-4 bg-neutral-900/50 p-1 rounded-lg border border-white/10">
@@ -818,6 +1030,24 @@ export default function AdminZeroTrustPage() {
                                         className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
                                     >
                                         Draft Apps
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="flags"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Flags
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="purchases"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Purchases
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="contributions"
+                                        className="text-xs px-4 rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-white text-neutral-400 transition-all"
+                                    >
+                                        Contributions
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
@@ -1243,7 +1473,7 @@ export default function AdminZeroTrustPage() {
                                                 <TableRow key={app.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
                                                     <TableCell className="pl-6 py-4 font-medium text-white">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`w-8 h-8 rounded-lg ${app.color || 'bg-white'} flex items-center justify-center`}>
+                                                            <div className={`w-8 h-8 rounded-lg bg-white flex items-center justify-center`}>
                                                                 <span className="text-black font-bold text-xs">{app.name.charAt(0).toUpperCase()}</span>
                                                             </div>
                                                             {app.name}
@@ -1387,12 +1617,183 @@ export default function AdminZeroTrustPage() {
                                 </Table>
                             </div>
                         </TabsContent>
+
+                        <TabsContent value="flags" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="text-neutral-400 font-medium pl-6">App Name</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Reason</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Reporter</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Description</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Date</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium pr-6">Status</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {flags.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-24 text-center text-neutral-500">
+                                                    No flagged apps found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            flags.map((flag) => (
+                                                <TableRow key={flag.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <TableCell className="font-medium text-white pl-6">
+                                                        {flag.appName}
+                                                        <div className="text-[10px] text-neutral-500 font-mono">{flag.appId}</div>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-300">
+                                                        <span className="px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-xs font-medium border border-red-500/20">
+                                                            {flag.reason}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm text-neutral-300">{flag.reporterName}</div>
+                                                        <div className="text-xs text-neutral-500">{flag.reporterEmail}</div>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 max-w-[300px] truncate" title={flag.description}>
+                                                        {flag.description}
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 font-mono text-xs">
+                                                        {new Date(flag.createdAt).toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <span className="text-xs uppercase font-bold text-neutral-500">{flag.status}</span>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="purchases" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="text-neutral-400 font-medium pl-6">Purchase ID</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">App Name</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">User</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Amount</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Status</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Date</TableHead>
+                                            <TableHead className="text-right text-neutral-400 font-medium pr-6">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {purchases.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="h-24 text-center text-neutral-500">
+                                                    No purchases found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            purchases.map((purchase) => (
+                                                <TableRow key={purchase.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <TableCell className="font-mono text-xs text-neutral-500 pl-6">
+                                                        {purchase.id}
+                                                    </TableCell>
+                                                    <TableCell className="text-white font-medium">
+                                                        {purchase.appName || 'Unknown'}
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 text-xs font-mono">
+                                                        {purchase.userId}
+                                                    </TableCell>
+                                                    <TableCell className="text-emerald-400 font-bold">
+                                                        {/* Assuming amount is raw number now */}
+                                                        ₹{purchase.amount ? parseFloat(purchase.amount).toFixed(2) : '0.00'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${purchase.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                            'bg-neutral-500/10 text-neutral-400'
+                                                            }`}>
+                                                            {purchase.status}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 font-mono text-xs">
+                                                        {new Date(purchase.createdAt).toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-neutral-400 hover:text-white">
+                                                            <MoreHorizontal className="w-4 h-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="contributions" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="rounded-2xl border border-white/10 bg-neutral-900/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+                                <Table>
+                                    <TableHeader className="bg-neutral-900/80 border-b border-white/5">
+                                        <TableRow className="border-none hover:bg-transparent">
+                                            <TableHead className="text-neutral-400 font-medium pl-6">Contribution ID</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">App</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Contributor</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Amount</TableHead>
+                                            <TableHead className="text-neutral-400 font-medium">Date</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {contributions.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-neutral-500">
+                                                    No contributions found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            contributions.map((contribution) => (
+                                                <TableRow key={contribution.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <TableCell className="font-mono text-xs text-neutral-500 pl-6">
+                                                        {contribution.invoiceNumber}
+                                                    </TableCell>
+                                                    <TableCell className="text-white font-medium">
+                                                        <div className="flex items-center gap-2">
+                                                            {contribution.appIcon && (
+                                                                <div className="w-6 h-6 rounded bg-neutral-800 overflow-hidden border border-white/10">
+                                                                    <img
+                                                                        src={typeof contribution.appIcon === 'string' ? contribution.appIcon : (contribution.appIcon['512'] || Object.values(contribution.appIcon)[0]) as string}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            {contribution.appName || 'Unknown'}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 text-xs">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-neutral-300 font-medium">{contribution.user?.fullName}</span>
+                                                            <span className="text-[10px] text-neutral-500">{contribution.user?.email}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-green-400 font-bold">
+                                                        ₹{contribution.amount ? parseFloat(contribution.amount).toFixed(2) : '0.00'}
+                                                    </TableCell>
+                                                    <TableCell className="text-neutral-400 font-mono text-xs">
+                                                        {new Date(contribution.createdAt).toLocaleString()}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </TabsContent>
                     </Tabs>
                 </div>
 
                 {/* Review App Dialog */}
                 <Dialog open={reviewAppOpen} onOpenChange={setReviewAppOpen}>
-                    <DialogContent className="w-[55vw] max-w-none bg-[#000] rounded-3xl border-white/10 text-white shadow-2xl p-0 gap-0 overflow-hidden max-h-[95vh] flex flex-col">
+                    <DialogContent className="w-[90vw] max-w-none bg-[#000] rounded-3xl border-white/10 text-white shadow-2xl p-0 gap-0 overflow-hidden h-[90vh] flex flex-col">
                         <DialogHeader className="p-6 border-b border-white/10 bg-neutral-900/20 backdrop-blur-sm sticky top-0 z-10">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -1413,15 +1814,25 @@ export default function AdminZeroTrustPage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {selectedReviewApp?.status === 'terminated' ? (
-                                        <Button
-                                            onClick={handleReopenApp}
-                                            disabled={processingReview}
-                                            className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white rounded-full font-semibold"
-                                        >
-                                            {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reopen for Review"}
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                onClick={handleReopenApp}
+                                                disabled={processingReview}
+                                                className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white rounded-full font-semibold"
+                                            >
+                                                {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reopen for Review"}
+                                            </Button>
+                                        </div>
                                     ) : (
-                                        <>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                onClick={() => setRegisterBuildOpen(!registerBuildOpen)}
+                                                variant="outline"
+                                                className={`border-white/5 font-semibold cursor-pointer rounded-full mr-2 ${registerBuildOpen ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50' : 'text-white hover:bg-white/10'}`}
+                                            >
+                                                <CloudUpload className="w-4 h-4 mr-2" />
+                                                Register Build
+                                            </Button>
                                             <Button
                                                 onClick={handleTerminateApp}
                                                 disabled={processingReview}
@@ -1445,7 +1856,7 @@ export default function AdminZeroTrustPage() {
                                             >
                                                 {processingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve & Publish"}
                                             </Button>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -1473,189 +1884,783 @@ export default function AdminZeroTrustPage() {
                             )}
                         </DialogHeader>
 
-                        <div className="p-6 overflow-y-auto space-y-8 flex-1">
-                            <div className="grid grid-cols-3 gap-8">
-                                <div className="col-span-2 space-y-8">
-                                    <div className="space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">Descriptions</Label>
+                        <Tabs defaultValue="build" className="flex flex-1 flex-col overflow-hidden h-full">
+                            <div className="px-6 border-b border-white/5 bg-neutral-900/10 shrink-0">
+                                <TabsList className="bg-transparent border-0 p-0 h-12 w-full justify-start gap-6">
+                                    <TabsTrigger value="build" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white/10 data-[state=active]:text-white text-neutral-500 rounded-none h-full px-0 font-medium shadow-none">Overview & Build</TabsTrigger>
+                                    <TabsTrigger value="privacy" className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white/10 data-[state=active]:text-white text-neutral-500 rounded-none h-full px-0 font-medium shadow-none">Privacy & Info</TabsTrigger>
+                                </TabsList>
+                            </div>
 
-                                        <div>
-                                            <Label className="text-xs font-semibold text-neutral-400 mb-1 block">Short Description</Label>
-                                            <p className="text-sm text-white bg-white/5 p-3 rounded-lg border border-white/5">{selectedReviewApp?.shortDescription || "N/A"}</p>
-                                        </div>
-
-                                        <div>
-                                            <Label className="text-xs font-semibold text-neutral-400 mb-1 block">Full Description</Label>
-                                            <div className="prose prose-invert max-w-none text-sm text-neutral-300 bg-white/5 p-3 rounded-lg border border-white/5">
-                                                {selectedReviewApp?.fullDescription || "N/A"}
-                                            </div>
-                                        </div>
+                            <TabsContent value="build" className="flex-1 overflow-hidden flex h-full mt-0 border-0 p-0 outline-none data-[state=inactive]:hidden">
+                                {/* Sidebar - File Tree */}
+                                <div className="w-[320px] bg-black/20 border-r border-white/5 flex flex-col h-full">
+                                    <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-neutral-900/20 backdrop-blur-sm">
+                                        <Package className="w-4 h-4 text-emerald-400" />
+                                        <span className="text-sm font-semibold text-white tracking-wide">Build Explorer</span>
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">App Assets</Label>
-
-                                        {/* Banner */}
-                                        {selectedReviewApp?.bannerUrl && (
-                                            <div>
-                                                <Label className="text-xs font-semibold text-neutral-400 mb-2 block">Feature Banner</Label>
-                                                <div className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5 relative">
-                                                    <img src={selectedReviewApp.bannerUrl} className="w-full h-full object-cover" />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Video */}
-                                        {selectedReviewApp?.videoUrl && (
-                                            <div>
-                                                <Label className="text-xs font-semibold text-neutral-400 mb-2 block">Preview Video</Label>
-                                                <div className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5 relative">
-                                                    <video src={selectedReviewApp.videoUrl} controls className="w-full h-full object-cover" />
-                                                </div>
+                                    <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                        {selectedReviewApp?.buildUrl ? (
+                                            <BuildFileTree url={selectedReviewApp.buildUrl} onSizeCalculated={setBundleSize} onFileSelect={setSelectedFile} onZipLoaded={setLoadedZip} />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-48 text-neutral-500 gap-2">
+                                                <Folder className="w-8 h-8 opacity-20" />
+                                                <span className="text-xs">No build uploaded</span>
                                             </div>
                                         )}
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-white tracking-wider">Screenshots</Label>
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                            {selectedReviewApp?.screenshots?.map((url: string, i: number) => (
-                                                <div key={i} className="aspect-video bg-white/5 rounded-lg overflow-hidden border border-white/5">
-                                                    <img src={url} className="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(url, '_blank')} />
-                                                </div>
-                                            ))}
-                                            {(!selectedReviewApp?.screenshots || selectedReviewApp.screenshots.length === 0) && (
-                                                <div className="text-neutral-500 text-sm italic col-span-3 text-center py-8">No screenshots provided.</div>
-                                            )}
+                                    {/* Meta Quick View */}
+                                    <div className="p-4 border-t border-white/5 bg-neutral-900/10 space-y-3">
+                                        <div>
+                                            <div className="text-[10px] uppercase font-bold text-neutral-500 mb-1">Bundle Size</div>
+                                            <div className="text-xs text-white font-mono">{bundleSize || "Loading..."}</div>
                                         </div>
-                                    </div>
-
-                                    {/* Reviewer Info Section */}
-                                    {selectedReviewApp?.reviewerInfo && (
-                                        <div className="space-y-4 pt-6 border-t border-white/5">
-                                            <Label className="text-xs uppercase font-bold text-white tracking-wider">Reviewer Information</Label>
-
-                                            <div className="grid gap-4 bg-white/5 p-4 rounded-xl border border-white/5 review-info-block">
-                                                {selectedReviewApp.reviewerInfo.testCredentials && (
-                                                    <div className="space-y-1">
-                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Test Credentials</div>
-                                                        <pre className="text-xs bg-black/30 p-2 rounded text-neutral-300 font-mono whitespace-pre-wrap border border-white/5">
-                                                            {selectedReviewApp.reviewerInfo.testCredentials}
-                                                        </pre>
-                                                    </div>
-                                                )}
-
-                                                {selectedReviewApp.reviewerInfo.functionality && (
-                                                    <div className="space-y-1">
-                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Functionality</div>
-                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
-                                                            {selectedReviewApp.reviewerInfo.functionality}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {selectedReviewApp.reviewerInfo.limitations && (
-                                                    <div className="space-y-1">
-                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Known Limitations</div>
-                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
-                                                            {selectedReviewApp.reviewerInfo.limitations}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {selectedReviewApp.reviewerInfo.guidance && (
-                                                    <div className="space-y-1">
-                                                        <div className="text-xs text-neutral-400 font-medium uppercase">Review Guidance</div>
-                                                        <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">
-                                                            {selectedReviewApp.reviewerInfo.guidance}
-                                                        </p>
-                                                    </div>
-                                                )}
+                                        <div>
+                                            <div className="text-[10px] uppercase font-bold text-neutral-500 mb-1">SHA Checksum</div>
+                                            <div className="text-[10px] text-neutral-400 font-mono break-all leading-tight">
+                                                {selectedReviewApp?.verifyKey || 'N/A'}
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+                                </div>
 
-                                    {/* App Activity History */}
-                                    {historyData && historyData.length > 0 && (
-                                        <div className="space-y-4 pt-6 border-t border-white/5">
-                                            <Label className="text-xs uppercase font-bold text-white tracking-wider flex items-center gap-2">
-                                                <History className="w-4 h-4" />
-                                                App Activity History
-                                            </Label>
-                                            <div className="rounded-xl border border-white/10 bg-black/20 overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                                                <div className="divide-y divide-white/5">
-                                                    {historyData.map((record, i) => (
-                                                        <div key={i} className="p-4 hover:bg-white/[0.02] transition-colors">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <span className={`text-xs font-bold uppercase ${record.action === 'REJECTED' ? 'text-red-400' :
-                                                                    record.action === 'TERMINATED' ? 'text-red-500' :
-                                                                        record.action === 'REOPENED' ? 'text-emerald-400' :
-                                                                            'text-neutral-400'
-                                                                    }`}>
-                                                                    {record.action || 'REJECTED'}
-                                                                </span>
-                                                                <span className="text-xs text-neutral-500">
-                                                                    {new Date(record.createdAt).toLocaleString()}
-                                                                </span>
+                                {/* Main Content */}
+                                <div className="flex-1 overflow-y-auto bg-gradient-to-br from-neutral-900/10 to-transparent">
+                                    <div className="p-8 space-y-8 max-w-5xl mx-auto">
+
+                                        {/* Register Build Panel */}
+                                        {registerBuildOpen && (
+                                            <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <Label className="text-xs uppercase font-bold text-indigo-400 tracking-wider flex items-center gap-2">
+                                                        <CloudUpload className="w-4 h-4" />
+                                                        Build Registration
+                                                    </Label>
+                                                    <Button size="sm" variant="ghost" onClick={() => setRegisterBuildOpen(false)} className="h-6 w-6 p-0 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white">
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+
+                                                <div
+                                                    className={`rounded-2xl border border-dashed transition-all duration-300 p-8 ${isDraggingOver
+                                                        ? 'border-indigo-500 bg-indigo-500/10'
+                                                        : 'border-white/10 bg-black/20 hover:border-white/20'
+                                                        }`}
+                                                    onDragOver={(e) => {
+                                                        e.preventDefault();
+                                                        setIsDraggingOver(true);
+                                                    }}
+                                                    onDragLeave={(e) => {
+                                                        e.preventDefault();
+                                                        setIsDraggingOver(false);
+                                                    }}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        setIsDraggingOver(false);
+
+                                                        // Handle OS File Drop
+                                                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                                            const file = e.dataTransfer.files[0];
+                                                            // Create a "node-like" object but with the raw File
+                                                            const fileNode = {
+                                                                name: file.name,
+                                                                size: file.size,
+                                                                // Special flag or prop to hold the raw file
+                                                                rawFile: file,
+                                                                path: file.name // Temporary path
+                                                            };
+                                                            setDroppedFiles([fileNode]);
+
+                                                            // Reset and start upload progress simulation (real upload happens on Approve)
+                                                            setUploadProgress(0);
+                                                            const interval = setInterval(() => {
+                                                                setUploadProgress(prev => {
+                                                                    if (prev >= 100) {
+                                                                        clearInterval(interval);
+                                                                        return 100;
+                                                                    }
+                                                                    return prev + 10;
+                                                                });
+                                                            }, 100);
+                                                            return;
+                                                        }
+
+                                                        const data = e.dataTransfer.getData("application/json");
+                                                        if (data) {
+                                                            try {
+                                                                const node = JSON.parse(data);
+
+                                                                // Initial state with node info (no file yet)
+                                                                setDroppedFiles([node]);
+
+                                                                // Extract content if available (for "Remote Server" drops) to enable Re-Upload
+                                                                if (loadedZip) {
+                                                                    const zipFile = loadedZip.file(node.path);
+                                                                    if (zipFile) {
+                                                                        toast.promise(
+                                                                            zipFile.async('blob'),
+                                                                            {
+                                                                                loading: 'Extracting remote file...',
+                                                                                success: (blob) => {
+                                                                                    const file = new File([blob], node.name, { type: 'application/octet-stream' });
+                                                                                    setDroppedFiles([{
+                                                                                        ...node,
+                                                                                        rawFile: file, // Attach raw file to enable "Upload Now" button
+                                                                                        size: blob.size
+                                                                                    }]);
+                                                                                    setManualUploadStatus('idle');
+                                                                                    setUploadedBuildInfo(null);
+                                                                                    return 'Remote file ready for upload';
+                                                                                },
+                                                                                error: 'Failed to extract remote file'
+                                                                            }
+                                                                        );
+                                                                    }
+                                                                }
+
+                                                                // Simulate upload visualization
+                                                                setUploadProgress(0);
+                                                                setTimeout(() => setUploadProgress(30), 200);
+                                                                setTimeout(() => setUploadProgress(60), 600);
+                                                                setTimeout(() => setUploadProgress(90), 1000);
+                                                                setTimeout(() => setUploadProgress(100), 1500);
+                                                            } catch (err) {
+                                                                console.error("Drop error", err);
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${isDraggingOver ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/5 text-neutral-500'
+                                                            }`}>
+                                                            <Folder className="w-8 h-8" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-white font-semibold">Drag & Drop build file here</h4>
+                                                            <p className="text-sm text-neutral-500 mt-1">From the Build Explorer sidebar</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Existing Build Info */}
+                                                    {selectedReviewApp?.currentBuild && (
+                                                        <div className="mt-6 p-4 rounded-xl bg-neutral-900/50 border border-white/10 text-left">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <Package className="w-4 h-4 text-neutral-400" />
+                                                                <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Current Build Status</span>
                                                             </div>
-                                                            {record.reason && (
-                                                                <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-wrap">
-                                                                    {record.reason}
-                                                                </p>
+                                                            <div className="space-y-1">
+                                                                <div className="flex justify-between items-center text-sm">
+                                                                    <span className="text-neutral-500">Version:</span>
+                                                                    <span className="text-white font-mono">{selectedReviewApp.currentBuild.version}</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-center text-sm">
+                                                                    <span className="text-neutral-500">Platform:</span>
+                                                                    <div className="flex gap-1">
+                                                                        {Object.keys(selectedReviewApp.currentBuild.platforms || {}).map(p => (
+                                                                            <span key={p} className="text-xs bg-white/10 px-1.5 py-0.5 rounded text-white capitalize">{p}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                {/* Show details for the first platform found */}
+                                                                {(() => {
+                                                                    const platforms = selectedReviewApp.currentBuild.platforms || {};
+                                                                    const firstPlatform = Object.values(platforms)[0] as any;
+                                                                    if (firstPlatform) {
+                                                                        return (
+                                                                            <>
+                                                                                <div className="flex justify-between items-center text-sm">
+                                                                                    <span className="text-neutral-500">File:</span>
+                                                                                    <span className="text-emerald-400 font-mono truncate max-w-[200px]" title={firstPlatform.buildId}>{firstPlatform.buildId}</span>
+                                                                                </div>
+                                                                                <div className="flex justify-between items-center text-sm">
+                                                                                    <span className="text-neutral-500">Size:</span>
+                                                                                    <span className="text-white font-mono">{firstPlatform.sizeMB} MB</span>
+                                                                                </div>
+                                                                            </>
+                                                                        );
+                                                                    }
+                                                                    return null;
+                                                                })()}
+                                                                <div className="flex justify-between items-center text-sm">
+                                                                    <span className="text-neutral-500">Last Updated:</span>
+                                                                    <span className="text-neutral-400">{new Date(selectedReviewApp.currentBuild.updatedAt).toLocaleDateString()}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {droppedFiles.length > 0 && (
+                                                        <div className="mt-8 space-y-4">
+                                                            <div className="flex items-center justify-between text-xs text-neutral-400">
+                                                                <span className="uppercase font-bold tracking-wider text-emerald-500">NEW BUILD VERIFIED</span>
+                                                            </div>
+
+                                                            <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/20 overflow-hidden">
+                                                                {droppedFiles.map((file: any, i: number) => (
+                                                                    <div key={i} className="flex flex-col gap-3 p-4 border-b border-white/5 last:border-0 relative">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                                                                                <FileIcon className="w-5 h-5" />
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0 text-left">
+                                                                                <div className="text-sm font-bold text-white truncate">{file.name}</div>
+                                                                                {file.rawFile ? (
+                                                                                    <div className="text-xs text-emerald-500/70 font-mono mt-0.5">Ready for Upload • {(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+                                                                                ) : (
+                                                                                    <div className="text-xs text-blue-400/70 font-mono mt-0.5">Remote Build Selected • {(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+                                                                                )}
+                                                                            </div>
+                                                                            {manualUploadStatus === 'idle' && (
+                                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-500 hover:text-red-400" onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setDroppedFiles(droppedFiles.filter((f: any) => f.path !== file.path));
+                                                                                    setManualUploadStatus('idle');
+                                                                                    setUploadedBuildInfo(null);
+                                                                                }}>
+                                                                                    <X className="w-4 h-4" />
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Upload Progress "Proof" */}
+                                                                        {(processingReview || manualUploadStatus === 'uploading') && (
+                                                                            <div className="space-y-1.5 mt-2 bg-black/40 p-3 rounded-lg border border-white/5">
+                                                                                <div className="flex justify-between text-[10px] font-medium uppercase tracking-wider">
+                                                                                    <span className="text-white font-medium animate-pulse">Uploading to LoopSync CLoud Console...</span>
+                                                                                    <span className="text-white font-medium">{uploadProgress}%</span>
+                                                                                </div>
+                                                                                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                                                                    <div className="h-full bg-indigo-500 transition-all duration-300 w-full origin-left" style={{ width: `${uploadProgress}%` }}></div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {manualUploadStatus === 'error' && (
+                                                                            <div className="mt-2 text-xs text-red-500 font-medium bg-red-500/10 p-2 rounded border border-red-500/20">
+                                                                                Upload failed. Please try again.
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Manual Upload Actions */}
+                                                                        {manualUploadStatus === 'idle' && !uploadedBuildInfo && file.rawFile && (
+                                                                            <div className="mt-2 flex justify-end">
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="secondary"
+                                                                                    className="h-7 text-xs bg-indigo-600 text-white font-semibold hover:bg-indigo-500 border border-indigo-600"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleManualUpload(file);
+                                                                                    }}
+                                                                                >
+                                                                                    <CloudUpload className="w-3 h-3 mr-1.5" />
+                                                                                    Upload New Build
+                                                                                </Button>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {uploadedBuildInfo && (
+                                                                            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-400 font-medium bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                                                                                <CheckCircle2 className="w-3 h-3" />
+                                                                                Verified & Upload Completed
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <input
+                                                        type="file"
+                                                        ref={fileInputRef}
+                                                        className="hidden"
+                                                        onChange={handleFileSelect}
+                                                        accept=".exe,.zip,.dmg,.pkg,.deb,.rpm,.AppImage,.msi" // Basic restriction
+                                                    />
+                                                </div>
+
+                                                {/* Color Palette Section */}
+                                                {/* Color Palette Section */}
+                                                <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-white/5">
+                                                    {/* Left: Palette Selection */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">
+                                                                Brand Color Palette
+                                                            </Label>
+                                                            <span className="text-[10px] text-neutral-600 font-medium bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                                                Select a preset
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="bg-black/20 rounded-2xl p-4 border border-white/5 shadow-inner">
+                                                            <div className="grid grid-cols-6 gap-3">
+                                                                {['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'].map(c => (
+                                                                    <button
+                                                                        key={c}
+                                                                        className={`w-9 h-9 rounded-full transition-all duration-300 relative group ${selectedReviewApp?.color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0A0A0A] scale-110' : 'hover:scale-105 hover:ring-2 hover:ring-white/20 hover:ring-offset-1 hover:ring-offset-[#0A0A0A]'}`}
+                                                                        style={{ backgroundColor: c }}
+                                                                        onClick={() => {
+                                                                            if (selectedReviewApp) {
+                                                                                setSelectedReviewApp({ ...selectedReviewApp, color: c });
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        {selectedReviewApp?.color === c && (
+                                                                            <Check className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-shadow-md" strokeWidth={3} />
+                                                                        )}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-4 px-1">
+                                                            <div className="flex-1 h-px bg-white/5"></div>
+                                                            <span className="text-[10px] text-neutral-600 font-medium">OR</span>
+                                                            <div className="flex-1 h-px bg-white/5"></div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                                            <div className="w-10 h-10 rounded-lg shadow-inner ring-1 ring-white/10" style={{ backgroundColor: selectedReviewApp?.color || '#ffffff' }} />
+                                                            <div className="space-y-0.5">
+                                                                <div className="text-[10px] uppercase font-bold text-neutral-500 tracking-wide">Active Color</div>
+                                                                <div className="text-sm font-mono text-white tracking-wide">{selectedReviewApp?.color || 'N/A'}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Right: Logo Picker */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">
+                                                                Pick from Logo
+                                                            </Label>
+                                                            <span className="text-[10px] text-neutral-600 font-medium bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                                                Click pixels to sample
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="bg-black/20 rounded-2xl p-6 border border-white/5 shadow-inner flex flex-col items-center justify-center min-h-[200px] relative group">
+                                                            {selectedReviewApp?.icons?.['512'] ? (
+                                                                <>
+                                                                    <div className="relative w-32 h-32 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_30px_-5px_var(--highlight-color)]" style={{ '--highlight-color': selectedReviewApp?.color || '#ffffff' } as React.CSSProperties}>
+                                                                        <div className="absolute inset-0 bg-[#0A0A0A] bg-[url('https://transparenttextures.com/patterns/dark-matter.png')] opacity-50"></div>
+                                                                        <img
+                                                                            src={selectedReviewApp.icons['512']}
+                                                                            alt="App Icon"
+                                                                            crossOrigin="anonymous"
+                                                                            className="relative w-full h-full object-contain p-4 cursor-crosshair z-10"
+                                                                            onClick={(e) => {
+                                                                                const img = e.currentTarget;
+                                                                                const canvas = document.createElement('canvas');
+                                                                                canvas.width = img.naturalWidth;
+                                                                                canvas.height = img.naturalHeight;
+                                                                                const ctx = canvas.getContext('2d');
+                                                                                if (ctx) {
+                                                                                    ctx.drawImage(img, 0, 0);
+                                                                                    const rect = img.getBoundingClientRect();
+                                                                                    const x = (e.clientX - rect.left) * (img.naturalWidth / rect.width);
+                                                                                    const y = (e.clientY - rect.top) * (img.naturalHeight / rect.height);
+                                                                                    const pixel = ctx.getImageData(x, y, 1, 1).data;
+                                                                                    const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(x => x.toString(16).padStart(2, '0')).join('');
+                                                                                    if (selectedReviewApp) {
+                                                                                        setSelectedReviewApp({ ...selectedReviewApp, color: hex });
+                                                                                        toast.success(`Color picked: ${hex}`);
+                                                                                    }
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="mt-4 text-center space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                                        <p className="text-xs font-medium text-neutral-300">Intelligent Color Sampler</p>
+                                                                        <p className="text-[10px] text-neutral-500">Click anywhere on the logo icon to instantly extract and apply the brand theme.</p>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="flex flex-col items-center justify-center text-neutral-600 gap-2">
+                                                                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
+                                                                        <AppWindow className="w-6 h-6 opacity-20" />
+                                                                    </div>
+                                                                    <span className="text-xs">No icon available</span>
+                                                                </div>
                                                             )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {selectedFile && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-xs uppercase font-bold text-white tracking-wider flex items-center gap-2">
+                                                        <FileText className="w-4 h-4 text-emerald-400" />
+                                                        File Preview: <span className="text-emerald-300 normal-case font-mono">{selectedFile.name}</span>
+                                                    </Label>
+                                                    <Button size="sm" variant="ghost" onClick={() => setSelectedFile(null)} className="h-6 text-neutral-500 hover:text-white">
+                                                        Close Preview
+                                                    </Button>
+                                                </div>
+
+                                                <div className="rounded-xl border border-white/10 bg-[#0A0A0A] overflow-hidden shadow-2xl">
+                                                    {selectedFile.type === 'text' ? (
+                                                        <ScrollArea className="h-[500px] w-full">
+                                                            <div className="p-4">
+                                                                <pre className="text-xs font-mono text-neutral-300 whitespace-pre-wrap break-all leading-relaxed">
+                                                                    {selectedFile.content}
+                                                                </pre>
+                                                            </div>
+                                                        </ScrollArea>
+                                                    ) : selectedFile.type === 'image' ? (
+                                                        <div className="h-[500px] w-full flex items-center justify-center bg-[url('https://transparenttextures.com/patterns/dark-matter.png')]">
+                                                            <img src={selectedFile.content || ""} className="max-w-full max-h-full object-contain" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-64 flex flex-col items-center justify-center text-neutral-500 gap-4">
+                                                            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5">
+                                                                {selectedFile.name.endsWith('.exe') ? (
+                                                                    <AppWindow className="w-8 h-8 text-neutral-400" />
+                                                                ) : (
+                                                                    <FileWarning className="w-8 h-8 text-neutral-400" />
+                                                                )}
+                                                            </div>
+                                                            <div className="text-center space-y-1">
+                                                                <p className="text-sm font-medium text-neutral-300">Preview not available</p>
+                                                                <p className="text-xs text-neutral-500">
+                                                                    This file type ({selectedFile.name.split('.').pop()}) cannot be viewed in the browser.
+                                                                </p>
+                                                            </div>
+                                                            {selectedFile.content && (
+                                                                <Button size="sm" variant="outline" asChild className="mt-2 border-white/10 hover:bg-white/5 text-white hover:text-white">
+                                                                    <a href={selectedFile.content || "#"} download={selectedFile.name}>
+                                                                        <Download className="w-4 h-4 mr-2" />
+                                                                        Download File
+                                                                    </a>
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* App Header & Overview */}
+                                        <div className="grid grid-cols-3 gap-8">
+                                            <div className="col-span-2 space-y-6">
+                                                <div>
+                                                    <Label className="text-xs uppercase font-bold text-emerald-500/80 mb-2 block tracking-wider">About this App</Label>
+                                                    <h3 className="text-2xl font-bold text-white mb-2">{selectedReviewApp?.shortDescription}</h3>
+                                                    <div className="prose prose-invert prose-sm max-w-none text-neutral-300 leading-relaxed">
+                                                        {selectedReviewApp?.fullDescription || "No detailed description provided."}
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-6 border-t border-white/5">
+                                                    <Label className="text-xs uppercase font-bold text-emerald-500/80 mb-4 block tracking-wider">Media Gallery</Label>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        {selectedReviewApp?.bannerUrl && (
+                                                            <div className="col-span-2 aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 relative group">
+                                                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold text-white z-10">FEATURE BANNER</div>
+                                                                <img src={selectedReviewApp.bannerUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                            </div>
+                                                        )}
+                                                        {selectedReviewApp?.videoUrl && (
+                                                            <div className="col-span-2 aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 relative group">
+                                                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold text-white z-10">PREVIEW VIDEO</div>
+                                                                <video src={selectedReviewApp.videoUrl} controls className="w-full h-full object-cover" />
+                                                            </div>
+                                                        )}
+                                                        {selectedReviewApp?.screenshots?.map((url: string, i: number) => (
+                                                            <div key={i} className="aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 relative group cursor-pointer" onClick={() => window.open(url, '_blank')}>
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                                    <Eye className="w-6 h-6 text-white drop-shadow-lg" />
+                                                                </div>
+                                                                <img src={url} className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-span-1 space-y-6">
+                                                {/* Info Cards */}
+                                                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 backdrop-blur-sm">
+                                                    <Label className="text-xs uppercase font-bold text-neutral-400 tracking-wider">App Details</Label>
+
+                                                    <div className="space-y-3">
+                                                        <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
+                                                            <span className="text-sm text-neutral-400">Version</span>
+                                                            <span className="text-sm font-mono text-white">{selectedReviewApp?.version || '1.0.0'}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
+                                                            <span className="text-sm text-neutral-400">Pricing</span>
+                                                            <span className="text-sm text-white capitalize">{selectedReviewApp?.pricingModel}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
+                                                            <span className="text-sm text-neutral-400">Price</span>
+                                                            <span className="text-sm text-white">₹{selectedReviewApp?.price}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
+                                                            <span className="text-sm text-neutral-400">Category</span>
+                                                            <span className="text-sm text-white">Productivity</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center py-1 border-b border-white/5 pb-2">
+                                                            <span className="text-sm text-neutral-400">Platforms</span>
+                                                            <div className="flex gap-1 flex-wrap justify-end max-w-[60%]">
+                                                                {selectedReviewApp?.platforms && selectedReviewApp.platforms.length > 0 ? (
+                                                                    selectedReviewApp.platforms.map((p: string) => (
+                                                                        <span key={p} className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white capitalize border border-white/5">{p}</span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-sm text-white">All Platforms</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center py-1">
+                                                            <span className="text-sm text-neutral-400">Availability</span>
+                                                            <span className="text-sm text-white max-w-[150px] truncate text-right" title={selectedReviewApp?.distributionRegions?.join(', ')}>
+                                                                {selectedReviewApp?.distributionMode === 'global'
+                                                                    ? 'Global'
+                                                                    : (selectedReviewApp?.distributionRegions && selectedReviewApp.distributionRegions.length > 0
+                                                                        ? selectedReviewApp.distributionRegions.join(', ')
+                                                                        : 'Global')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-2">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {selectedReviewApp?.tags?.map((tag: string) => (
+                                                                <span key={tag} className="px-2 py-1 rounded-md bg-white/10 text-[10px] font-medium text-neutral-300 border border-white/5 uppercase tracking-wide">{tag}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Reviewer Info */}
+                                                {selectedReviewApp?.reviewerInfo && (
+                                                    <div className="rounded-2xl border border-white/10 overflow-hidden">
+                                                        <div className="bg-white/5 p-4 py-3 border-b border-white/5 flex items-center gap-2">
+                                                            <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400">
+                                                                <ShieldCheck className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <Label className="text-xs uppercase font-bold text-neutral-300 tracking-wider">App Review Information</Label>
+                                                        </div>
+
+                                                        <div className="p-4 space-y-6 bg-black/20">
+                                                            {selectedReviewApp.reviewerInfo.testCredentials && (
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <Key className="w-3 h-3" />
+                                                                        Test Access (Credentials & Steps)
+                                                                    </Label>
+                                                                    <div className="relative group">
+                                                                        <pre className="text-xs bg-black/40 p-3 rounded-xl border border-white/5 text-neutral-300 font-mono whitespace-pre-wrap break-all pr-10 hover:border-white/10 transition-colors">
+                                                                            {selectedReviewApp.reviewerInfo.testCredentials}
+                                                                        </pre>
+                                                                        <Button
+                                                                            size="icon"
+                                                                            variant="ghost"
+                                                                            className="absolute right-1 top-1 h-7 w-7 text-neutral-500 hover:text-white hover:bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                                            onClick={() => {
+                                                                                navigator.clipboard.writeText(selectedReviewApp.reviewerInfo.testCredentials || "");
+                                                                                toast.success("Credentials copied to clipboard");
+                                                                            }}
+                                                                        >
+                                                                            <Copy className="w-3.5 h-3.5" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {selectedReviewApp.reviewerInfo.functionality && (
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <AppWindow className="w-3 h-3" />
+                                                                        App Functionality Overview
+                                                                    </Label>
+                                                                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                                                        <p className="text-xs text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                                            {selectedReviewApp.reviewerInfo.functionality}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {selectedReviewApp.reviewerInfo.limitations && (
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <AlertTriangle className="w-3 h-3" />
+                                                                        Known Limitations
+                                                                    </Label>
+                                                                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                                                        <p className="text-xs text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                                            {selectedReviewApp.reviewerInfo.limitations}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {selectedReviewApp.reviewerInfo.guidance && (
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <FileText className="w-3 h-3" />
+                                                                        Review Guidance
+                                                                    </Label>
+                                                                    <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                                                        <p className="text-xs text-neutral-300 leading-relaxed whitespace-pre-line">
+                                                                            {selectedReviewApp.reviewerInfo.guidance}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Download Action */}
+                                                {selectedReviewApp?.buildUrl && (
+                                                    <Button className="w-full h-12 bg-white text-black hover:bg-neutral-200 rounded-xl font-bold shadow-lg shadow-white/5" asChild>
+                                                        <a href={selectedReviewApp.buildUrl} download>
+                                                            <Code2 className="w-4 h-4 mr-2" />
+                                                            Download Source Build
+                                                        </a>
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* History Section */}
+                                        {historyData && historyData.length > 0 && (
+                                            <div className="pt-8 border-t border-white/5">
+                                                <Label className="text-xs uppercase font-bold text-neutral-500 mb-4 block tracking-wider">Review History</Label>
+                                                <div className="relative border-l border-white/10 ml-3 space-y-8">
+                                                    {historyData.map((record, i) => (
+                                                        <div key={i} className="pl-8 relative">
+                                                            <div className={`absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full border-2 border-[#0A0A0A] ${record.action === 'REJECTED' ? 'bg-red-500' :
+                                                                record.action === 'TERMINATED' ? 'bg-red-700' :
+                                                                    record.action === 'REOPENED' ? 'bg-emerald-500' :
+                                                                        'bg-neutral-600'
+                                                                }`}></div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className={`text-sm font-bold ${record.action === 'REJECTED' ? 'text-red-400' : 'text-white'
+                                                                        }`}>{record.action}</span>
+                                                                    <span className="text-xs text-neutral-500">{new Date(record.createdAt).toLocaleString()}</span>
+                                                                </div>
+                                                                {record.reason && (
+                                                                    <p className="text-sm text-neutral-400 bg-white/5 p-3 rounded-lg border border-white/5 mt-1 inline-block">
+                                                                        "{record.reason}"
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="col-span-1 space-y-6">
-                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Distribution</Label>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-neutral-400">Pricing</span>
-                                            <span className="text-white capitalize">{selectedReviewApp?.pricingModel}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-neutral-400">Price</span>
-                                            <span className="text-white">₹{selectedReviewApp?.price}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-neutral-400">Region</span>
-                                            <span className="text-white capitalize">{selectedReviewApp?.distributionMode}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Build Artifacts</Label>
-                                        {selectedReviewApp?.buildUrl ? (
-                                            <Button className="w-full bg-white font-semibold text-black hover:bg-neutral-200 rounded-xl" asChild>
-                                                <a href={selectedReviewApp.buildUrl} download>
-                                                    <Code2 className="w-4 h-4 mr-2" />
-                                                    Download Build
-                                                </a>
-                                            </Button>
-                                        ) : (
-                                            <div className="text-sm text-neutral-500">No build uploaded.</div>
                                         )}
-                                        <div className="text-xs text-neutral-500 font-mono break-all border-t border-white/5 pt-3 mt-3">
-                                            SHA: {selectedReviewApp?.verifyKey}
+                                    </div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="privacy" className="flex-1 overflow-y-auto bg-neutral-900/50 p-8 mt-0 outline-none data-[state=inactive]:hidden">
+                                <div className="max-w-4xl mx-auto grid grid-cols-2 gap-12">
+                                    {/* Privacy Column */}
+                                    <div className="space-y-8">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white mb-1">Data Used to Track You</h3>
+                                            <p className="text-sm text-neutral-400 mb-4">The following data may be used to track you across apps and websites owned by other companies.</p>
+                                            <div className="space-y-3">
+                                                {["Identifiers", "Usage Data", "Location"].map(item => (
+                                                    <label key={item} className="flex items-center gap-3 text-sm text-neutral-300 cursor-pointer hover:text-white transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-white/10 bg-black checked:bg-emerald-500 accent-emerald-500"
+                                                            checked={privacyTracking.includes(item)}
+                                                            onChange={e => {
+                                                                if (e.target.checked) setPrivacyTracking([...privacyTracking, item]);
+                                                                else setPrivacyTracking(privacyTracking.filter(i => i !== item));
+                                                            }}
+                                                        />
+                                                        {item}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white mb-1">Data Linked to You</h3>
+                                            <p className="text-sm text-neutral-400 mb-4">The following data may be collected and linked to your identity.</p>
+                                            <div className="space-y-3">
+                                                {["Purchases", "Location", "Contact Info", "User Content", "Identifiers", "Usage Data", "Diagnostics"].map(item => (
+                                                    <label key={item} className="flex items-center gap-3 text-sm text-neutral-300 cursor-pointer hover:text-white transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-white/10 bg-black checked:bg-emerald-500 accent-emerald-500"
+                                                            checked={privacyLinked.includes(item)}
+                                                            onChange={e => {
+                                                                if (e.target.checked) setPrivacyLinked([...privacyLinked, item]);
+                                                                else setPrivacyLinked(privacyLinked.filter(i => i !== item));
+                                                            }}
+                                                        />
+                                                        {item}
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
-                                        <Label className="text-xs uppercase font-bold text-neutral-500 tracking-wider">Metadata</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedReviewApp?.tags?.map((tag: string) => (
-                                                <span key={tag} className="px-2 py-1 rounded-md bg-white/10 text-xs text-white border border-white/5">{tag}</span>
-                                            ))}
+                                    {/* Info Column */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-semibold text-white mb-2">Store Information</h3>
+
+                                        <div className="space-y-2">
+                                            <Label>Age Rating</Label>
+                                            <select
+                                                className="w-full bg-black border border-white/10 rounded-md p-2 text-sm text-white focus:border-emerald-500 outline-none"
+                                                value={extraInfo.ageRating}
+                                                onChange={e => setExtraInfo({ ...extraInfo, ageRating: e.target.value })}
+                                            >
+                                                <option value="4+">4+</option>
+                                                <option value="9+">9+</option>
+                                                <option value="12+">12+</option>
+                                                <option value="17+">17+</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Copyright</Label>
+                                            <Input
+                                                className="bg-black border-white/10 text-white focus:border-emerald-500"
+                                                placeholder="© 2025 LoopSync Entertainment"
+                                                value={extraInfo.copyright}
+                                                onChange={e => setExtraInfo({ ...extraInfo, copyright: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Developer Website</Label>
+                                            <Input
+                                                className="bg-black border-white/10 text-white focus:border-emerald-500"
+                                                placeholder="https://example.com"
+                                                value={extraInfo.website}
+                                                onChange={e => setExtraInfo({ ...extraInfo, website: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Support Email</Label>
+                                            <Input
+                                                className="bg-black border-white/10 text-white focus:border-emerald-500"
+                                                placeholder="support@example.com"
+                                                value={extraInfo.supportEmail}
+                                                onChange={e => setExtraInfo({ ...extraInfo, supportEmail: e.target.value })}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </TabsContent>
+                        </Tabs>
                     </DialogContent>
                 </Dialog>
 
@@ -2030,7 +3035,277 @@ export default function AdminZeroTrustPage() {
                         </div>
                     </DialogContent>
                 </Dialog>
-            </main>
+            </main >
+        </div >
+    );
+}
+// --- Build File Tree Components ---
+
+interface FileNode {
+    name: string;
+    path: string;
+    type: 'file' | 'folder';
+    size: number;
+    children?: FileNode[];
+}
+
+function BuildFileTree({ url, onSizeCalculated, onFileSelect, onZipLoaded }: {
+    url: string;
+    onSizeCalculated: (size: string) => void;
+    onFileSelect: (file: any) => void;
+    onZipLoaded?: (zip: JSZip) => void;
+}) {
+    const [structure, setStructure] = useState<FileNode[] | null>(null);
+    const [rootZip, setRootZip] = useState<JSZip | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchZip = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Failed to fetch build");
+                const blob = await response.blob();
+
+                // Calculate and report size immediately upon fetch
+                onSizeCalculated(formatBytes(blob.size));
+
+                const zip = await JSZip.loadAsync(blob);
+                setRootZip(zip); // Store the zip instance
+                if (onZipLoaded) onZipLoaded(zip);
+
+                const root: FileNode[] = [];
+                const paths: { [key: string]: FileNode } = {};
+
+                // First pass: create nodes
+                zip.forEach((relativePath, zipEntry) => {
+                    const parts = relativePath.split('/');
+                    const fileName = parts.pop();
+                    if (!fileName && zipEntry.dir) return; // Skip empty folder entries if redundant
+
+                    // Reconstruct simple tree
+                    // Note: This is a simplified flat-to-tree for zip.
+                    // A robust implementation would handle nested folders recursively.
+                    // For now, let's just show a simplified list or 1-level depth if complex
+
+                    // Actually, let's do a proper tree construction
+                    let currentLevel = root;
+                    let currentPath = "";
+
+                    parts.forEach((part, index) => {
+                        // This logic handles creating folder nodes
+                        // We can improve this if needed, but for now let's just List them flat-ish or use a helper
+                    });
+                });
+
+                // Simpler Approach for speed:
+                // Parse distinct paths
+                const nodes: FileNode[] = [];
+
+                zip.forEach((relativePath, zipEntry) => {
+                    if (zipEntry.dir) return;
+                    nodes.push({
+                        name: relativePath,
+                        path: relativePath,
+                        type: 'file',
+                        size: (zipEntry as any)._data?.uncompressedSize || 0
+                    });
+                });
+
+                // Convert flat list of files to tree
+                const tree = buildTreeFromPaths(nodes);
+
+                setStructure(tree);
+                setLoading(false);
+            } catch (err) {
+                console.error(err);
+                setError("Could not load build structure");
+                setLoading(false);
+            }
+        };
+
+        if (url) fetchZip();
+    }, [url]);
+
+    const handleNodeClick = async (node: FileNode) => {
+        if (node.type !== 'file' || !rootZip) return;
+
+        try {
+            const file = rootZip.file(node.path);
+            if (!file) return;
+
+            const name = node.name.toLowerCase();
+            const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
+            const isText = /\.(txt|json|js|jsx|ts|tsx|css|html|md|xml|yml|yaml|env|config)$/i.test(name) || !name.includes('.');
+
+            if (isImage) {
+                const blob = await file.async('blob');
+                const url = URL.createObjectURL(blob);
+                onFileSelect({
+                    name: node.name,
+                    content: url,
+                    type: 'image'
+                });
+            } else if (isText) {
+                const text = await file.async('string');
+                onFileSelect({
+                    name: node.name,
+                    content: text,
+                    type: 'text'
+                });
+            } else {
+                // Convert binary/other files to blob for downloading
+                const blob = await file.async('blob');
+                const url = URL.createObjectURL(blob);
+                onFileSelect({
+                    name: node.name,
+                    content: url, // Pass the blob URL
+                    type: 'other'
+                });
+            }
+        } catch (e) {
+            console.error("Error reading file", e);
+            // toast.error("Failed to read file content"); // Assuming toast is available
+        }
+    };
+
+    if (loading) return <div className="flex items-center justify-center h-32 text-neutral-500 gap-2"><Loader2 className="animate-spin w-4 h-4" /><span className="text-xs">Parsing Bundle...</span></div>;
+    if (error) return <div className="p-4 text-xs text-red-400 text-center">{error}</div>;
+    if (!structure) return null;
+
+    return (
+        <div className="text-xs font-mono">
+            {structure.map((node, i) => (
+                <TreeNode key={i} node={node} level={0} onSelect={handleNodeClick} />
+            ))}
         </div>
     );
+}
+
+function buildTreeFromPaths(files: FileNode[]): FileNode[] {
+    const root: FileNode[] = [];
+
+    files.forEach(file => {
+        const parts = file.path.split('/');
+        let currentLevel = root;
+
+        parts.forEach((part, index) => {
+            const isFile = index === parts.length - 1;
+            const existingNode = currentLevel.find(n => n.name === part);
+
+            if (existingNode) {
+                if (!isFile && existingNode.children) {
+                    currentLevel = existingNode.children;
+                }
+            } else {
+                const newNode: FileNode = {
+                    name: part,
+                    path: file.path,
+                    type: isFile ? 'file' : 'folder',
+                    size: isFile ? file.size : 0,
+                    children: isFile ? undefined : []
+                };
+                currentLevel.push(newNode);
+                if (!isFile && newNode.children) {
+                    currentLevel = newNode.children;
+                }
+            }
+        });
+    });
+
+    // Sort: Folders first, then files
+    const sortNodes = (nodes: FileNode[]) => {
+        nodes.sort((a, b) => {
+            if (a.type === b.type) return a.name.localeCompare(b.name);
+            return a.type === 'folder' ? -1 : 1;
+        });
+        nodes.forEach(n => {
+            if (n.children) sortNodes(n.children);
+        });
+    };
+    sortNodes(root);
+    return root;
+}
+
+function TreeNode({ node, level, onSelect }: { node: FileNode, level: number, onSelect: (node: FileNode) => void }) {
+    const [isOpen, setIsOpen] = useState(level < 2); // Open top levels by default
+    const hasChildren = node.type === 'folder' && node.children && node.children.length > 0;
+
+    const handleClick = () => {
+        if (node.type === 'folder') {
+            setIsOpen(!isOpen);
+        } else {
+            onSelect(node);
+        }
+    };
+
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData("application/json", JSON.stringify(node));
+        e.dataTransfer.effectAllowed = "copy";
+
+        // Create a custom drag ghost if needed, or default
+        const dragPreview = document.createElement("div");
+        dragPreview.innerText = node.name;
+        dragPreview.style.background = "#333";
+        dragPreview.style.color = "#fff";
+        dragPreview.style.padding = "4px 8px";
+        dragPreview.style.borderRadius = "4px";
+        dragPreview.style.position = "absolute";
+        dragPreview.style.top = "-1000px";
+        document.body.appendChild(dragPreview);
+        e.dataTransfer.setDragImage(dragPreview, 0, 0);
+        setTimeout(() => document.body.removeChild(dragPreview), 0);
+    };
+
+    return (
+        <div>
+            <div
+                className={`flex items-center gap-1.5 py-1 px-2 hover:bg-white/5 cursor-pointer rounded select-none transition-colors ${node.name.startsWith('.') ? 'opacity-50' : ''}`}
+                style={{ paddingLeft: `${level * 12 + 8}px` }}
+                onClick={handleClick}
+                draggable={true}
+                onDragStart={handleDragStart}
+            >
+                <div className="text-neutral-500 w-3 h-3 flex items-center justify-center shrink-0">
+                    {node.type === 'folder' && (
+                        isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />
+                    )}
+                </div>
+
+                {node.type === 'folder' ? (
+                    <Folder className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                ) : (
+                    <FileIcon className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                )}
+
+                <span className={`truncate ${node.type === 'folder' ? 'text-neutral-200 font-medium' : 'text-neutral-400'}`}>
+                    {node.name}
+                </span>
+
+                {node.type === 'file' && (
+                    <span className="ml-auto text-[9px] text-neutral-600 pl-2">
+                        {formatBytes(node.size)}
+                    </span>
+                )}
+            </div>
+
+            {hasChildren && isOpen && (
+                <div className="animate-in slide-in-from-top-1 fade-in duration-200">
+                    {node.children!.map((child, i) => (
+                        <TreeNode key={i} node={child} level={level + 1} onSelect={onSelect} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function formatBytes(bytes: number, decimals = 1) {
+    if (!+bytes) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }

@@ -2,9 +2,16 @@ import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import {
-    AnalyticsOverview, AnalyticsTraffic, AnalyticsDevices, AnalyticsRealtime,
-    getAnalyticsOverview, getAnalyticsTraffic, getAnalyticsDevices, getAnalyticsRealtime
+    AnalyticsOverview, AnalyticsTraffic, AnalyticsDevices, AnalyticsRealtime, OverviewApp,
+    getAnalyticsOverview, getAnalyticsTraffic, getAnalyticsDevices, getAnalyticsRealtime, getOverviewSnapshot
 } from "@/lib/api";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export default function AnalyticsContent() {
     const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
@@ -13,6 +20,13 @@ export default function AnalyticsContent() {
     const [realtime, setRealtime] = useState<AnalyticsRealtime | null>(null);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('7d');
+    const [apps, setApps] = useState<OverviewApp[]>([]);
+    const [selectedAppId, setSelectedAppId] = useState<string | undefined>(undefined);
+
+    // Fetch Apps
+    React.useEffect(() => {
+        getOverviewSnapshot('').then(data => setApps(data.apps)).catch(console.error);
+    }, []);
 
     // Fetch initial data
     React.useEffect(() => {
@@ -20,9 +34,9 @@ export default function AnalyticsContent() {
             try {
                 setLoading(true);
                 const [ov, tr, dev] = await Promise.all([
-                    getAnalyticsOverview(range),
-                    getAnalyticsTraffic(range),
-                    getAnalyticsDevices(range)
+                    getAnalyticsOverview(range, 'worldwide', selectedAppId),
+                    getAnalyticsTraffic(range, 'worldwide', selectedAppId),
+                    getAnalyticsDevices(range, 'worldwide', selectedAppId)
                 ]);
                 setOverview(ov);
                 setTraffic(tr);
@@ -34,13 +48,13 @@ export default function AnalyticsContent() {
             }
         };
         fetchData();
-    }, [range]);
+    }, [range, selectedAppId]);
 
     // Real-time polling
     React.useEffect(() => {
         const fetchRealtime = async () => {
             try {
-                const rt = await getAnalyticsRealtime();
+                const rt = await getAnalyticsRealtime(selectedAppId);
                 setRealtime(rt);
             } catch (e) { console.error(e); }
         };
@@ -51,7 +65,7 @@ export default function AnalyticsContent() {
         // Poll every 5s
         const interval = setInterval(fetchRealtime, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedAppId]);
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -91,23 +105,51 @@ export default function AnalyticsContent() {
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 p-1 rounded-lg">
-                    {['7d', '30d', '1y'].map((r) => (
-                        <button
-                            key={r}
-                            onClick={() => setRange(r)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${range === r ? "bg-[#d1aea0] text-black shadow-sm" : "text-zinc-400 hover:text-white"}`}
-                        >
-                            {r === '7d' ? '7 Days' : r === '30d' ? '30 Days' : 'Year'}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/5 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors">
+                                {selectedAppId ? apps.find(a => a.id === selectedAppId)?.name || 'Unknown App' : 'All Apps'}
+                                <ChevronDown className="w-4 h-4 text-zinc-500" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-[#0A0A0A] border-white/10 text-zinc-300">
+                            <DropdownMenuItem
+                                className="focus:bg-white/5 cursor-pointer"
+                                onClick={() => setSelectedAppId(undefined)}
+                            >
+                                All Apps
+                            </DropdownMenuItem>
+                            {apps.map(app => (
+                                <DropdownMenuItem
+                                    key={app.id}
+                                    className="focus:bg-white/5 cursor-pointer truncate"
+                                    onClick={() => setSelectedAppId(app.id)}
+                                >
+                                    {app.name}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 p-1 rounded-lg">
+                        {['7d', '30d', '1y'].map((r) => (
+                            <button
+                                key={r}
+                                onClick={() => setRange(r)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${range === r ? "bg-[#d1aea0] text-black shadow-sm" : "text-zinc-400 hover:text-white"}`}
+                            >
+                                {r === '7d' ? '7 Days' : r === '30d' ? '30 Days' : 'Year'}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
-                    label="Total Users"
+                    label="Total Downloads"
                     value={overview?.totalUsers.toLocaleString() || "0"}
                     change={`+${overview?.totalUsersChangePercent}%`}
                 />
@@ -218,7 +260,7 @@ export default function AnalyticsContent() {
             </div>
 
 
-        </div>
+        </div >
     )
 }
 

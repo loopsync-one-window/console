@@ -152,7 +152,7 @@ export default function DocsPage() {
 
                                 <CodeBlock
                                     language="bash"
-                                    code={`curl -X GET https://api.loopsync.com/v2/user \\
+                                    code={`curl -X GET https://api.loopsync.cloud/v2/user \\
   -H "Authorization: Bearer pk_live_837...98x2" \\
   -H "Content-Type: application/json"`}
                                 />
@@ -166,7 +166,7 @@ export default function DocsPage() {
                                     code={`{
   "id": "usr_829301",
   "name": "Ripun Basumatary",
-  "email": "ripun@loopsync.com",
+  "email": "ripun@loopsync.cloud",
   "plan": "pro",
   "created_at": "2025-10-24T10:00:00Z"
 }`}
@@ -179,7 +179,7 @@ export default function DocsPage() {
                                     All API requests should be made to the following base URL:
                                 </p>
                                 <div className="p-4 rounded-lg bg-white/[0.03] border border-white/5 font-mono text-sm text-[#d1aea0]">
-                                    https://api.loopsync.com/v2
+                                    https://api.loopsync.cloud/v2
                                 </div>
                             </section>
 

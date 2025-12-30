@@ -1550,9 +1550,9 @@ export const getRevenueSummary = async (): Promise<RevenueSummary> => {
   return handleResponse(response);
 };
 
-export const getRevenueTransactions = async (limit: number = 20): Promise<{ items: RevenueTransaction[] }> => {
+export const getRevenueTransactions = async (limit: number = 10, page: number = 1): Promise<{ items: RevenueTransaction[], total: number, page: number, totalPages: number }> => {
   const token = await getDeveloperAccessToken();
-  const response = await fetch(`${API_BASE_URL}/api/v1/revenue/transactions?limit=${limit}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/revenue/transactions?limit=${limit}&page=${page}`, {
     headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   return handleResponse(response);
@@ -1602,33 +1602,37 @@ export interface AnalyticsRealtime {
   requestsPerMinute: number;
 }
 
-export const getAnalyticsOverview = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsOverview> => {
+export const getAnalyticsOverview = async (range: string = '7d', region: string = 'worldwide', appId?: string): Promise<AnalyticsOverview> => {
   const token = await getDeveloperAccessToken();
-  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/overview?range=${range}&region=${region}`, {
+  const query = `range=${range}&region=${region}${appId ? `&appId=${appId}` : ''}`;
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/overview?${query}`, {
     headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   return handleResponse(response);
 };
 
-export const getAnalyticsTraffic = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsTraffic> => {
+export const getAnalyticsTraffic = async (range: string = '7d', region: string = 'worldwide', appId?: string): Promise<AnalyticsTraffic> => {
   const token = await getDeveloperAccessToken();
-  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/traffic?range=${range}&region=${region}`, {
+  const query = `range=${range}&region=${region}${appId ? `&appId=${appId}` : ''}`;
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/traffic?${query}`, {
     headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   return handleResponse(response);
 };
 
-export const getAnalyticsDevices = async (range: string = '7d', region: string = 'worldwide'): Promise<AnalyticsDevices> => {
+export const getAnalyticsDevices = async (range: string = '7d', region: string = 'worldwide', appId?: string): Promise<AnalyticsDevices> => {
   const token = await getDeveloperAccessToken();
-  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/devices?range=${range}&region=${region}`, {
+  const query = `range=${range}&region=${region}${appId ? `&appId=${appId}` : ''}`;
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/devices?${query}`, {
     headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   return handleResponse(response);
 };
 
-export const getAnalyticsRealtime = async (): Promise<AnalyticsRealtime> => {
+export const getAnalyticsRealtime = async (appId?: string): Promise<AnalyticsRealtime> => {
   const token = await getDeveloperAccessToken();
-  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/realtime`, {
+  const query = appId ? `?appId=${appId}` : '';
+  const response = await fetch(`${API_BASE_URL}/api/v1/analytics/realtime${query}`, {
     headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   return handleResponse(response);
@@ -1658,6 +1662,7 @@ export interface OverviewSnapshot {
   context: {
     displayName: string;
     timeOfDay: string;
+    missingRequirements?: string[];
   };
   apps: OverviewApp[];
   activity: OverviewActivityItem[];

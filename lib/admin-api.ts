@@ -166,6 +166,8 @@ export interface ReviewedApp {
         limitations?: string;
         guidance?: string;
     };
+    platforms?: string[];
+    distributionRegions?: string[];
 }
 
 // --- App Actions ---
@@ -192,7 +194,18 @@ export const getAdminAppsForReview = async (): Promise<ReviewedApp[]> => {
     return handleResponse(response);
 };
 
-export const getAdminAppDetails = async (appId: string): Promise<any> => {
+// Update interface for detailed app response
+export interface AdminAppDetails extends ReviewedApp {
+    currentBuild?: {
+        version: string;
+        platforms: Record<string, { buildId: string; sizeMB: number; path: string }>;
+        updatedAt: string;
+    };
+    website?: string;
+    supportEmail?: string;
+}
+
+export const getAdminAppDetails = async (appId: string): Promise<AdminAppDetails> => {
     const token = getAdminAccessToken();
     const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}`, {
         headers: {
@@ -211,6 +224,37 @@ export const adminApproveApp = async (appId: string): Promise<any> => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
+    });
+    return handleResponse(response);
+};
+
+export const adminPublishApp = async (appId: string, buildDetails?: any): Promise<any> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/publish`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(buildDetails || {}),
+    });
+    return handleResponse(response);
+};
+
+export const uploadAdminBuild = async (appId: string, version: string, platform: string, file: File): Promise<any> => {
+    const token = getAdminAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("version", version);
+    formData.append("platform", platform);
+
+    const response = await fetch(`${API_BASE_URL}/admin/apps/${appId}/upload-build`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            // Content-Type not set for FormData, browser sets boundary
+        },
+        body: formData,
     });
     return handleResponse(response);
 };
@@ -343,6 +387,39 @@ export const deleteUsersBulk = async (ids: string[]): Promise<any> => {
             Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ids }),
+    });
+    return handleResponse(response);
+};
+
+export const getAdminFlags = async (): Promise<any[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/flags`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getAdminPurchases = async (): Promise<any[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/purchases`, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
+
+export const getAdminContributions = async (): Promise<any[]> => {
+    const token = getAdminAccessToken();
+    const response = await fetch(`${API_BASE_URL}/admin/contributions`, {
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
     });
     return handleResponse(response);
 };

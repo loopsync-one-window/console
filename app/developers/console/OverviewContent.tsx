@@ -25,7 +25,11 @@ import {
    Overview Content
 ========================= */
 
-export default function OverviewContent() {
+interface OverviewContentProps {
+    setActiveTab?: (tab: 'overview' | 'analytics' | 'revenue' | 'banking' | 'settings') => void;
+}
+
+export default function OverviewContent({ setActiveTab }: OverviewContentProps) {
     const [data, setData] = useState<OverviewSnapshot | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -103,6 +107,42 @@ export default function OverviewContent() {
                     Publish App
                 </Link>
             </div>
+
+            {/* Missing Requirements Alert */}
+            {data?.context.missingRequirements && data.context.missingRequirements.length > 0 && (
+                <div className="mb-8 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+                    <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="text-sm font-medium text-orange-400 mb-1">Complete your developer profile</h3>
+                        <p className="text-sm text-zinc-400 mb-3">
+                            To enable full account functionality and payouts, please complete the following:
+                        </p>
+                        <ul className="space-y-1">
+                            {data.context.missingRequirements.map((req, i) => (
+                                <li key={i} className="text-sm text-zinc-500 flex items-center gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-orange-500/50" />
+                                    {req}
+                                    {req.includes('bio') || req.includes('picture') ? (
+                                        <button
+                                            onClick={() => setActiveTab?.('settings')}
+                                            className="text-xs text-blue-400 hover:underline ml-1 cursor-pointer bg-transparent border-none p-0 inline"
+                                        >
+                                            Go to Settings
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => setActiveTab?.('banking')}
+                                            className="text-xs text-blue-400 hover:underline ml-1 cursor-pointer bg-transparent border-none p-0 inline"
+                                        >
+                                            Go to Banking
+                                        </button>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
 
             {/* Search */}
             <div className="flex items-center gap-4 mb-8">
@@ -393,7 +433,7 @@ function AppCard({
                         </>
                     ) : (
                         <>
-                            <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-semibold">Active Users</span>
+                            <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-semibold">Total Downloads</span>
                             <span className="text-sm font-medium text-white">{users}</span>
                         </>
                     )}

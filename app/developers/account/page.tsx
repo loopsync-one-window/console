@@ -623,7 +623,7 @@ function AccountContent() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-[#fff] px-8 font-medium text-black transition-all duration-300 hover:bg-[#09ee70] disabled:opacity-70 disabled:hover:bg-[#fff] w-full sm:w-auto"
+                                        className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-[#fff] px-8 font-medium text-black transition-all duration-300 hover:bg-[#0033ffff] hover:text-white disabled:opacity-70 disabled:hover:bg-[#fff] w-full sm:w-auto"
                                     >
                                         <div className="flex items-center gap-2.5">
                                             {isSubmitting ? (
@@ -633,7 +633,7 @@ function AccountContent() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span className="text-[12px] font-bold uppercase">{isLogin ? "Sign In" : "Create Account"}</span>
+                                                    <span className="text-[12px] font-bold uppercase relative top-0.5">{isLogin ? "Sign In" : "Create Account"}</span>
                                                     <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                                                 </>
                                             )}

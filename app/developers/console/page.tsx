@@ -131,7 +131,7 @@ export default function ConsoleDashboard() {
                 {/* Main Content */}
                 <main className="flex-1 ml-0 md:ml-80 p-8 md:p-16 overflow-y-auto min-h-[calc(100vh-4rem)]">
                     <div className="max-w-5xl mx-auto">
-                        {activeTab === 'overview' && <OverviewContent />}
+                        {activeTab === 'overview' && <OverviewContent setActiveTab={setActiveTab} />}
                         {activeTab === 'analytics' && <AnalyticsContent />}
                         {activeTab === 'revenue' && <RevenueContent />}
                         {activeTab === 'banking' && <BankingContent />}

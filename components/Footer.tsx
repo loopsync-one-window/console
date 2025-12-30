@@ -57,15 +57,14 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Links Column 1: Product */}
+                    {/* Links Column 1: Store */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="font-geom font-semibold text-white">Product</h4>
+                        <h4 className="font-geom font-semibold text-white">Store</h4>
                         <ul className="space-y-2.5 text-sm text-zinc-400">
-                            <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
-                            <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                            <li><Link href="/download" className="hover:text-white transition-colors">Download</Link></li>
-                            <li><Link href="/changelog" className="hover:text-white transition-colors">Changelog</Link></li>
-                            <li><Link href="/roadmap" className="hover:text-white transition-colors">Roadmap</Link></li>
+                            <li><Link href="/store" className="hover:text-white transition-colors">Discover</Link></li>
+                            <li><Link href="/store/apps" className="hover:text-white transition-colors">Apps</Link></li>
+                            <li><Link href="/store/extensions" className="hover:text-white transition-colors">Extensions</Link></li>
+                            <li><Link href="/store/software" className="hover:text-white transition-colors">Software</Link></li>
                         </ul>
                     </div>
 
@@ -73,11 +72,8 @@ export default function Footer() {
                     <div className="flex flex-col gap-4">
                         <h4 className="font-geom font-semibold text-white">Resources</h4>
                         <ul className="space-y-2.5 text-sm text-zinc-400">
-                            <li><Link href="/docs" className="hover:text-white transition-colors">Documentation</Link></li>
-                            <li><Link href="/api" className="hover:text-white transition-colors">API Reference</Link></li>
-                            <li><Link href="/community" className="hover:text-white transition-colors">Community</Link></li>
-                            <li><Link href="/support" className="hover:text-white transition-colors">Help Center</Link></li>
-                            <li><Link href="/status" className="hover:text-white transition-colors">System Status</Link></li>
+                            <li><Link href="/developers/docs" className="hover:text-white transition-colors">Developer Docs</Link></li>
+                            <li><Link href="/one-window/support/resources" className="hover:text-white transition-colors">Support</Link></li>
                         </ul>
                     </div>
 
@@ -85,11 +81,10 @@ export default function Footer() {
                     <div className="flex flex-col gap-4">
                         <h4 className="font-geom font-semibold text-white">Company</h4>
                         <ul className="space-y-2.5 text-sm text-zinc-400">
-                            <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                            <li><Link href="/company" className="hover:text-white transition-colors">About Us</Link></li>
                             <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
                             <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-                            <li><Link href="/brand" className="hover:text-white transition-colors">Brand Assets</Link></li>
+                            <li><Link href="/one-window/support/resources" className="hover:text-white transition-colors">Contact</Link></li>
                         </ul>
                     </div>
                 </div>

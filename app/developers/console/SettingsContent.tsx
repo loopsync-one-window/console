@@ -8,6 +8,8 @@ import {
     DeveloperProfile, ApiKey, DeveloperNotifications
 } from "@/lib/api";
 
+import { containsBadWord } from "@/lib/badWords";
+
 export default function SettingsContent() {
     const [profile, setProfile] = useState<DeveloperProfile | null>(null);
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -19,6 +21,7 @@ export default function SettingsContent() {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [showAvatarModal, setShowAvatarModal] = useState(false);
+    const [inappropriateModal, setInappropriateModal] = useState(false);
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -43,6 +46,13 @@ export default function SettingsContent() {
 
     const handleUpdateProfile = async (field: keyof DeveloperProfile, value: string) => {
         if (!profile) return;
+
+        // Check for bad words
+        if (containsBadWord(value)) {
+            setInappropriateModal(true);
+            return;
+        }
+
         // Optimistic update
         setProfile({ ...profile, [field]: value });
         try {
@@ -369,6 +379,31 @@ export default function SettingsContent() {
                 onUpload={() => fileInputRef.current?.click()}
                 isUploading={uploadingAvatar}
             />
+
+            {/* Inappropriate Content Alert Modal */}
+            {inappropriateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/10 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-[#000]/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-100 animate-[scaleIn_0.2s_ease-out]">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="p-3 bg-red-500/10 rounded-full">
+                                <Settings className="w-6 h-6 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-white mb-2">Content Warning</h3>
+                                <p className="text-sm text-zinc-400 leading-relaxed">
+                                    Your input contains inappropriate language. Please remove it and try again.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setInappropriateModal(false)}
+                                className="w-full py-2.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-colors mt-2"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
