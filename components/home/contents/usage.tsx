@@ -30,20 +30,35 @@ export function Usage() {
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        let email = ""
+      ; (async () => {
         try {
-          const raw = localStorage.getItem("user")
-          if (raw) {
-            const u = JSON.parse(raw) as { email?: string }
-            email = u?.email || ""
+          let email = ""
+          try {
+            const raw = localStorage.getItem("user")
+            if (raw) {
+              const u = JSON.parse(raw) as { email?: string }
+              email = u?.email || ""
+            }
+          } catch { }
+          if (email) {
+            const data = await getAtlasUsageStatusClient(email)
+            if (mounted) setUsageData(data)
+          } else {
+            const zero: AtlasUsageStatusResponse = {
+              email: "",
+              channel: "Atlas",
+              usage: {
+                openai: { consumedRequests: 0, burnRate: 0 },
+                gemini: { consumedRequests: 0, burnRate: 0 },
+                grok: { consumedRequests: 0, burnRate: 0 },
+              },
+              totalConsumedRequests: 0,
+              totalBurnRate: 0,
+            }
+            if (mounted) setUsageData(zero)
           }
-        } catch {}
-        if (email) {
-          const data = await getAtlasUsageStatusClient(email)
-          if (mounted) setUsageData(data)
-        } else {
+        } catch (err) {
+          // toast({ title: "Failed to load usage", description: err instanceof Error ? err.message : String(err) })
           const zero: AtlasUsageStatusResponse = {
             email: "",
             channel: "Atlas",
@@ -57,36 +72,31 @@ export function Usage() {
           }
           if (mounted) setUsageData(zero)
         }
-      } catch (err) {
-        toast({ title: "Failed to load usage", description: err instanceof Error ? err.message : String(err) })
-        const zero: AtlasUsageStatusResponse = {
-          email: "",
-          channel: "Atlas",
-          usage: {
-            openai: { consumedRequests: 0, burnRate: 0 },
-            gemini: { consumedRequests: 0, burnRate: 0 },
-            grok: { consumedRequests: 0, burnRate: 0 },
-          },
-          totalConsumedRequests: 0,
-          totalBurnRate: 0,
-        }
-        if (mounted) setUsageData(zero)
-      }
-    })()
-    ;(async () => {
-      try {
-        let email = ""
+      })()
+      ; (async () => {
         try {
-          const raw = localStorage.getItem("user")
-          if (raw) {
-            const u = JSON.parse(raw) as { email?: string }
-            email = u?.email || ""
+          let email = ""
+          try {
+            const raw = localStorage.getItem("user")
+            if (raw) {
+              const u = JSON.parse(raw) as { email?: string }
+              email = u?.email || ""
+            }
+          } catch { }
+          if (email) {
+            const data = await getCeresUsageStatusClient(email)
+            if (mounted) setCeresUsageData(data)
+          } else {
+            const zero: CeresUsageStatusResponse = {
+              email: "",
+              channel: "ceres",
+              totalConsumedRequests: 0,
+              totalBurnRate: 0,
+            }
+            if (mounted) setCeresUsageData(zero)
           }
-        } catch {}
-        if (email) {
-          const data = await getCeresUsageStatusClient(email)
-          if (mounted) setCeresUsageData(data)
-        } else {
+        } catch (err) {
+          // toast({ title: "Failed to load usage", description: err instanceof Error ? err.message : String(err) })
           const zero: CeresUsageStatusResponse = {
             email: "",
             channel: "ceres",
@@ -95,17 +105,7 @@ export function Usage() {
           }
           if (mounted) setCeresUsageData(zero)
         }
-      } catch (err) {
-        toast({ title: "Failed to load usage", description: err instanceof Error ? err.message : String(err) })
-        const zero: CeresUsageStatusResponse = {
-          email: "",
-          channel: "ceres",
-          totalConsumedRequests: 0,
-          totalBurnRate: 0,
-        }
-        if (mounted) setCeresUsageData(zero)
-      }
-    })()
+      })()
     return () => {
       mounted = false
     }
@@ -145,7 +145,7 @@ export function Usage() {
   const burnRateRupeesCeres = (ceresUsageData?.totalBurnRate || 0)
 
   const onPurchase = (appName: string) => {
-    toast({ title: "Credit Store", description: `Opening credits for ${appName}` })
+    // toast({ title: "Credit Store", description: `Opening credits for ${appName}` })
     setActiveItem("credit-store")
     setPurchaseOpen(false)
   }
@@ -158,11 +158,11 @@ export function Usage() {
 
   return (
     <div className="flex-1 bg-background relative overflow-auto scrollbar-hide">
-      <div className="px-8 xl:px-12 pt-10 pb-4">
+      <div className="px-4 md:px-8 xl:px-12 pt-10 pb-4">
         <p className="text-4xl font-semibold text:white">Usage</p>
       </div>
 
-      <div className="px-8 xl:px-12 mt-4 mb-12">
+      <div className="px-4 md:px-8 xl:px-12 mt-4 mb-12">
         <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
           <div
             className="absolute inset-0 pointer-events-none opacity-50"
@@ -171,7 +171,7 @@ export function Usage() {
                 "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 100%), repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 2px)",
             }}
           />
-          <div className="relative p-8 md:p-12 flex items-center gap-6">
+          <div className="relative p-6 md:p-12 flex flex-col md:flex-row items-start md:items-center gap-6">
             <img src="/resources/apple.svg" alt="Apple" className="w-10 h-10 brightness-0 invert" />
             <img src="/resources/windows.svg" alt="Apple" className="w-9 h-9 brightness-0 invert" />
             <div>
@@ -182,18 +182,18 @@ export function Usage() {
         </div>
       </div>
 
-      <div className="px-8 xl:px-12 pb-20">
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-8 mt-6">
+      <div className="px-4 md:px-8 xl:px-12 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-6">
           <Card className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors">
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)" }} />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-white/60">Active</p>
-                      <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-white/80 font-semibold">Owned</Badge>
-                      <img src="/resources/apple.svg" alt="Apple" className="w-4 h-4 brightness-0 invert" />
-                      <img src="/resources/windows.svg" alt="Windows" className="w-3.5 h-3.5 brightness-0 invert" />
-                      </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-white/80 font-semibold">Owned</Badge>
+                  <img src="/resources/apple.svg" alt="Apple" className="w-4 h-4 brightness-0 invert" />
+                  <img src="/resources/windows.svg" alt="Windows" className="w-3.5 h-3.5 brightness-0 invert" />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="py-5">

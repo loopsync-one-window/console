@@ -88,10 +88,10 @@ export function AllProducts() {
 
     const extension = products.find(ext => ext.id === id)
     if (extension) {
-      toast({
-        title: "Extension Add",
-        description: `${extension.name} has been successfully added. Please select your browser to continue.`,
-      })
+      // toast({
+      //   title: "Extension Add",
+      //   description: `${extension.name} has been successfully added. Please select your browser to continue.`,
+      // })
       setInstalledProducts(prev => ({ ...prev, [id]: true }))
       // No auto-detection, let user manually select
       setDetectedBrowser(null);
@@ -123,10 +123,10 @@ export function AllProducts() {
 
     const extension = products.find(ext => ext.id === id)
     if (extension) {
-      toast({
-        title: "Extension Uninstalled",
-        description: `${extension.name} has been successfully uninstalled.`,
-      })
+      // toast({
+      //   title: "Extension Uninstalled",
+      //   description: `${extension.name} has been successfully uninstalled.`,
+      // })
     }
   }
 
@@ -135,10 +135,10 @@ export function AllProducts() {
 
     const app = apps.find(a => a.id === id)
     if (app) {
-      toast({
-        title: "App Installed",
-        description: `${app.name} has been successfully installed.`,
-      })
+      // toast({
+      //   title: "App Installed",
+      //   description: `${app.name} has been successfully installed.`,
+      // })
     }
   }
 
@@ -147,10 +147,10 @@ export function AllProducts() {
 
     const app = apps.find(a => a.id === id)
     if (app) {
-      toast({
-        title: "App Uninstalled",
-        description: `${app.name} has been successfully uninstalled.`,
-      })
+      // toast({
+      //   title: "App Uninstalled",
+      //   description: `${app.name} has been successfully uninstalled.`,
+      // })
     }
   }
 
@@ -634,15 +634,15 @@ export function AllProducts() {
                           if (selected?.id === "1" && selectedBrowser === "Firefox") {
                             // Open Firefox addon page for Atlas
                             window.open("https://addons.mozilla.org/en-US/firefox/addon/loopsync-atlas/", "_blank");
-                            toast({
-                              title: "Redirecting to Firefox Add-ons",
-                              description: `You're being redirected to install ${selected?.name} for ${selectedBrowser}.`
-                            });
+                            // toast({
+                            //   title: "Redirecting to Firefox Add-ons",
+                            //   description: `You're being redirected to install ${selected?.name} for ${selectedBrowser}.`
+                            // });
                           } else {
-                            toast({
-                              title: "Extension Added",
-                              description: `${selected?.name} has been added to ${selectedBrowser}.`
-                            });
+                            // toast({
+                            //   title: "Extension Added",
+                            //   description: `${selected?.name} has been added to ${selectedBrowser}.`
+                            // });
                           }
                           setIsModalOpen(false);
                         }}

@@ -29,7 +29,7 @@ export function Help() {
     try {
       const userRaw = localStorage.getItem("user")
       if (!userRaw) {
-        toast({ title: "Not logged in", description: "Please log in to submit a ticket.", variant: "destructive" })
+        // toast({ title: "Not logged in", description: "Please log in to submit a ticket.", variant: "destructive" })
         setIsSubmitting(false)
         return
       }
@@ -44,16 +44,16 @@ export function Help() {
         description,
       })
 
-      toast({
-        title: "Ticket Submitted",
-        description: "Your support ticket has been submitted successfully.",
-      })
+      // toast({
+      //   title: "Ticket Submitted",
+      //   description: "Your support ticket has been submitted successfully.",
+      // })
       setSuccessOpen(true)
       setSubject("")
       setCategory("")
       setDescription("")
     } catch (err) {
-      toast({ title: "Submission failed", description: "Please try again later.", variant: "destructive" })
+      // toast({ title: "Submission failed", description: "Please try again later.", variant: "destructive" })
     } finally {
       setIsSubmitting(false)
     }

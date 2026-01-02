@@ -210,10 +210,10 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
         </svg>
       </div>
 
-      <div className="relative z-10 flex h-full items-center justify-center overflow-auto scrollbar-hide">
+      <div className="relative z-10 flex flex-col lg:flex-row h-full items-center justify-center overflow-auto scrollbar-hide">
         {/* Left content section */}
-        <div className="flex flex-col justify-center items-start px-10 py-12 max-w-screen-2xl">
-          <h1 className="text-6xl font-bold mb-4 text-foreground">You're all set!</h1>
+        <div className="flex flex-col justify-center items-start px-6 py-8 lg:px-10 lg:py-12 w-full lg:w-auto max-w-screen-2xl">
+          <h1 className="text-4xl lg:text-6xl font-bold mb-4 text-foreground">You're all set!</h1>
           <p className="text-base font-medium text-white leading-relaxed mb-6">
             Your account is ready. Feel free to move through <br />the next steps at your own pace.
           </p>
@@ -240,7 +240,7 @@ export function ContentArea({ skipOnboarding = false }: { skipOnboarding?: boole
         </div>
 
         {/* Right checklist section */}
-        <div className="w-90 flex items-center justify-center px-4">
+        <div className="w-full lg:w-90 max-w-md flex items-center justify-center px-4 mt-8 lg:mt-0">
           <div className="space-y-4 w-full">
             {steps.map((step, index) => (
               <div

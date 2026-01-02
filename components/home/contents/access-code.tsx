@@ -45,7 +45,7 @@ export function AccessCode() {
   const [ceresShowDebit, setCeresShowDebit] = useState(false)
   const [ceresDebitMessage, setCeresDebitMessage] = useState("")
   const [ceresDebitPhase, setCeresDebitPhase] = useState<"loading" | "success" | "error" | null>(null)
-  
+
 
   useEffect(() => {
     const load = async () => {
@@ -55,44 +55,44 @@ export function AccessCode() {
         setEmail(userEmail)
         const atlasCached = getCachedAtlasAccessCode(userEmail)
         const ceresCached = getCachedCeresAccessCode(userEmail)
-        ;(async () => {
-          try {
-            const atlasData = atlasCached ? atlasCached : await getAtlasAccessCodeClient(userEmail)
-            setAccessCode(atlasData.currentAccessCode || "")
-            setAppName(atlasData.appName || "Atlas")
-            const provider = String(atlasData.provider || "atlas").toLowerCase()
-            setProviderName(provider)
-            setLogoSrc(provider === "atlas" ? "/apps/atlas.png" : "/apps/atlas.png")
-            setTotalChangeCount(atlasData.totalChangeCount || "0")
-            setIsChargable(Boolean(atlasData.isChargable))
-            setIsBlocked(Boolean(atlasData.isBlocked))
-          } catch {
-            toast({ title: "Error", description: "Unable to load Atlas access code" })
-          } finally {
-            setShowCode(false)
-            setIsLoadingAccess(false)
-          }
-        })()
-        ;(async () => {
-          try {
-            const ceresData = ceresCached ? ceresCached : await getCeresAccessCodeClient(userEmail)
-            setCeresAccessCode(ceresData.currentAccessCode || "")
-            setCeresAppName(ceresData.appName || "Ceres Assist")
-            const provider = String(ceresData.provider || "ceres").toLowerCase()
-            setCeresProviderName(provider)
-            setCeresLogoSrc(provider === "ceres" ? "/apps/ceres.png" : "/apps/ceres.png")
-            setCeresTotalChangeCount(ceresData.totalChangeCount || "0")
-            setCeresIsChargable(Boolean(ceresData.isChargable))
-            setCeresIsBlocked(Boolean(ceresData.isBlocked))
-          } catch {
-            toast({ title: "Error", description: "Unable to load Ceres access code" })
-          } finally {
-            setShowCeresCode(false)
-            setIsLoadingCeres(false)
-          }
-        })()
+          ; (async () => {
+            try {
+              const atlasData = atlasCached ? atlasCached : await getAtlasAccessCodeClient(userEmail)
+              setAccessCode(atlasData.currentAccessCode || "")
+              setAppName(atlasData.appName || "Atlas")
+              const provider = String(atlasData.provider || "atlas").toLowerCase()
+              setProviderName(provider)
+              setLogoSrc(provider === "atlas" ? "/apps/atlas.png" : "/apps/atlas.png")
+              setTotalChangeCount(atlasData.totalChangeCount || "0")
+              setIsChargable(Boolean(atlasData.isChargable))
+              setIsBlocked(Boolean(atlasData.isBlocked))
+            } catch {
+              // toast({ title: "Error", description: "Unable to load Atlas access code" })
+            } finally {
+              setShowCode(false)
+              setIsLoadingAccess(false)
+            }
+          })()
+          ; (async () => {
+            try {
+              const ceresData = ceresCached ? ceresCached : await getCeresAccessCodeClient(userEmail)
+              setCeresAccessCode(ceresData.currentAccessCode || "")
+              setCeresAppName(ceresData.appName || "Ceres Assist")
+              const provider = String(ceresData.provider || "ceres").toLowerCase()
+              setCeresProviderName(provider)
+              setCeresLogoSrc(provider === "ceres" ? "/apps/ceres.png" : "/apps/ceres.png")
+              setCeresTotalChangeCount(ceresData.totalChangeCount || "0")
+              setCeresIsChargable(Boolean(ceresData.isChargable))
+              setCeresIsBlocked(Boolean(ceresData.isBlocked))
+            } catch {
+              // toast({ title: "Error", description: "Unable to load Ceres access code" })
+            } finally {
+              setShowCeresCode(false)
+              setIsLoadingCeres(false)
+            }
+          })()
       } catch (e) {
-        toast({ title: "Error", description: "Unable to load access code" })
+        // toast({ title: "Error", description: "Unable to load access code" })
       } finally {
         //
       }
@@ -125,13 +125,13 @@ export function AccessCode() {
           if (!res?.success) {
             setDebitPhase("error")
             setDebitMessage(res?.message || "Insufficient Credits")
-            toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
+            // toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
             return
           }
         } catch (err: any) {
           setDebitPhase("error")
           setDebitMessage("Insufficient Credits")
-          toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
+          // toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
           return
         }
         await new Promise((r) => setTimeout(r, 2000))
@@ -145,7 +145,7 @@ export function AccessCode() {
         setIsBlocked(Boolean(data.isBlocked))
         setShowNewCode(true)
         setTimeout(() => setShowNewCode(false), 3000)
-        toast({ title: "Recovered", description: "Your account access has been recovered." })
+        // toast({ title: "Recovered", description: "Your account access has been recovered." })
         return
       } else if (isChargable) {
         const reqId = makeRequestId()
@@ -157,13 +157,13 @@ export function AccessCode() {
           if (!res?.success) {
             setDebitPhase("error")
             setDebitMessage(res?.message || "Insufficient Credits")
-            toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
+            // toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
             return
           }
         } catch (err: any) {
           setDebitPhase("error")
           setDebitMessage("Insufficient Credits")
-          toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
+          // toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
           return
         }
         await new Promise((r) => setTimeout(r, 2000))
@@ -178,10 +178,10 @@ export function AccessCode() {
       setIsBlocked(Boolean(data.isBlocked))
       setShowNewCode(true)
       setTimeout(() => setShowNewCode(false), 3000)
-      toast({ title: "Updated", description: "Your access code has been changed." })
+      // toast({ title: "Updated", description: "Your access code has been changed." })
     } catch (e: any) {
       const msg = e?.message || "Unable to process change"
-      toast({ title: "Failed", description: msg, variant: "destructive" })
+      // toast({ title: "Failed", description: msg, variant: "destructive" })
     } finally {
       setChangeLoading(false)
     }
@@ -202,13 +202,13 @@ export function AccessCode() {
           if (!res?.success) {
             setCeresDebitPhase("error")
             setCeresDebitMessage(res?.message || "Insufficient Credits")
-            toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
+            // toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
             return
           }
         } catch (err: any) {
           setCeresDebitPhase("error")
           setCeresDebitMessage("Insufficient Credits")
-          toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
+          // toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
           return
         }
         await new Promise((r) => setTimeout(r, 2000))
@@ -222,7 +222,7 @@ export function AccessCode() {
         setCeresIsBlocked(Boolean(data.isBlocked))
         setShowCeresNewCode(true)
         setTimeout(() => setShowCeresNewCode(false), 3000)
-        toast({ title: "Recovered", description: "Your Ceres access has been recovered." })
+        // toast({ title: "Recovered", description: "Your Ceres access has been recovered." })
         return
       } else if (ceresIsChargable) {
         const reqId = makeRequestId()
@@ -234,13 +234,13 @@ export function AccessCode() {
           if (!res?.success) {
             setCeresDebitPhase("error")
             setCeresDebitMessage(res?.message || "Insufficient Credits")
-            toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
+            // toast({ title: "Payment failed", description: res?.message || "Insufficient Credits", variant: "destructive" })
             return
           }
         } catch (err: any) {
           setCeresDebitPhase("error")
           setCeresDebitMessage("Insufficient Credits")
-          toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
+          // toast({ title: "Payment failed", description: "Insufficient Credits", variant: "destructive" })
           return
         }
         await new Promise((r) => setTimeout(r, 2000))
@@ -255,10 +255,10 @@ export function AccessCode() {
       setCeresIsBlocked(Boolean(data.isBlocked))
       setShowCeresNewCode(true)
       setTimeout(() => setShowCeresNewCode(false), 3000)
-      toast({ title: "Updated", description: "Your Ceres access code has been changed." })
+      // toast({ title: "Updated", description: "Your Ceres access code has been changed." })
     } catch (e: any) {
       const msg = e?.message || "Unable to process change"
-      toast({ title: "Failed", description: msg, variant: "destructive" })
+      // toast({ title: "Failed", description: msg, variant: "destructive" })
     } finally {
       setCeresChangeLoading(false)
     }
@@ -266,174 +266,174 @@ export function AccessCode() {
 
   return (
     <>
-    <div className={"flex-1 bg-background relative overflow-auto scrollbar-hide"}>
-      <div className="px-8 xl:px-12 pt-10 pb-4">
-        <p className="text-4xl font-semibold text-white">Access Code</p>
-      </div>
+      <div className={"flex-1 bg-background relative overflow-auto scrollbar-hide"}>
+        <div className="px-4 md:px-8 xl:px-12 pt-10 pb-4">
+          <p className="text-4xl font-semibold text-white">Access Code</p>
+        </div>
 
-      <div className="px-8 xl:px-12 pb-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-10">
-          <Card
-            className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
-          >
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ backgroundImage: "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)" }}
-            />
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-white/60">Primary</p>
-                <Badge variant="outline" className="text-black bg-white font-semibold">Active</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="py-5">
-              <div className="flex items-start gap-4">
-                <img src={logoSrc} alt="Access Code" className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-white text-base">{appName || "Atlas"}</CardTitle>
-                    {providerName === "atlas" && (
-                      <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4" />
-                    )}
-                    <Badge variant="outline" className="text-white/70">
-                      {totalChangeCount === "0" ? "Newly Issued" : `RC#${totalChangeCount}`}
-                    </Badge>
+        <div className="px-4 md:px-8 xl:px-12 pb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+            <Card
+              className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundImage: "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)" }}
+              />
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-white/60">Primary</p>
+                  <Badge variant="outline" className="text-black bg-white font-semibold">Active</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="py-5">
+                <div className="flex items-start gap-4">
+                  <img src={logoSrc} alt="Access Code" className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-white text-base">{appName || "Atlas"}</CardTitle>
+                      {providerName === "atlas" && (
+                        <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4" />
+                      )}
+                      <Badge variant="outline" className="text-white/70">
+                        {totalChangeCount === "0" ? "Newly Issued" : `RC#${totalChangeCount}`}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-white font-bold mt-2 line-clamp-2">
+                      {isLoadingAccess ? (
+                        <span className="relative inline-block w-10 h-6 rounded-full overflow-hidden bg-white/10">
+                          <span className="absolute inset-0 shimmer" />
+                        </span>
+                      ) : (
+                        showCode ? accessCode : accessCode.replace(/./g, "*")
+                      )}
+                    </CardDescription>
+                    <div className="mt-4 flex items-center gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); setShowCode(!showCode) }}
+                        className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
+                      >
+                        {showCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showCode ? " Hide" : " Reveal"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); requestChange() }}
+                        className="text-white font-semibold hover:bg-transparent cursor-pointer rounded-full"
+                      >
+                        Change
+                      </Button>
+                    </div>
                   </div>
-                  <CardDescription className="text-white font-bold mt-2 line-clamp-2">
-                    {isLoadingAccess ? (
-                      <span className="relative inline-block w-10 h-6 rounded-full overflow-hidden bg-white/10">
-                        <span className="absolute inset-0 shimmer" />
-                      </span>
-                    ) : (
-                      showCode ? accessCode : accessCode.replace(/./g, "*")
-                    )}
-                  </CardDescription>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); setShowCode(!showCode) }}
-                      className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
-                    >
-                      {showCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      {showCode ? " Hide" : " Reveal"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); requestChange() }}
-                      className="text-white font-semibold hover:bg-transparent cursor-pointer rounded-full"
-                    >
-                      Change
-                    </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card
+              className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundImage: "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)" }}
+              />
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-white/60">Primary</p>
+                  <Badge variant="outline" className="text-black bg-white font-semibold">Active</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="py-5">
+                <div className="flex items-start gap-4">
+                  <img src={ceresLogoSrc} alt="Ceres Access Code" className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-white text-base">{ceresAppName || "Ceres Assist"}</CardTitle>
+                      {ceresProviderName === "ceres" && (
+                        <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4" />
+                      )}
+                      <Badge variant="outline" className="text-white/70">
+                        {ceresTotalChangeCount === "0" ? "Newly Issued" : `RC#${ceresTotalChangeCount}`}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-white font-bold mt-2 line-clamp-2">
+                      {isLoadingCeres ? (
+                        <span className="relative inline-block w-10 h-6 rounded-full overflow-hidden bg-white/10">
+                          <span className="absolute inset-0 shimmer" />
+                        </span>
+                      ) : (
+                        showCeresCode ? ceresAccessCode : ceresAccessCode.replace(/./g, "*")
+                      )}
+                    </CardDescription>
+                    <div className="mt-4 flex items-center gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); setShowCeresCode(!showCeresCode) }}
+                        className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
+                      >
+                        {showCeresCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showCeresCode ? " Hide" : " Reveal"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); requestCeresChange() }}
+                        className="text_white font-semibold hover:bg-transparent cursor-pointer rounded-full"
+                      >
+                        Change
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/50 backdrop-blur-xl hover:bg-black/60 transition-colors"
-          >
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ backgroundImage: "radial-gradient(60% 70% at 50% 55%, rgba(255,255,255,0.06), transparent)" }}
-            />
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-white/60">Primary</p>
-                <Badge variant="outline" className="text-black bg-white font-semibold">Active</Badge>
-              </div>
-            </CardHeader>
-          <CardContent className="py-5">
-            <div className="flex items-start gap-4">
-              <img src={ceresLogoSrc} alt="Ceres Access Code" className="w-14 h-14 rounded-xl ring-1 ring-white/10 shadow-lg" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-white text-base">{ceresAppName || "Ceres Assist"}</CardTitle>
-                  {ceresProviderName === "ceres" && (
-                    <img src="/verified/badge.svg" alt="Verified" className="w-4 h-4" />
-                  )}
-                  <Badge variant="outline" className="text-white/70">
-                    {ceresTotalChangeCount === "0" ? "Newly Issued" : `RC#${ceresTotalChangeCount}`}
-                  </Badge>
-                </div>
-                <CardDescription className="text-white font-bold mt-2 line-clamp-2">
-                  {isLoadingCeres ? (
-                    <span className="relative inline-block w-10 h-6 rounded-full overflow-hidden bg-white/10">
-                      <span className="absolute inset-0 shimmer" />
-                    </span>
-                  ) : (
-                    showCeresCode ? ceresAccessCode : ceresAccessCode.replace(/./g, "*")
-                  )}
-                </CardDescription>
-                <div className="mt-4 flex items-center gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); setShowCeresCode(!showCeresCode) }}
-                    className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
-                  >
-                    {showCeresCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    {showCeresCode ? " Hide" : " Reveal"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); requestCeresChange() }}
-                    className="text_white font-semibold hover:bg-transparent cursor-pointer rounded-full"
-                  >
-                    Change
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
-    <Dialog open={isChangeOpen} onOpenChange={setIsChangeOpen}>
-      <DialogContent className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-white mb-4">Confirm Change</DialogTitle>
-          <DialogDescription className="text-white">
-            You can change your access code up to <span className="font-bold text-white">3 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
-          </DialogDescription>
-        </DialogHeader>
-        {isBlocked && (
-          <div className="mt-2 text-red-400 font-semibold">Your account is currently blocked. Recovery incurs ₹349.00.</div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" className="rounded-full" onClick={() => setIsChangeOpen(false)} disabled={changeLoading}>Cancel</Button>
-          <Button className="bg-white text-black font-semibold rounded-full hover:bg-white/90" onClick={handleAgree} disabled={changeLoading}>
-            {changeLoading ? "Processing..." : isBlocked ? "Recovery Access" : "Agree"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <Dialog open={isCeresChangeOpen} onOpenChange={setIsCeresChangeOpen}>
-      <DialogContent className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-white mb-4">Confirm Change</DialogTitle>
-          <DialogDescription className="text-white">
-            You can change your access code up to <span className="font-bold text-white">3-4 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
-          </DialogDescription>
-        </DialogHeader>
-        {ceresIsBlocked && (
-          <div className="mt-2 text-red-400 font-semibold">Your account is currently blocked. Recovery incurs ₹349.00.</div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" className="rounded-full" onClick={() => setIsCeresChangeOpen(false)} disabled={ceresChangeLoading}>Cancel</Button>
-          <Button className="bg-white text-black font-semibold rounded-full hover:bg-white/90" onClick={handleCeresAgree} disabled={ceresChangeLoading}>
-            {ceresChangeLoading ? "Processing..." : ceresIsBlocked ? "Recovery Access" : "Agree"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <NewCodeOverlay open={showNewCode} code={accessCode} />
-    <NewCodeOverlay open={showCeresNewCode} code={ceresAccessCode} />
-    <DebitOverlay open={showDebit} message={debitMessage} phase={debitPhase} onClose={() => { setShowDebit(false); setDebitPhase(null); setDebitMessage("") }} />
-    <DebitOverlay open={ceresShowDebit} message={ceresDebitMessage} phase={ceresDebitPhase} onClose={() => { setCeresShowDebit(false); setCeresDebitPhase(null); setCeresDebitMessage("") }} />
+      <Dialog open={isChangeOpen} onOpenChange={setIsChangeOpen}>
+        <DialogContent className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white mb-4">Confirm Change</DialogTitle>
+            <DialogDescription className="text-white">
+              You can change your access code up to <span className="font-bold text-white">3 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
+            </DialogDescription>
+          </DialogHeader>
+          {isBlocked && (
+            <div className="mt-2 text-red-400 font-semibold">Your account is currently blocked. Recovery incurs ₹349.00.</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" className="rounded-full" onClick={() => setIsChangeOpen(false)} disabled={changeLoading}>Cancel</Button>
+            <Button className="bg-white text-black font-semibold rounded-full hover:bg-white/90" onClick={handleAgree} disabled={changeLoading}>
+              {changeLoading ? "Processing..." : isBlocked ? "Recovery Access" : "Agree"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isCeresChangeOpen} onOpenChange={setIsCeresChangeOpen}>
+        <DialogContent className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white mb-4">Confirm Change</DialogTitle>
+            <DialogDescription className="text-white">
+              You can change your access code up to <span className="font-bold text-white">3-4 times for free</span>. After that, each change costs <span className="font-bold text-white">₹16.49</span>. The maximum allowed changes is <span className="font-bold text-white">12</span>. Once this limit is reached, your account will be <span className="font-bold text-white">temporarily blocked</span>, and recovery may cost <span className="font-bold text-white">₹349</span>. Please keep your access code secure and classified.
+            </DialogDescription>
+          </DialogHeader>
+          {ceresIsBlocked && (
+            <div className="mt-2 text-red-400 font-semibold">Your account is currently blocked. Recovery incurs ₹349.00.</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" className="rounded-full" onClick={() => setIsCeresChangeOpen(false)} disabled={ceresChangeLoading}>Cancel</Button>
+            <Button className="bg-white text-black font-semibold rounded-full hover:bg-white/90" onClick={handleCeresAgree} disabled={ceresChangeLoading}>
+              {ceresChangeLoading ? "Processing..." : ceresIsBlocked ? "Recovery Access" : "Agree"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <NewCodeOverlay open={showNewCode} code={accessCode} />
+      <NewCodeOverlay open={showCeresNewCode} code={ceresAccessCode} />
+      <DebitOverlay open={showDebit} message={debitMessage} phase={debitPhase} onClose={() => { setShowDebit(false); setDebitPhase(null); setDebitMessage("") }} />
+      <DebitOverlay open={ceresShowDebit} message={ceresDebitMessage} phase={ceresDebitPhase} onClose={() => { setCeresShowDebit(false); setCeresDebitPhase(null); setCeresDebitMessage("") }} />
     </>
   )
 }

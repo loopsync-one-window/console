@@ -256,7 +256,7 @@ export function Dashboard() {
         } catch { }
       }
       if (!email) {
-        toast.error("Could not verify user email")
+        // toast.error("Could not verify user email")
         return
       }
 
@@ -270,7 +270,7 @@ export function Dashboard() {
 
       if (res.success) {
         setTrialCreditsClaimed(true)
-        toast.success("Successfully claimed ₹400 credits")
+        // toast.success("Successfully claimed ₹400 credits")
         try {
           const overview = await getBillingOverview({ force: true })
           if (overview?.success && overview?.data) setOverview(overview.data)
@@ -278,13 +278,13 @@ export function Dashboard() {
       } else {
         if (res.message?.includes("already claimed") || ((res as any).code === 'ALREADY_CLAIMED')) {
           setTrialCreditsClaimed(true)
-          toast.info("Credits already claimed")
+          // toast.info("Credits already claimed")
         } else {
-          toast.error(res.message || "Failed to claim credits")
+          // toast.error(res.message || "Failed to claim credits")
         }
       }
     } catch (e) {
-      toast.error("An error occurred")
+      // toast.error("An error occurred")
     } finally {
       setShowProcessingModal(false)
       setIsClaimingCredits(false)
@@ -343,7 +343,7 @@ export function Dashboard() {
 
 
 
-      <div className="relative z-10 p-8">
+      <div className="relative z-10 p-4 md:p-8">
         <Dialog
           open={isTrialModalOpen && isFreeTrial}
         >
@@ -449,8 +449,8 @@ export function Dashboard() {
         </div>
 
         {/* Usage Snapshot Section */}
-        <div className="mb-8 rounded-3xl border border-white/5 bg-black p-8">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 rounded-3xl border border-white/5 bg-black p-4 md:p-8">
+          <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <h2 className="text-[16px] font-medium text-foreground">Usage Snapshot for {monthLabel}</h2>
             {(userDataLoaded && isFreeTrial) ? (
               <div className="flex items-center gap-3">
@@ -466,7 +466,7 @@ export function Dashboard() {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Usage Cap */}
             <div className="flex flex-col items-center gap-4 p-4">
               <div className="relative w-24 h-24">
@@ -594,7 +594,7 @@ export function Dashboard() {
           </div>
 
           {/* Usage Details */}
-          <div className="border-t border-border pt-8 mb-8 grid grid-cols-3 gap-8">
+          <div className="border-t border-border pt-8 mb-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex justify-between">
               <p className="text-muted-foreground">Total usage</p>
               <p className="font-semibold text-foreground">{isLoading ? <span className="inline-block bg-white/5 animate-pulse rounded-full w-24 h-5" /> : fmt(overview?.usage?.total || 0)}</p>

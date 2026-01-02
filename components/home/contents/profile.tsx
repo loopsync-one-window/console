@@ -55,11 +55,11 @@ export function Profile() {
 
   return (
     <div className="flex-1 bg-background relative overflow-auto scrollbar-hide">
-      <div className="px-8 xl:px-12 pt-10 pb-4">
+      <div className="px-4 md:px-8 xl:px-12 pt-10 pb-4">
         <p className="text-4xl font-semibold text-white">My Profile</p>
       </div>
 
-      <div className="px-8 xl:px-12 mt-4 mb-12">
+      <div className="px-4 md:px-8 xl:px-12 mt-4 mb-12">
         <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
           <div
             className="absolute inset-0 pointer-events-none opacity-50"
@@ -68,7 +68,7 @@ export function Profile() {
                 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 100%), repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 2px)',
             }}
           />
-          <div className="relative p-8 md:p-12 flex items-center gap-6">
+          <div className="relative p-6 md:p-12 flex flex-col md:flex-row items-center gap-6">
             <img src="/resources/apple.svg" alt="Apple" className="w-10 h-10 brightness-0 invert" />
             <img src="/resources/windows.svg" alt="Windows" className="w-9 h-9 brightness-0 invert" />
             <div>
@@ -79,14 +79,14 @@ export function Profile() {
         </div>
       </div>
 
-      <div className="px-8 xl:px-12 pb-20">
+      <div className="px-4 md:px-8 xl:px-12 pb-20">
         <Card className="bg-black/40 border-white/5 rounded-3xl shadow-xl hover:border-white/5 transition-colors">
           <CardHeader>
             <CardTitle className="text-white">Profile Details</CardTitle>
             <CardDescription className="text-white/70">Key account information and actions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-start gap-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/30 to-white/10 border border-white/20 ring-2 ring-white/20 shadow-lg flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
                 {profile.fullName?.charAt(0)?.toUpperCase() || 'R'}
               </div>
@@ -188,22 +188,22 @@ export function Profile() {
               className="rounded-full bg-white text-black font-semibold hover:bg-white/90"
               onClick={async () => {
                 if (!newPassword || !confirmPassword) {
-                  toast({ title: 'Missing fields', description: 'Enter and confirm your new password.', variant: 'destructive' });
+                  // toast({ title: 'Missing fields', description: 'Enter and confirm your new password.', variant: 'destructive' });
                   return;
                 }
                 if (newPassword !== confirmPassword) {
-                  toast({ title: 'Passwords do not match', description: 'Ensure both passwords are identical.', variant: 'destructive' });
+                  // toast({ title: 'Passwords do not match', description: 'Ensure both passwords are identical.', variant: 'destructive' });
                   return;
                 }
                 setIsChanging(true);
                 try {
                   const res = await changePassword(newPassword, confirmPassword);
-                  toast({ title: 'Success', description: res.message || 'Password changed successfully.' });
+                  // toast({ title: 'Success', description: res.message || 'Password changed successfully.' });
                   setIsPasswordOpen(false);
                   setNewPassword('');
                   setConfirmPassword('');
                 } catch (e) {
-                  toast({ title: 'Change failed', description: 'Please try again later.', variant: 'destructive' });
+                  // toast({ title: 'Change failed', description: 'Please try again later.', variant: 'destructive' });
                 } finally {
                   setIsChanging(false);
                 }

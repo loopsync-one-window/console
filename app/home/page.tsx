@@ -146,6 +146,49 @@ function HomeContent() {
     }
   }, [allowed, retryCount])
 
+  // Periodically check status (every 5 minutes) and on window focus
+  useEffect(() => {
+    if (!allowed || !hasCheckedOnboard) return
+
+    const checkStatus = async () => {
+      try {
+        const autopay = await getAutopayStatus()
+        setAutopayStatus(autopay)
+
+        const restricted =
+          autopay?.isAutopayCancelled ||
+          autopay?.shouldRestrict ||
+          autopay?.local?.autoRenew === false ||
+          autopay?.local?.status?.toUpperCase() === "PAST_DUE" || // Explicitly check PAST_DUE
+          (autopay?.local?.status?.toUpperCase() !== "ACTIVE" && autopay?.local?.status?.toUpperCase() !== "TRIAL")
+
+        if (restricted) {
+          setMustShowCancelModal(true)
+        }
+      } catch (e) {
+        // ignore silent errors during polling
+      }
+    }
+
+    // Check every 5 minutes
+    const interval = setInterval(checkStatus, 5 * 60 * 1000)
+
+    // Check on window focus
+    const onFocus = () => {
+      if (document.visibilityState === "visible") {
+        checkStatus()
+      }
+    }
+    window.addEventListener("visibilitychange", onFocus)
+    window.addEventListener("focus", onFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("visibilitychange", onFocus)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [allowed, hasCheckedOnboard])
+
   if (!hydrated || !allowed) return null
 
   if (isLoading) {
@@ -200,6 +243,11 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
     router.push(`/secure/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billingCycle=monthly&reactivate=true`)
   }
 
+  const isTrialExpired = status?.local?.status === "PAST_DUE" || status?.reason === "TRIAL_EXPIRED_NO_PAYMENT"
+  const isPaymentPending = status?.reason === "PAYMENT_PENDING"
+
+  if (!open) return null
+
   return (
     <Dialog open={open}>
       <DialogContent
@@ -209,10 +257,14 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
       >
         <div className="space-y-3 pt-2">
           <DialogTitle className="text-2xl font-bold text-black tracking-tighter">
-            Subscription Paused
+            {isPaymentPending ? "Payment Verification" : isTrialExpired ? "Trial Expired" : "Subscription Paused"}
           </DialogTitle>
           <p className="text-[15px] text-gray-500 font-medium leading-relaxed">
-            Your subscription is currently inactive. Please reactivate to continue using LoopSync.
+            {isPaymentPending
+              ? "Your payment is currently being processed. Please wait while we verify the transaction."
+              : isTrialExpired
+                ? "Your 7-day free trial has ended. Please confirm your payment details to continue calculating your loops."
+                : "Your subscription is currently inactive. Please reactivate to continue using LoopSync."}
           </p>
         </div>
 
@@ -221,7 +273,7 @@ function AutopayCancelModal({ open, status, email }: { open: boolean; status: Au
             onClick={handleReactivate}
             className="w-full cursor-pointer bg-black text-white hover:bg-zinc-800 font-bold h-12 rounded-full transition-all text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
           >
-            Reactivate Subscription
+            {isTrialExpired ? "Continue Subscription" : "Reactivate Subscription"}
           </Button>
 
           <a

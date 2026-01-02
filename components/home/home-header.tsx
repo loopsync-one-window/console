@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Search, Settings } from "lucide-react"
+import { Bell, Search, Settings, Menu } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,7 @@ import { getBillingOverview, getProfilePreferences, updateStabilityModePreferenc
 export function HomeHeader() {
   const router = useRouter()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const { setActiveItem } = useSidebar()
+  const { setActiveItem, setMobileMenuOpen } = useSidebar()
   const [stabilityMode, setStabilityMode] = useState(false)
   const [lowPrepay, setLowPrepay] = useState(false)
   const [loadingStability, setLoadingStability] = useState(true)
@@ -42,7 +42,7 @@ export function HomeHeader() {
         const res = await getBillingOverview()
         const balance = res?.data?.credits?.prepaid?.balance || 0
         setLowPrepay((balance / 100) < 85)
-      } catch {}
+      } catch { }
     })()
   }, [])
 
@@ -51,7 +51,7 @@ export function HomeHeader() {
       try {
         const prefs = await getProfilePreferences()
         setStabilityMode(prefs?.stabilityMode === 'active')
-      } catch {}
+      } catch { }
       setLoadingStability(false)
     })()
   }, [])
@@ -114,6 +114,11 @@ export function HomeHeader() {
     <header className="border-b-2 border-white/5 border-border bg-black px-6 py-3.5 flex items-center justify-between h-16">
       {/* Left side - Tabs */}
       <div className="flex items-center gap-4">
+        <div className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)} className="text-white hover:bg-white/10">
+            <Menu className="w-5 h-5" />
+          </Button>
+        </div>
 
         {/* <div
           className="relative overflow-hidden flex items-center gap-2 p-2 px-4 rounded-full border border-white/10 border-border bg-transparent cursor-pointer backdrop-blur-md transition-all duration-300 hover:bg-white/10 shimmer"
@@ -182,8 +187,8 @@ export function HomeHeader() {
             onCheckedChange={toggleStabilityMode}
             className="cursor-pointer"
           />
-          <label 
-            htmlFor="stability-mode" 
+          <label
+            htmlFor="stability-mode"
             className="text-[13px] font-semibold cursor-pointer whitespace-nowrap"
           >
             {stabilityMode ? 'Stability Mode' : 'Stability Mode'}
@@ -208,13 +213,12 @@ export function HomeHeader() {
             <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
               <div className="space-y-4 pr-4">
                 {notifications.map((notification) => (
-                  <div 
+                  <div
                     key={notification.id}
-                    className={`p-4 rounded-lg border ml-10 mr-10 ${
-                      notification.unread 
-                        ? "bg-transparent border-white/5" 
-                        : "bg-transparent border-border border-white/5"
-                    }`}
+                    className={`p-4 rounded-lg border ml-10 mr-10 ${notification.unread
+                      ? "bg-transparent border-white/5"
+                      : "bg-transparent border-border border-white/5"
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="w-8 h-8">
@@ -243,7 +247,7 @@ export function HomeHeader() {
         </Sheet>
 
         {/* Profile avatar */}
-        <div 
+        <div
           className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-semibold cursor-pointer"
           onClick={() => setActiveItem("my-profile")}
         >

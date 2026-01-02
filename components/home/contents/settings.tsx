@@ -50,7 +50,7 @@ export function Settings() {
           setAutoSave(prefs.emergencyLockdown === 'active');
         }
       } catch (e) {
-        toast({ title: 'Failed to load preferences', description: 'Using defaults.', variant: 'destructive' });
+        // toast({ title: 'Failed to load preferences', description: 'Using defaults.', variant: 'destructive' });
       } finally {
         setLoadingInit(false);
       }
@@ -59,15 +59,15 @@ export function Settings() {
 
   const handleConfirmDelete = async () => {
     if (!/^\d{6}$/.test(otp)) {
-      toast({ title: 'Invalid OTP', description: 'Enter the 6-digit code to proceed.', variant: 'destructive' });
+      // toast({ title: 'Invalid OTP', description: 'Enter the 6-digit code to proceed.', variant: 'destructive' });
       return;
     }
     setConfirmDeleteLoading(true);
     try {
       const res = await confirmDeletion(otp);
       setIsOtpOpen(false);
-      toast({ title: 'Success', description: res.message || 'Your account is scheduled for deletion.' });
-      
+      // toast({ title: 'Success', description: res.message || 'Your account is scheduled for deletion.' });
+
       // Clear all tokens from localStorage
       try {
         localStorage.removeItem('accessToken');
@@ -77,20 +77,20 @@ export function Settings() {
       } catch (e) {
         console.error('Error clearing localStorage:', e);
       }
-      
+
       // Logout from API
       try {
         await logoutAny();
       } catch (e) {
         console.error('Error logging out from API:', e);
       }
-      
+
       setShowExitOverlay(true);
       setTimeout(() => {
         window.location.href = 'https://loopsync.cloud';
       }, 3000);
     } catch (e) {
-      toast({ title: 'Deletion failed', description: 'Please try again later.', variant: 'destructive' });
+      // toast({ title: 'Deletion failed', description: 'Please try again later.', variant: 'destructive' });
     } finally {
       setConfirmDeleteLoading(false);
     }
@@ -98,11 +98,11 @@ export function Settings() {
 
   return (
     <div className="flex-1 bg-background relative overflow-auto scrollbar-hide">
-      <div className="px-8 xl:px-12 pt-10 pb-4">
+      <div className="px-4 md:px-8 xl:px-12 pt-10 pb-4">
         <p className="text-4xl font-semibold text-white">Settings</p>
       </div>
 
-      <div className="px-8 xl:px-12 mt-4 mb-12">
+      <div className="px-4 md:px-8 xl:px-12 mt-4 mb-12">
         <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
           <div
             className="absolute inset-0 pointer-events-none opacity-50"
@@ -111,7 +111,7 @@ export function Settings() {
                 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 100%), repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 2px)',
             }}
           />
-          <div className="relative p-8 md:p-12 flex items-center gap-6">
+          <div className="relative p-6 md:p-12 flex flex-col md:flex-row items-center gap-6">
             <img src="/resources/apple.svg" alt="Apple" className="w-10 h-10 brightness-0 invert" />
             <img src="/resources/windows.svg" alt="Windows" className="w-9 h-9 brightness-0 invert" />
             <div>
@@ -122,13 +122,13 @@ export function Settings() {
         </div>
       </div>
 
-      <div className="px-8 xl:px-12 pb-20">
+      <div className="px-4 md:px-8 xl:px-12 pb-20">
         <div className="rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 p-6">
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-semibold mb-4 text-white">Preferences</h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between mt-10">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-10 gap-4">
                   <div>
                     <p className="font-bold text-white">Notifications</p>
                     <p className="text-sm text-white/70">Receive notifications about your account activity</p>
@@ -145,10 +145,10 @@ export function Settings() {
                         setLoadingNotifications(true);
                         try {
                           await updateNotificationsPreference(checked);
-                          toast({ title: 'Updated', description: 'Notifications preference saved.' });
+                          // toast({ title: 'Updated', description: 'Notifications preference saved.' });
                         } catch (e) {
                           setNotifications(prev);
-                          toast({ title: 'Failed', description: 'Could not update notifications.', variant: 'destructive' });
+                          // toast({ title: 'Failed', description: 'Could not update notifications.', variant: 'destructive' });
                         } finally {
                           setLoadingNotifications(false);
                         }
@@ -156,8 +156,8 @@ export function Settings() {
                     />
                   )}
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
                     <p className="font-bold text-white">Music Experience</p>
                     <p className="text-sm text-white/70">Enable music experience to listen to music while using the platform</p>
@@ -174,10 +174,10 @@ export function Settings() {
                         setLoadingMusic(true);
                         try {
                           await updateMusicExperiencePreference(checked);
-                          toast({ title: 'Updated', description: 'Music experience preference saved.' });
+                          // toast({ title: 'Updated', description: 'Music experience preference saved.' });
                         } catch (e) {
                           setMusicExperience(prev);
-                          toast({ title: 'Failed', description: 'Could not update music experience.', variant: 'destructive' });
+                          // toast({ title: 'Failed', description: 'Could not update music experience.', variant: 'destructive' });
                         } finally {
                           setLoadingMusic(false);
                         }
@@ -185,8 +185,8 @@ export function Settings() {
                     />
                   )}
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
                     <p className="font-bold text-white">Emergency Lockdown</p>
                     <p className="text-sm text-white/70">Lockdown your account in case of unauthorized access</p>
@@ -203,10 +203,10 @@ export function Settings() {
                         setLoadingLockdown(true);
                         try {
                           await updateEmergencyLockdownPreference(checked);
-                          toast({ title: 'Updated', description: 'Emergency lockdown preference saved.' });
+                          // toast({ title: 'Updated', description: 'Emergency lockdown preference saved.' });
                         } catch (e) {
                           setAutoSave(prev);
-                          toast({ title: 'Failed', description: 'Could not update emergency lockdown.', variant: 'destructive' });
+                          // toast({ title: 'Failed', description: 'Could not update emergency lockdown.', variant: 'destructive' });
                         } finally {
                           setLoadingLockdown(false);
                         }
@@ -216,7 +216,7 @@ export function Settings() {
                 </div>
               </div>
             </div>
-            
+
             {/* <div>
               <h2 className="text-lg font-semibold mb-4 text-white">Account</h2>
               <div className="space-y-4">
@@ -237,7 +237,7 @@ export function Settings() {
                 </div>
               </div>
             </div> */}
-            
+
             <div className="pt-4 border-t border-border mt-4 ">
               <Button
                 className='bg-red-700 hover:bg-red-600 rounded-full cursor-pointer text-white font-bold'
@@ -246,15 +246,15 @@ export function Settings() {
                 Delete Account
               </Button>
             </div>
-         </div> 
-       </div>
-     </div>
+          </div>
+        </div>
+      </div>
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Delete Account</AlertDialogTitle>
             <AlertDialogDescription className="text-white">
-            This action will permanently delete your account. All associated data and your current plan will be lost and cannot be recovered.            </AlertDialogDescription>
+              This action will permanently delete your account. All associated data and your current plan will be lost and cannot be recovered.            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className='text-white rounded-full'>Cancel</AlertDialogCancel>
@@ -266,12 +266,12 @@ export function Settings() {
                 try {
                   const res = await requestDeletionOtp();
                   if (res.success) {
-                    toast({ title: 'OTP sent', description: res.message });
+                    // toast({ title: 'OTP sent', description: res.message });
                   } else {
-                    toast({ title: 'Failed to send OTP', description: res.message, variant: 'destructive' });
+                    // toast({ title: 'Failed to send OTP', description: res.message, variant: 'destructive' });
                   }
                 } catch (e) {
-                  toast({ title: 'Failed to send OTP', description: 'Please try again later.', variant: 'destructive' });
+                  // toast({ title: 'Failed to send OTP', description: 'Please try again later.', variant: 'destructive' });
                 } finally {
                   setRequestOtpLoading(false);
                 }

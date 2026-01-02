@@ -62,7 +62,7 @@ export default function SyncCreditStore() {
     return "/flags/worldwide.svg"
   }
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const cached = getCachedBillingDetails()
         if (cached) {
@@ -71,13 +71,13 @@ export default function SyncCreditStore() {
           const res = await getBillingDetails()
           setDetails(res)
         }
-      } catch {}
+      } catch { }
       try {
         const sub = await getSubscriptionMe()
         const trial = sub?.subscription?.isFreeTrial === true
         setIsFreeTrial(trial)
         setCreditType(trial ? "free" : "prepaid")
-      } catch {}
+      } catch { }
     })()
   }, [])
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function SyncCreditStore() {
                   paymentReferenceId: resp?.razorpay_payment_id,
                   status: "PAID",
                 })
-              } catch {}
+              } catch { }
             }
             setSuccessInfo({ amountPaise, paymentId: resp?.razorpay_payment_id })
             setShowSuccess(true)
@@ -184,7 +184,7 @@ export default function SyncCreditStore() {
               paymentReferenceId: response?.error?.metadata?.payment_id || response?.error?.payment_id,
               status: "FAILED",
             })
-          } catch {}
+          } catch { }
         })
       }
       setIsCheckoutActive(true)
@@ -215,28 +215,28 @@ export default function SyncCreditStore() {
             </div>
           )}
           <div className="mt-4">
-          <div className="flex justify-center">
-  <Button
-    className="bg-white text-black rounded-full text-center align-middle font-semibold"
-    onClick={() => {
-      setShowSuccess(false)
-      setIsCheckoutActive(false)
-      invalidateBillingOverviewCache()
-      setActiveItem("dashboard")
-    }}
-  >
-    Done
-  </Button>
-</div>
+            <div className="flex justify-center">
+              <Button
+                className="bg-white text-black rounded-full text-center align-middle font-semibold"
+                onClick={() => {
+                  setShowSuccess(false)
+                  setIsCheckoutActive(false)
+                  invalidateBillingOverviewCache()
+                  setActiveItem("dashboard")
+                }}
+              >
+                Done
+              </Button>
+            </div>
 
           </div>
         </DialogContent>
       </Dialog>
-      <div className="px-8 xl:px-12 pt-10 pb-4">
+      <div className="px-4 md:px-8 xl:px-12 pt-10 pb-4">
         <p className="text-4xl font-semibold text-white">Credit Store</p>
       </div>
 
-      <div className="px-8 xl:px-12 mt-4 mb-12">
+      <div className="px-4 md:px-8 xl:px-12 mt-4 mb-12">
         <div className="relative rounded-3xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/5">
           <div
             className="absolute inset-0 pointer-events-none opacity-50"
@@ -248,7 +248,7 @@ export default function SyncCreditStore() {
 
           <div className="relative p-8 md:p-12">
             {/* Display selected credits + cost */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
               <div className="flex items-center gap-2 text-white/70 text-sm">
                 <span>Credits to Purchase</span>
                 <Tooltip>
@@ -313,49 +313,49 @@ export default function SyncCreditStore() {
             </div>
 
             <div className="mt-8">
-            <div className="bg-white/5 border border-white/10 p-6 space-y-6">
-{/* Title + Button Row */}
-    <div className="flex items-center justify-between">
-      <h3 className="text-white text-lg font-semibold">Billing</h3>
-      <div className="flex items-center gap-3">
-        <div className="w-40">
-          <Select
-            value={creditType}
-            onValueChange={(v) => {
-              const allowed = isFreeTrial ? "free" : "prepaid"
-              setCreditType((v as "prepaid" | "free") === allowed ? allowed : allowed)
-            }}
-          >
-            <SelectTrigger className="rounded-full border border-white/10 bg-transparent text-white font-semibold px-3 py-2">
-              <SelectValue placeholder="prepaid" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="prepaid" disabled={isFreeTrial === true}>Prepaid</SelectItem>
-              <SelectItem value="free" disabled={isFreeTrial === false}>Free</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-40">
-          <Button
-            disabled={isLoading || isPaying || isCheckoutActive}
-            className="relative overflow-hidden cursor-pointer bg-white text-black font-semibold px-6 py-3 rounded-full w-full hover:bg-white/90 transition-colors"
-            onClick={handleMakePayment}
-          >
-            {isPaying ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0c-4.418 0-8 3.582-8 8h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing…
-              </span>
-            ) : (
-              "Make Payment"
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
+              <div className="bg-white/5 border border-white/10 p-6 space-y-6">
+                {/* Title + Button Row */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <h3 className="text-white text-lg font-semibold">Billing</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-40">
+                      <Select
+                        value={creditType}
+                        onValueChange={(v) => {
+                          const allowed = isFreeTrial ? "free" : "prepaid"
+                          setCreditType((v as "prepaid" | "free") === allowed ? allowed : allowed)
+                        }}
+                      >
+                        <SelectTrigger className="rounded-full border border-white/10 bg-transparent text-white font-semibold px-3 py-2">
+                          <SelectValue placeholder="prepaid" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="prepaid" disabled={isFreeTrial === true}>Prepaid</SelectItem>
+                          <SelectItem value="free" disabled={isFreeTrial === false}>Free</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-40">
+                      <Button
+                        disabled={isLoading || isPaying || isCheckoutActive}
+                        className="relative overflow-hidden cursor-pointer bg-white text-black font-semibold px-6 py-3 rounded-full w-full hover:bg-white/90 transition-colors"
+                        onClick={handleMakePayment}
+                      >
+                        {isPaying ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0c-4.418 0-8 3.582-8 8h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing…
+                          </span>
+                        ) : (
+                          "Make Payment"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {/* <div className="flex items-center justify-between">
                     <span className="text-white/70 text-sm">Selected credits</span>
@@ -374,7 +374,7 @@ export default function SyncCreditStore() {
                   <div className="grid grid-cols-3 gap-4 border-b border-white/10 pb-4 text-xs font-medium text-white/70">
                     <div className="font-semibold text-white text-base">Payment Method</div>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 p-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-lg border border-white/10 bg-black/30 p-4">
                     <div className="flex items-center gap-4 flex-1">
                       <img src="payment/razorpay.png" alt="Razorpay" className="h-6 w-auto invert brightness-0 saturate-0" />
                       <span className="text-white">

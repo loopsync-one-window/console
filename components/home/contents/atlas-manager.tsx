@@ -62,8 +62,8 @@ export default function AtlasManager() {
     enabledCount === 1
       ? 'grid grid-cols-1 md:grid-cols-1 gap-4'
       : enabledCount === 2
-      ? 'grid grid-cols-1 md:grid-cols-2 gap-4'
-      : 'grid grid-cols-1 md:grid-cols-3 gap-4'
+        ? 'grid grid-cols-1 md:grid-cols-2 gap-4'
+        : 'grid grid-cols-1 md:grid-cols-3 gap-4'
 
   const selectMode = (mode: 'default' | 'custom') => {
     setSelectedMode(mode)
@@ -98,10 +98,10 @@ export default function AtlasManager() {
       try {
         const requestId = `PM-${provider}-${Date.now()}`
         await consumeBilling(email, 199, `atlas.customize.${provider}`, requestId)
-      } catch {}
-      toast({ title: 'Updated', description: 'Custom response saved.' })
+      } catch { }
+      // toast({ title: 'Updated', description: 'Custom response saved.' })
     } catch (e) {
-      toast({ title: 'Failed', description: 'Could not customize prompt.', variant: 'destructive' })
+      // toast({ title: 'Failed', description: 'Could not customize prompt.', variant: 'destructive' })
     } finally {
       setPromptLoading((l) => ({ ...l, [key]: false }))
     }
@@ -122,10 +122,10 @@ export default function AtlasManager() {
     try {
       const email = currentUser?.email || 'you@loopsync.cloud'
       await updateSmartActionClient({ email, key: key as any, enabled: next })
-      toast({ title: 'Updated', description: 'Smart action saved.' })
+      // toast({ title: 'Updated', description: 'Smart action saved.' })
     } catch (e) {
       setSmartActions((s) => ({ ...s, [key]: prev }))
-      toast({ title: 'Failed', description: 'Could not update smart action.', variant: 'destructive' })
+      // toast({ title: 'Failed', description: 'Could not update smart action.', variant: 'destructive' })
     }
   }
 
@@ -140,7 +140,7 @@ export default function AtlasManager() {
           visionPro: models.visionPro === 'active',
         })
       } catch (e) {
-        toast({ title: 'Failed to load models', description: 'Using defaults.', variant: 'destructive' })
+        // toast({ title: 'Failed to load models', description: 'Using defaults.', variant: 'destructive' })
       } finally {
         setLoadingInit(false)
       }
@@ -154,7 +154,7 @@ export default function AtlasManager() {
         const u = JSON.parse(raw) as { id: string; email: string }
         setCurrentUser({ id: u.id, email: u.email })
       }
-    } catch {}
+    } catch { }
   }, [])
 
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function AtlasManager() {
         const sa = await getSmartActionsClient(email)
         setSmartActions((s) => ({ ...s, ...sa }))
       } catch (e) {
-        toast({ title: 'Failed to load smart actions', description: 'Using defaults.', variant: 'destructive' })
+        // toast({ title: 'Failed to load smart actions', description: 'Using defaults.', variant: 'destructive' })
       }
     })()
   }, [currentUser?.email, toast])
@@ -191,7 +191,7 @@ export default function AtlasManager() {
         const anyCustom = [gemini?.mode, openai?.mode, grok?.mode].some((m) => m === 'custom')
         if (anyCustom) setSelectedMode('custom')
       } catch (e) {
-        toast({ title: 'Failed to load prompt mode', description: 'Using defaults.', variant: 'destructive' })
+        // toast({ title: 'Failed to load prompt mode', description: 'Using defaults.', variant: 'destructive' })
       }
     })()
   }, [toast])
@@ -204,9 +204,9 @@ export default function AtlasManager() {
       await deletePromptModeClient(provider, email)
       setTrainingPrompts((p) => ({ ...p, [key]: '' }))
       setTrained((t) => ({ ...t, [key]: false }))
-      toast({ title: 'Deleted', description: 'Custom response removed.' })
+      // toast({ title: 'Deleted', description: 'Custom response removed.' })
     } catch (e) {
-      toast({ title: 'Failed', description: 'Could not delete custom response.', variant: 'destructive' })
+      // toast({ title: 'Failed', description: 'Could not delete custom response.', variant: 'destructive' })
     } finally {
       setDeleteLoading((l) => ({ ...l, [key]: false }))
     }
@@ -223,10 +223,10 @@ export default function AtlasManager() {
       if (key === 'computeMax') await updateComputeMaxModel(next)
       else if (key === 'r3Advanced') await updateR3AdvancedModel(next)
       else await updateVisionProModel(next)
-      toast({ title: 'Updated', description: 'Model preference saved.' })
+      // toast({ title: 'Updated', description: 'Model preference saved.' })
     } catch (e) {
       setModelsEnabled((p) => ({ ...p, [key]: prev }))
-      toast({ title: 'Failed', description: 'Could not update model.', variant: 'destructive' })
+      // toast({ title: 'Failed', description: 'Could not update model.', variant: 'destructive' })
     } finally {
       if (key === 'computeMax') setLoadingComputeMax(false)
       if (key === 'r3Advanced') setLoadingR3Advanced(false)
@@ -240,7 +240,7 @@ export default function AtlasManager() {
         <p className="text-4xl font-semibold text:white">Atlas Manager</p>
       </div>
 
-     
+
 
       <div className="px-8 xl:px-12 mt-4 mb-12">
         <div className="relative rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/5">
@@ -394,11 +394,10 @@ export default function AtlasManager() {
           <CardContent>
             <div
               aria-hidden={selectedMode !== 'custom'}
-              className={`transition-all duration-300 ${
-                selectedMode === 'custom'
-                  ? 'opacity-100 max-h-[1000px]'
-                  : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
-              }`}
+              className={`transition-all duration-300 ${selectedMode === 'custom'
+                ? 'opacity-100 max-h-[1000px]'
+                : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
+                }`}
             >
               {enabledCount === 0 ? (
                 <div className="flex items-center justify-center py-12">
@@ -408,236 +407,236 @@ export default function AtlasManager() {
                 <div className={gridCols}>
                   {modelsEnabled.computeMax && (
                     <Card className="relative overflow-hidden rounded-xl border border-white/0 bg-black backdrop-blur-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-white text-base">Compute-Max</CardTitle>
-                        <Badge variant="outline" className="text-white/70">Atlas</Badge>
-                      </div>
-                      <CardDescription className="text-white/70">High-performance compute mode.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {trained.computeMax ? (
-                        <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
-                          Success! If you'd like to revise it, delete your custom response and create a new one.
-                        </p>
-                      ) : (
-                        <Textarea
-                          value={trainingPrompts.computeMax}
-                          onChange={(e) => updateTrainingPrompt('computeMax', e.target.value)
-                          }
-                          placeholder="Set your preferred style. Example: 'Solve problems step by step with brief explanations.'"
-                          className="text-white/90 h-32"
-                        />
-                      )}
-                      <div className="flex items-center gap-2">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-white text-base">Compute-Max</CardTitle>
+                          <Badge variant="outline" className="text-white/70">Atlas</Badge>
+                        </div>
+                        <CardDescription className="text-white/70">High-performance compute mode.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         {trained.computeMax ? (
-                          <Button
-                            variant="default"
-                            className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
-                            onClick={() => onDeletePrompt('computeMax')}
-                            disabled={selectedMode !== 'custom' || deleteLoading.computeMax}
-                          >
-                            {deleteLoading.computeMax ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Removing...
-                              </span>
-                            ) : (
-                              <>
-                                <Trash2 className="w-5 h-5 mr-1" />
-                                Delete
-                              </>
-                            )}
-                          </Button>
+                          <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
+                            Success! If you'd like to revise it, delete your custom response and create a new one.
+                          </p>
                         ) : (
-                          <Button
-                            variant="default"
-                            className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
-                            onClick={() => onCustomize('computeMax')}
-                            disabled={selectedMode !== 'custom' || promptLoading.computeMax}
-                          >
-                            {promptLoading.computeMax ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                Preparing...
-                              </span>
-                            ) : (
-                              <>
-                                <StarsIcon className="w-5 h-5 mr-1" />
-                                Customize
-                              </>
-                            )}
-                          </Button>
+                          <Textarea
+                            value={trainingPrompts.computeMax}
+                            onChange={(e) => updateTrainingPrompt('computeMax', e.target.value)
+                            }
+                            placeholder="Set your preferred style. Example: 'Solve problems step by step with brief explanations.'"
+                            className="text-white/90 h-32"
+                          />
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
-                              <Info className="w-3.5 h-3.5 text-white/50" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
-                            Each customization event incurs a cost of approximately ₹1.99
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex items-center gap-2">
+                          {trained.computeMax ? (
+                            <Button
+                              variant="default"
+                              className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
+                              onClick={() => onDeletePrompt('computeMax')}
+                              disabled={selectedMode !== 'custom' || deleteLoading.computeMax}
+                            >
+                              {deleteLoading.computeMax ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Removing...
+                                </span>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-5 h-5 mr-1" />
+                                  Delete
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="default"
+                              className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
+                              onClick={() => onCustomize('computeMax')}
+                              disabled={selectedMode !== 'custom' || promptLoading.computeMax}
+                            >
+                              {promptLoading.computeMax ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                  Preparing...
+                                </span>
+                              ) : (
+                                <>
+                                  <StarsIcon className="w-5 h-5 mr-1" />
+                                  Customize
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
+                                <Info className="w-3.5 h-3.5 text-white/50" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
+                              Each customization event incurs a cost of approximately ₹1.99
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {modelsEnabled.r3Advanced && (
                     <Card className="relative overflow-hidden rounded-xl border border-white/0 bg-black backdrop-blur-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-white text-base">R3 Advanced</CardTitle>
-                        <Badge variant="outline" className="text-white/70">Atlas</Badge>
-                      </div>
-                      <CardDescription className="text-white/70">Advanced reasoning capabilities.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {trained.r3Advanced ? (
-                        <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
-                          Success! If you’d like to revise it, delete your custom response and create a new one.
-                        </p>
-                      ) : (
-                        <Textarea
-                          value={trainingPrompts.r3Advanced}
-                          onChange={(e) => updateTrainingPrompt('r3Advanced', e.target.value)
-                          }
-                          placeholder="Tell Atlas how to answer. Example: 'Show each step clearly, then give the final answer.'"
-                          className="text-white/90 h-32"
-                        />
-                      )}
-                      <div className="flex items-center gap-2">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-white text-base">R3 Advanced</CardTitle>
+                          <Badge variant="outline" className="text-white/70">Atlas</Badge>
+                        </div>
+                        <CardDescription className="text-white/70">Advanced reasoning capabilities.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         {trained.r3Advanced ? (
-                          <Button
-                            variant="default"
-                            className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
-                            onClick={() => onDeletePrompt('r3Advanced')}
-                            disabled={selectedMode !== 'custom' || deleteLoading.r3Advanced}
-                          >
-                            {deleteLoading.r3Advanced ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Removing...
-                              </span>
-                            ) : (
-                              <>
-                                <Trash2 className="w-5 h-5 mr-1" />
-                                Delete
-                              </>
-                            )}
-                          </Button>
+                          <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
+                            Success! If you’d like to revise it, delete your custom response and create a new one.
+                          </p>
                         ) : (
-                          <Button
-                            variant="default"
-                            className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
-                            onClick={() => onCustomize('r3Advanced')}
-                            disabled={selectedMode !== 'custom' || promptLoading.r3Advanced}
-                          >
-                            {promptLoading.r3Advanced ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                Preparing...
-                              </span>
-                            ) : (
-                              <>
-                                <StarsIcon className="w-5 h-5 mr-1" />
-                                Customize
-                              </>
-                            )}
-                          </Button>
+                          <Textarea
+                            value={trainingPrompts.r3Advanced}
+                            onChange={(e) => updateTrainingPrompt('r3Advanced', e.target.value)
+                            }
+                            placeholder="Tell Atlas how to answer. Example: 'Show each step clearly, then give the final answer.'"
+                            className="text-white/90 h-32"
+                          />
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
-                              <Info className="w-3.5 h-3.5 text-white/50" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
-                            Each customization event incurs a cost of approximately ₹1.99
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex items-center gap-2">
+                          {trained.r3Advanced ? (
+                            <Button
+                              variant="default"
+                              className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
+                              onClick={() => onDeletePrompt('r3Advanced')}
+                              disabled={selectedMode !== 'custom' || deleteLoading.r3Advanced}
+                            >
+                              {deleteLoading.r3Advanced ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Removing...
+                                </span>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-5 h-5 mr-1" />
+                                  Delete
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="default"
+                              className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
+                              onClick={() => onCustomize('r3Advanced')}
+                              disabled={selectedMode !== 'custom' || promptLoading.r3Advanced}
+                            >
+                              {promptLoading.r3Advanced ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                  Preparing...
+                                </span>
+                              ) : (
+                                <>
+                                  <StarsIcon className="w-5 h-5 mr-1" />
+                                  Customize
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
+                                <Info className="w-3.5 h-3.5 text-white/50" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
+                              Each customization event incurs a cost of approximately ₹1.99
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {modelsEnabled.visionPro && (
                     <Card className="relative overflow-hidden rounded-xl border border-white/0 bg-black backdrop-blur-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-white text-base">Vision Pro</CardTitle>
-                        <Badge variant="outline" className="text-white/70">Atlas</Badge>
-                      </div>
-                      <CardDescription className="text-white/70">Enhanced visual understanding.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {trained.visionPro ? (
-                        <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
-                          Success! If you’d like to revise it, delete your custom response and create a new one.
-                        </p>
-                      ) : (
-                        <Textarea
-                          value={trainingPrompts.visionPro}
-                          onChange={(e) => updateTrainingPrompt('visionPro', e.target.value)
-                          }
-                          placeholder="Describe instructions - e.g., visual extraction, OCR, charts and diagrams"
-                          className="text-white/90 h-32"
-                        />
-                      )}
-                      <div className="flex items-center gap-2">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-white text-base">Vision Pro</CardTitle>
+                          <Badge variant="outline" className="text-white/70">Atlas</Badge>
+                        </div>
+                        <CardDescription className="text-white/70">Enhanced visual understanding.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         {trained.visionPro ? (
-                          <Button
-                            variant="default"
-                            className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
-                            onClick={() => onDeletePrompt('visionPro')}
-                            disabled={selectedMode !== 'custom' || deleteLoading.visionPro}
-                          >
-                            {deleteLoading.visionPro ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Removing...
-                              </span>
-                            ) : (
-                              <>
-                                <Trash2 className="w-5 h-5 mr-1" />
-                                Delete
-                              </>
-                            )}
-                          </Button>
+                          <p className="text-white/80 text-sm bg-[#141416] p-3 rounded-md">
+                            Success! If you’d like to revise it, delete your custom response and create a new one.
+                          </p>
                         ) : (
-                          <Button
-                            variant="default"
-                            className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
-                            onClick={() => onCustomize('visionPro')}
-                            disabled={selectedMode !== 'custom' || promptLoading.visionPro}
-                          >
-                            {promptLoading.visionPro ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                Preparing...
-                              </span>
-                            ) : (
-                              <>
-                                <StarsIcon className="w-5 h-5 mr-1" />
-                                Customize
-                              </>
-                            )}
-                          </Button>
+                          <Textarea
+                            value={trainingPrompts.visionPro}
+                            onChange={(e) => updateTrainingPrompt('visionPro', e.target.value)
+                            }
+                            placeholder="Describe instructions - e.g., visual extraction, OCR, charts and diagrams"
+                            className="text-white/90 h-32"
+                          />
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
-                              <Info className="w-3.5 h-3.5 text-white/50" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
-                            Each customization event incurs a cost of approximately ₹1.99
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex items-center gap-2">
+                          {trained.visionPro ? (
+                            <Button
+                              variant="default"
+                              className="bg-red-600 text-white font-semibold hover:bg-red-500 rounded-full"
+                              onClick={() => onDeletePrompt('visionPro')}
+                              disabled={selectedMode !== 'custom' || deleteLoading.visionPro}
+                            >
+                              {deleteLoading.visionPro ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Removing...
+                                </span>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-5 h-5 mr-1" />
+                                  Delete
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="default"
+                              className="bg-white text-black font-semibold hover:bg-white/90 rounded-full"
+                              onClick={() => onCustomize('visionPro')}
+                              disabled={selectedMode !== 'custom' || promptLoading.visionPro}
+                            >
+                              {promptLoading.visionPro ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                  Preparing...
+                                </span>
+                              ) : (
+                                <>
+                                  <StarsIcon className="w-5 h-5 mr-1" />
+                                  Customize
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full cursor-help">
+                                <Info className="w-3.5 h-3.5 text-white/50" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-white font-semibold text-black rounded-xl w-64 shadow-lg border border-black/10">
+                              Each customization event incurs a cost of approximately ₹1.99
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
@@ -645,7 +644,7 @@ export default function AtlasManager() {
           </CardContent>
         </Card>
       </div>
- <div className="px-8 xl:px-12 pb-20">
+      <div className="px-8 xl:px-12 pb-20">
         <Card className="relative overflow-hidden rounded-3xl border border-white/5 bg-black/50 backdrop-blur-xl">
           <div
             className="absolute inset-0 pointer-events-none"
@@ -654,17 +653,17 @@ export default function AtlasManager() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-white text-lg">Smart Actions</CardTitle>
-<Badge
-  variant="outline"
-  className="flex items-center gap-2 text-white font-semibold font-mono p-2 px-4"
->
-  Alt + X + Drag
-  <img
-    src="/resources/windows.svg"
-    alt="Windows"
-    className="w-4 h-4 ml-4 brightness-0 invert opacity-100"
-  />
-</Badge>
+              <Badge
+                variant="outline"
+                className="flex items-center gap-2 text-white font-semibold font-mono p-2 px-4"
+              >
+                Alt + X + Drag
+                <img
+                  src="/resources/windows.svg"
+                  alt="Windows"
+                  className="w-4 h-4 ml-4 brightness-0 invert opacity-100"
+                />
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -699,7 +698,7 @@ export default function AtlasManager() {
                 </div>
               </div>
 
-              
+
 
               <div className="group relative rounded-xl border border-white/10 bg-black/40 p-4">
                 <div className="flex items-start justify-between gap-4">
@@ -775,7 +774,7 @@ export default function AtlasManager() {
       </div>
       <div className="px-8 xl:px-12 pb-20 mt-12" />
 
-      
+
     </div>
   )
 }

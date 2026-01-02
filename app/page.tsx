@@ -118,7 +118,7 @@ export default function Home() {
             </h1>
 
             <p className="max-w-xl lg:max-w-3xl text-sm sm:text-base lg:text-lg font-semibold text-white drop-shadow-lg opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards]">
-              Find apps, games, extensions, and software in one simple platform. <br className="hidden sm:block" />Discover useful tools without the clutter.
+              Manage apps, extensions, and software from one unified platform. <br className="hidden sm:block" />Built for clarity, speed, and control.
             </p>
 
             <div className="mt-4 flex w-full flex-col gap-4 sm:w-auto sm:flex-row opacity-0 animate-[fadeUp_1s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards]">
