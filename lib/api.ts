@@ -1,6 +1,6 @@
 // API Configuration
-// export const API_BASE_URL = "https://srv01.loopsync.cloud";
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "https://srv01.loopsync.cloud";
+// export const API_BASE_URL = "http://localhost:8000";
 
 
 // Types for our API responses

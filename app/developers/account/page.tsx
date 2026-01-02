@@ -29,8 +29,8 @@ declare global {
     }
 }
 
-// const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "https://srv01.loopsync.cloud/api/v1";
+// const API_BASE_URL = "http://localhost:8000/api/v1";
 
 function AccountContent() {
     const [isLogin, setIsLogin] = useState(false);
